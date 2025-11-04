@@ -167,13 +167,13 @@ dashboard-of-doom-ios/
 
 #### Data Sources Integration
 
-- **BfS (Bundesamt für Strahlenschutz)**: Radiation monitoring network
-- **UBA (Umweltbundesamt)**: Federal environmental agency air quality data
-- **Pegelonline**: Federal waterway and shipping administration data
-- **NINA API**: National warning system for civil protection
-- **Corona-Zahlen.org**: COVID-19 statistics aggregation service
-- **OpenStreetMap**: Geographic data and points of interest
-- **DAWUM**: Political polling and survey data aggregation
+- **[BfS (Bundesamt für Strahlenschutz)](https://www.bfs.de/)**: Radiation monitoring network
+- **[UBA (Umweltbundesamt)](https://www.umweltbundesamt.de/)**: Federal environmental agency air quality data
+- **[Pegelonline](https://www.pegelonline.wsv.de/)**: Federal waterway and shipping administration data
+- **[NINA API](https://www.bbk.bund.de/DE/Warnung-Vorsorge/Warn-App-NINA/warn-app-nina_node.html)**: National warning system for civil protection
+- **[Corona-Zahlen.org](https://corona-zahlen.org/)**: COVID-19 statistics aggregation service
+- **[OpenStreetMap](https://www.openstreetmap.org/)**: Geographic data and points of interest
+- **[DAWUM](https://dawum.de/)**: Political polling and survey data aggregation
 
 ## Getting Started
 
@@ -243,14 +243,6 @@ git commit -m "feat: add your feature description"
 # Push and create pull request
 git push origin feature/your-feature-name
 ```
-
-### Testing Strategy
-
-- **Unit Tests**: Core business logic and data transformations
-- **Integration Tests**: API communication and data pipeline validation
-- **UI Tests**: SwiftUI interface behavior and user interaction flows
-- **Performance Tests**: Memory usage and data processing efficiency
-- **Device Testing**: Validation on both iPhone and iPad form factors
 
 ## Data Quality & Reliability
 
