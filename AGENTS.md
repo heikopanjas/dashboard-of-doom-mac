@@ -373,6 +373,16 @@ Remember: This application focuses specifically on German environmental data and
 
 ## Recent Updates & Decisions
 
+### November 4, 2025 (Swift Package Creation)
+- **Package Structure**: Created DashboardOfDoomCore Swift Package at repository root with Sources/ and Tests/ directories
+- **Public API**: Made all core types, controllers, services, transformers, units, utilities, and extensions public for external consumption
+- **Package Manifest**: Added Package.swift with iOS 17.0+ and macOS 14.0+ platform support
+- **Included Components**: Controllers (Weather, Forecast, Covid, Particle, Radiation, Level, Hazard, Survey, PointOfInterest), all Services, all Transformers, all Models (Location, Hazard, PointOfInterest), all custom Units, all Utilities (ARIMA, MovingAverage, HaversineDistance, PointInPolygon, PolygonProximityCalculator, OSMUtilities, MathematicalSymbols, Trace), all Extensions, and core Process files (ProcessManager, ProcessController, ProcessQuality, ProcessValue, ProcessTransformer, ProcessSubscriber, ProcessSubscription, ProcessSensor, ProcessSelector), plus LocationManager and NetworkManager
+- **Access Control**: Applied public modifiers systematically to classes, structs, enums, protocols, actors, initializers, functions, properties, static members, and override methods
+- **Package Documentation**: Created README-Package.md with comprehensive usage examples, architecture description, and feature documentation
+- **Test Suite**: Added basic test file structure for package validation
+- **Reasoning**: Extracted core functionality into a reusable Swift Package to enable code sharing between iOS and macOS applications while maintaining a clean separation of concerns. The package encapsulates all data processing, network communication, mathematical analysis, and business logic, allowing presentation layers to be platform-specific while sharing the core infrastructure.
+
 ### November 4, 2025 (README Update)
 - **README iOS Focus**: Updated README.md to reflect iOS-only repository scope
 - **Repository Links**: Added reference to separate macOS repository with correct GitHub links
