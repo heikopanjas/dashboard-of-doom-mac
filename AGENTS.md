@@ -373,6 +373,17 @@ Remember: This application focuses specifically on German environmental data and
 
 ## Recent Updates & Decisions
 
+### November 4, 2025 (README Update)
+- **README iOS Focus**: Updated README.md to reflect iOS-only repository scope
+- **Repository Links**: Added reference to separate macOS repository with correct GitHub links
+- **Screenshots Section**: Updated to note iOS application with temporary placeholder for screenshots
+- **Project Structure**: Simplified to show single Xcode project structure without platform folders
+- **Installation Steps**: Streamlined setup instructions for iOS-only development
+- **Features & Architecture**: Removed macOS-specific sections and emphasized iOS native capabilities
+- **Testing Strategy**: Updated to focus on iPhone and iPad form factors
+- **Related Projects**: Added section linking to macOS repository variant
+- **Reasoning**: Aligned README documentation with repository separation to provide accurate information for iOS-focused development while maintaining reference to macOS variant
+
 ### November 4, 2025 (Repository Separation)
 - **iOS Repository Isolation**: Updated AGENTS.md to reflect separation of iOS and macOS into independent repositories
 - **Architecture Documentation**: Revised all cross-platform references to focus on iOS-only implementation

@@ -1,39 +1,42 @@
-# Dashboard of Doom
+# Dashboard of Doom (iOS)
 
 ![Swift 6.0](https://img.shields.io/badge/Swift-6.0-orange.svg)
 ![iOS 18.0+](https://img.shields.io/badge/iOS-18.0+-blue.svg)
-![macOS 15.0+](https://img.shields.io/badge/macOS-15.0+-blue.svg)
 ![MIT License](https://img.shields.io/badge/License-MIT-green.svg)
 
-**Dashboard of Doom** is a sophisticated cross-platform SwiftUI application that provides real-time environmental and public health data visualization for Germany. This comprehensive monitoring dashboard aggregates data from multiple German government and public APIs to create an interactive, location-aware environmental monitoring system.
+**Dashboard of Doom** is a sophisticated iOS SwiftUI application that provides real-time environmental and public health data visualization for Germany. This comprehensive monitoring dashboard aggregates data from multiple German government and public APIs to create an interactive, location-aware environmental monitoring system.
 
-> Regional Focus: This application is specifically designed for use in Germany and integrates with German federal data sources.
+> **Note**: This repository contains the iOS application. A separate [macOS repository](https://github.com/heikopanjas/dashboard-of-doom-macos) exists for the menu bar application variant.
+
+> **Regional Focus**: This application is specifically designed for use in Germany and integrates with German federal data sources.
 
 ## Screenshots
 
-### macOS Application
+### iOS Application
 
 <div align="center">
 
 **Main Dashboard**
-![macOS Main Dashboard](images/macos-main.png)
+![iOS Main Dashboard](images/macos-main.png)
 
 **Weather Forecast**
-![macOS Weather Forecast](images/macos-forecast.png)
+![iOS Weather Forecast](images/macos-forecast.png)
 
 **Environmental Monitoring**
-![macOS Environmental Data](images/macos-environment.png)
+![iOS Environmental Data](images/macos-environment.png)
 
 **Particle Analysis**
-![macOS Particle Data](images/macos-particles.png)
+![iOS Particle Data](images/macos-particles.png)
 
 **State Election Polls**
-![macOS State Election Polls](images/macos-state.png)
+![iOS State Election Polls](images/macos-state.png)
 
 **Federal Election Polls**
-![macOS Federal Election Polls](images/macos-federal.png)
+![iOS Federal Election Polls](images/macos-federal.png)
 
 </div>
+
+> **Note**: Screenshots shown are from the original cross-platform version. iOS-specific screenshots will be updated soon.
 
 ## Features
 
@@ -44,13 +47,7 @@
 - **Chart Visualizations**: Advanced charts using Swift Charts framework
 - **Multi-category Navigation**: Seamless switching between data categories
 - **Background Updates**: Continuous location-based data refreshing
-
-### macOS Menu Bar Application
-
-- **Lightweight Menu Bar Extra**: Quick access to current conditions
-- **Live Temperature Display**: Real-time temperature in menu bar
-- **Settings Panel**: Configurable preferences and data sources
-- **Dark Mode Optimized**: Native macOS appearance integration
+- **iPhone & iPad Support**: Responsive layouts optimized for all iOS devices
 
 ### Data Sources & Monitoring
 
@@ -73,10 +70,12 @@
 
 ## Architecture & Design
 
-### Platform-Specific Patterns
+### Architecture Pattern
 
 - **iOS**: MVVM (Model-View-ViewModel) architecture with reactive data binding
-- **macOS**: MVP (Model-View-Presenter) pattern optimized for menu bar applications
+- **Full-Screen Interface**: Interactive dashboard with environmental data visualization
+- **Location-Aware**: Background location updates and real-time data refresh
+- **Native iOS**: Optimized for iPhone and iPad with responsive layouts
 
 ### Core Architecture Components
 
@@ -116,7 +115,7 @@
 - **Concurrency**: Comprehensive async/await implementation
 - **Observable Macro**: iOS 17+ state management with `@Observable`
 - **Environment Injection**: SwiftUI environment-based dependency management
-- **Cross-platform Code**: Shared business logic between iOS and macOS
+- **Native iOS**: Optimized for iOS platform with native frameworks
 
 ### Data Processing Excellence
 
@@ -135,8 +134,8 @@
 ## Project Structure
 
 ```text
-dashboard-of-doom/
-├── iOS/DashboardOfDoom/              # iOS Application Target
+dashboard-of-doom-ios/
+├── DashboardOfDoom/                  # iOS Application
 │   ├── Controllers/                  # Data orchestration layer
 │   ├── Services/                     # API communication services
 │   ├── Presenters/                   # State management (MVVM)
@@ -146,16 +145,8 @@ dashboard-of-doom/
 │   ├── Extensions/                   # Swift utility extensions
 │   ├── Units/                        # Measurement unit definitions
 │   └── Utilities/                    # Helper functions and tools
-├── macOS/DashboardOfDoom/            # macOS Application Target
-│   ├── Controllers/                  # Data orchestration layer
-│   ├── Services/                     # API communication services
-│   ├── Presenters/                   # State management (MVP)
-│   ├── Transformers/                 # Data processing pipeline
-│   ├── Views/                        # SwiftUI user interfaces
-│   ├── Models/                       # Core data structures
-│   ├── Extensions/                   # Swift utility extensions
-│   ├── Units/                        # Measurement unit definitions
-│   └── Utilities/                    # Helper functions and tools
+├── DashboardOfDoom.xcodeproj/        # Xcode project
+├── AGENTS.md                         # AI agent instructions
 ├── LICENSE                           # MIT License
 └── README.md                         # This documentation
 ```
@@ -188,7 +179,7 @@ dashboard-of-doom/
 
 ### Prerequisites
 
-- **macOS 15.0+** or **iOS 18.0+**
+- **iOS 18.0+** (for device deployment)
 - **Xcode 16.3+** with iOS 18 SDK
 - **Swift 6.0+** compiler
 - **Developer Account** (for device deployment)
@@ -198,28 +189,24 @@ dashboard-of-doom/
 1. **Clone the Repository**
 
    ```bash
-   git clone https://github.com/ultralove/dashboard-of-doom.git
-   cd dashboard-of-doom
+   git clone https://github.com/heikopanjas/dashboard-of-doom-ios.git
+   cd dashboard-of-doom-ios
    ```
 
-2. **Open Platform-Specific Projects**
+2. **Open the Project**
 
    ```bash
-   # For iOS Development
-   open iOS/DashboardOfDoom.xcodeproj
-
-   # For macOS Development
-   open macOS/DashboardOfDoom.xcodeproj
+   open DashboardOfDoom.xcodeproj
    ```
 
 3. **Configure Build Settings**
    - Select appropriate development team
    - Configure signing certificates
-   - Set deployment targets (iOS 18.0+ / macOS 15.0+)
+   - Set deployment target (iOS 18.0+)
 
 4. **Build and Run**
-   - **iOS**: Select iPhone/iPad simulator or connected device
-   - **macOS**: Select "My Mac" destination and run
+   - Select iPhone/iPad simulator or connected device
+   - Press ⌘R to build and run the application
 
 ### Permissions & Configuration
 
@@ -227,11 +214,6 @@ dashboard-of-doom/
 
 - **Location Services**: Required for location-based environmental data
 - **Background App Refresh**: Enables continuous data updates
-- **Network Access**: Essential for API communication
-
-#### macOS Permissions
-
-- **Location Services**: Required for geographic data filtering
 - **Network Access**: Essential for API communication
 
 ## 🧩 Development & Contribution
@@ -242,7 +224,7 @@ dashboard-of-doom/
 2. **Reactive Programming**: Observable state management with SwiftUI integration
 3. **Error Resilience**: Comprehensive error handling and recovery mechanisms
 4. **Performance Optimization**: Efficient data processing and memory management
-5. **Cross-platform Compatibility**: Shared business logic with platform-specific presentation
+5. **iOS Native**: Optimized for iOS platform with native frameworks and patterns
 
 ### Development Workflow
 
@@ -268,6 +250,7 @@ git push origin feature/your-feature-name
 - **Integration Tests**: API communication and data pipeline validation
 - **UI Tests**: SwiftUI interface behavior and user interaction flows
 - **Performance Tests**: Memory usage and data processing efficiency
+- **Device Testing**: Validation on both iPhone and iPad form factors
 
 ## Data Quality & Reliability
 
@@ -316,4 +299,8 @@ copies or substantial portions of the Software.
 
 ---
 
-Built with care in Swift for the German environmental monitoring community
+Built with ❤️ in Swift for the German environmental monitoring community
+
+## Related Projects
+
+- [Dashboard of Doom (macOS)](https://github.com/heikopanjas/dashboard-of-doom-macos) - Menu bar application variant
