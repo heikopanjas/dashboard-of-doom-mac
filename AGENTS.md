@@ -1,6 +1,6 @@
 # Agent Instructions for Dashboard of Doom (macOS)
 
-*Last updated: November 4, 2025*
+*Last updated: November 4, 2025 (Evening - Build System)*
 
 ## Project Overview
 
@@ -370,6 +370,11 @@ Remember: This application focuses specifically on German environmental data and
 ---
 
 ## Recent Updates & Decisions
+
+### November 4, 2025 (Evening Update - Build System)
+- **Build Configuration**: Added comprehensive .gitignore file for Xcode project
+- **Source Control**: Implemented proper ignore patterns for macOS development including xcuserdata, DerivedData, build artifacts, Swift Package Manager files, dependency managers, fastlane outputs, macOS system files, IDE configurations, and temporary files
+- **Reasoning**: Essential for maintaining clean repository state, preventing accidental commits of user-specific settings, build artifacts, and system files. Follows Xcode and Swift community best practices for version control
 
 ### November 4, 2025 (Evening Update - README)
 - **README.md Modernization**: Updated README.md to reflect macOS-only repository status
