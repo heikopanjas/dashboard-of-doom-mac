@@ -9,24 +9,27 @@ class LevelController: ProcessController {
         self.forecastDuration = 12 * 4 * self.measurementDistance  // 12 hours
     }
 
-    func refreshData(for location: Location) async throws -> ProcessSensor? {
+    func refreshData(for location: Location) async throws -> [ProcessSensor] {
+        var data: [ProcessSensor] = []
+
         if let nearestStation = try await fetchNearestStation(location: location) {
             trace.debug("Nearest station: \(nearestStation)")
             var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
             if let level = try await fetchMeasurements(station: nearestStation) {
                 var measurement: [ProcessValue<Dimension>] = []
-                measurement.append(contentsOf: Self.interpolateMeasurements(measurements: level, distance: self.measurementDistance))
-                measurement.append(contentsOf: Self.forecastMeasurements(data: measurement, duration: self.forecastDuration))
+                measurement.append(contentsOf: self.interpolateMeasurements(measurements: level, distance: self.measurementDistance))
+                measurement.append(contentsOf: self.forecastMeasurements(data: measurement, duration: self.forecastDuration))
                 measurements[.water(.level)] = measurement.sorted(by: { $0.timestamp < $1.timestamp })
             }
             if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestStation.location) {
-                return ProcessSensor(
+                let sensor = ProcessSensor(
                     name: nearestStation.name, location: nearestStation.location, placemark: placemark, customData: ["icon": "water.waves"],
                     measurements: measurements,
                     timestamp: Date.now)
+                data.append(sensor)
             }
         }
-        return nil
+        return data
     }
 
     struct Station {
@@ -46,32 +49,32 @@ class LevelController: ProcessController {
                     }
                 }
                 else {
-                if let waterways = try await fetchNearestWaterways(for: location) {
-                    if let nearestWaterway = Self.nearestWaterway(waterways: waterways, location: location) {
-                        trace.debug("Nearest waterway: \(nearestWaterway)")
-                        if let synchronizedStations = Self.synchronize(stations, with: nearestWaterway) {
-                            if let synchronizedStation = Self.nearestStation(stations: synchronizedStations, location: location) {
-                                nearestStation = Station(
-                                    id: synchronizedStation.id, name: nearestWaterway.name, location: synchronizedStation.location)
+                    if let waterways = try await fetchNearestWaterways(for: location) {
+                        if let nearestWaterway = Self.nearestWaterway(waterways: waterways, location: location) {
+                            trace.debug("Nearest waterway: \(nearestWaterway)")
+                            if let synchronizedStations = Self.synchronize(stations, with: nearestWaterway) {
+                                if let synchronizedStation = Self.nearestStation(stations: synchronizedStations, location: location) {
+                                    nearestStation = Station(
+                                        id: synchronizedStation.id, name: nearestWaterway.name, location: synchronizedStation.location)
+                                }
                             }
-                        }
-                        else {
-                            trace.warning("No synchronized stations found, falling back to nearest station")
-                            if let station = Self.nearestStation(stations: stations, location: location) {
-                                nearestStation = Station(
-                                    id: station.id, name: self.capitalizeGerman(text: station.name), location: station.location)
+                            else {
+                                trace.warning("No synchronized stations found, falling back to nearest station")
+                                if let station = Self.nearestStation(stations: stations, location: location) {
+                                    nearestStation = Station(
+                                        id: station.id, name: self.capitalizeGerman(text: station.name), location: station.location)
+                                }
                             }
-                        }
-                        if let nearestStation = nearestStation {
-                            trace.debug("Nearest station: \(nearestStation)")
-                        }
-                        else {
-                            trace.error("No station found")
+                            if let nearestStation = nearestStation {
+                                trace.debug("Nearest station: \(nearestStation)")
+                            }
+                            else {
+                                trace.error("No station found")
+                            }
                         }
                     }
                 }
             }
-        }
         }
         return nearestStation
     }
@@ -207,7 +210,7 @@ class LevelController: ProcessController {
         return nil
     }
 
-    private static func interpolateMeasurements(measurements: [ProcessValue<Dimension>], distance: TimeInterval) -> [ProcessValue<Dimension>] {
+    private func interpolateMeasurements(measurements: [ProcessValue<Dimension>], distance: TimeInterval) -> [ProcessValue<Dimension>] {
         var interpolatedMeasurement: [ProcessValue<Dimension>] = []
         if let start = measurements.first?.timestamp, let end = measurements.last?.timestamp {
             var current = start
@@ -231,7 +234,7 @@ class LevelController: ProcessController {
         return interpolatedMeasurement
     }
 
-    private static func forecastMeasurements(data: [ProcessValue<Dimension>], duration: TimeInterval) -> [ProcessValue<Dimension>] {
+    private func forecastMeasurements(data: [ProcessValue<Dimension>], duration: TimeInterval) -> [ProcessValue<Dimension>] {
         var forecastMeasurements: [ProcessValue<Dimension>] = []
         if data.count > 0 {
             let unit = data[0].value.unit
@@ -243,8 +246,10 @@ class LevelController: ProcessController {
                 try predictor.addData(dataPoints)
                 let prediction = try predictor.forecast(duration: duration)
                 forecastMeasurements = prediction.forecasts.map { forecast in
+//                    ProcessValue<Dimension>(
+//                        value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
                     ProcessValue<Dimension>(
-                        value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
+                        value: Measurement(value: 0.0, unit: unit), quality: .unknown, timestamp: forecast.timestamp)
                 }
             }
             catch {

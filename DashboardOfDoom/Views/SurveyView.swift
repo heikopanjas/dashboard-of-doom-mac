@@ -39,16 +39,15 @@ struct SurveyView: View {
                 #endif
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                ForEach(ProcessSelector.Survey.allCases, id: \.self) { selector in
-                    if self.presenter.isAvailable(selector: .survey(selector)) {
-                        VStack {
-                            SurveyChartView(selector: .survey(selector))
+                    ForEach(ProcessSelector.Survey.allCases, id: \.self) { selector in
+                        if self.presenter.isAvailable(selector: .survey(selector)) {
+                            VStack {
+                                SurveyChartView(selector: .survey(selector))
+                            }
+                            .frame(height: 167)
                         }
-                        .frame(height: 167)
                     }
                 }
-            }
-                .padding(.vertical, 5)
             }
         }
     }

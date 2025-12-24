@@ -3,7 +3,9 @@ import Foundation
 import WeatherKit
 
 class ForecastController: ProcessController {
-    func refreshData(for location: Location) async throws -> ProcessSensor? {
+    func refreshData(for location: Location) async throws -> [ProcessSensor] {
+        var data: [ProcessSensor] = []
+
         if let placemark = await LocationManager.reverseGeocodeLocation(location: location) {
             var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
 
@@ -98,12 +100,13 @@ class ForecastController: ProcessController {
             }
             measurements[.forecast(.windGust)] = windGust
 
-            return ProcessSensor(
+            let sensor = ProcessSensor(
                 name: "Forecast", location: location, placemark: placemark, measurements: self.sanitizeData(measurements: measurements),
                 timestamp: Date.now)
+            data.append(sensor)
         }
 
-        return nil
+        return data
     }
 
     private func sanitizeData(measurements: [ProcessSelector: [ProcessValue<Dimension>]]) -> [ProcessSelector: [ProcessValue<Dimension>]] {

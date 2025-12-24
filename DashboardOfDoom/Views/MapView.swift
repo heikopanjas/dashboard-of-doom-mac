@@ -29,7 +29,7 @@ struct MapView: View {
                     Text("Last update: \(Date.absoluteString(date: sensor.timestamp))")
                         .foregroundColor(.gray)
                 }
-                .padding(.vertical, 5)
+//                .padding(.vertical, 5)
                 .padding(.leading, 5)
                 .font(.footnote)
                 #else
@@ -60,7 +60,7 @@ struct MapView: View {
                             simple: UserDefaults.standard.bool(forKey: "showWeather") == false, anchor: .topTrailing)
 
                         if UserDefaults.standard.bool(forKey: "showCovid") == true {
-                        MapAnnotation(presenter: incidence, selector: .covid(.incidence), anchor: .bottomLeading)
+                            MapAnnotation(presenter: incidence, selector: .covid(.incidence), anchor: .bottomLeading)
                         }
 
                         if UserDefaults.standard.bool(forKey: "showParticles") == true {
@@ -70,17 +70,17 @@ struct MapView: View {
                         }
 
                         if UserDefaults.standard.bool(forKey: "showLevels") == true {
-                        MapAnnotation(presenter: water, selector: .water(.level), anchor: .bottomLeading)
+                            MapAnnotation(presenter: water, selector: .water(.level), anchor: .bottomLeading)
                         }
 
                         if UserDefaults.standard.bool(forKey: "showRadiation") == true {
-                        MapAnnotation(presenter: radiation, selector: .radiation(.total), anchor: .bottomLeading)
-                                }
+                            MapAnnotation(presenter: radiation, selector: .radiation(.total), anchor: .bottomLeading)
+                        }
 
                         if UserDefaults.standard.bool(forKey: "showElectionPolls") == true {
-                                MapAnnotation(presenter: surveys, selector: .survey(.fascists), anchor: .topLeading)
-                            }
+                            MapAnnotation(presenter: surveys, selector: .survey(.fascists), anchor: .topLeading)
                         }
+                    }
                     .allowsHitTesting(false)
                 }
             }

@@ -2,7 +2,7 @@ import CoreLocation
 import MapKit
 import SwiftUI
 
-@Observable class WeatherPresenter: ProcessPresenter, ProcessSubscriber {
+@Observable class WeatherPresenter: ProcessPresenter, ProcessRefreshable {
     private let processController = WeatherController()
     private let processTransformer = WeatherTransformer()
 
@@ -14,7 +14,7 @@ import SwiftUI
 
     func refreshData(location: Location) async -> Void {
         do {
-            if let sensor = try await processController.refreshData(for: location) {
+            if let sensor = try await processController.refreshData(for: location).first {
                 try self.processTransformer.renderData(sensor: sensor)
                 await self.publishData(sensor: sensor)
             }
@@ -22,9 +22,6 @@ import SwiftUI
         catch {
             trace.error("Error refreshing data: %@", error.localizedDescription)
         }
-    }
-
-    func resetData() async {
     }
 
     @MainActor func publishData(sensor: ProcessSensor) async -> Void {

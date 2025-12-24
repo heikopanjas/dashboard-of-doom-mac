@@ -39,17 +39,16 @@ struct LevelView: View {
                 #endif
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                ForEach(ProcessSelector.Water.allCases, id: \.self) { selector in
-                    if self.presenter.isAvailable(selector: .water(selector)) {
-                        VStack {
-                            LevelChartView(selector: .water(selector))
-                        }
+                    ForEach(ProcessSelector.Water.allCases, id: \.self) { selector in
+                        if self.presenter.isAvailable(selector: .water(selector)) {
+                            VStack {
+                                LevelChartView(selector: .water(selector))
+                            }
 
-                        .frame(height: 167)
+                            .frame(height: 167)
+                        }
                     }
                 }
-            }
-                .padding(.vertical, 5)
             }
         }
     }

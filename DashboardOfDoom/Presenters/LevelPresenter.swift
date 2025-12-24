@@ -1,6 +1,6 @@
 import SwiftUI
 
-@Observable class LevelPresenter: ProcessPresenter, ProcessSubscriber {
+@Observable class LevelPresenter: ProcessPresenter, ProcessRefreshable {
     private let processController = LevelController()
     private let processTransformer = LevelTransformer()
 
@@ -12,7 +12,7 @@ import SwiftUI
 
     func refreshData(location: Location) async -> Void {
         do {
-            if let sensor = try await processController.refreshData(for: location) {
+            if let sensor = try await processController.refreshData(for: location).first {
                 try self.processTransformer.renderData(sensor: sensor)
                 await self.publishData(sensor: sensor)
             }
@@ -20,9 +20,6 @@ import SwiftUI
         catch {
             trace.error("Error refreshing data: %@", error.localizedDescription)
         }
-    }
-
-    func resetData() async {
     }
 
     @MainActor func publishData(sensor: ProcessSensor) async -> Void {
@@ -35,8 +32,8 @@ import SwiftUI
         self.trend = self.processTransformer.trend
 
         if UserDefaults.standard.bool(forKey: "showLevels") == true {
-        MapPresenter.shared.updateRegion(for: self.id, with: sensor.location)
-    }
+            MapPresenter.shared.updateRegion(for: self.id, with: sensor.location)
+        }
         else {
             MapPresenter.shared.updateRegion(remove: self.id)
         }

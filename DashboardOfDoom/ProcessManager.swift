@@ -9,7 +9,7 @@ public class ProcessManager: Identifiable, LocationManagerDelegate {
 
     private let updateInterval: TimeInterval = 60
     private var subscriptions: [ProcessSubscription] = []
-    private var subscribers: [UUID: any ProcessSubscriber] = [:]
+    private var subscribers: [UUID: any ProcessRefreshable] = [:]
 
     private init() {
         self.locationManager.delegate = self
@@ -43,7 +43,7 @@ public class ProcessManager: Identifiable, LocationManagerDelegate {
         }
     }
 
-    public func refreshSubscription(subscriber: any ProcessSubscriber) {
+    public func refreshSubscription(subscriber: any ProcessRefreshable) {
         if let location = self.location {
             if let delegate = self.subscribers[subscriber.id] {
                 Task {
@@ -59,25 +59,17 @@ public class ProcessManager: Identifiable, LocationManagerDelegate {
         }
     }
 
-    public func resetSubscription(subscriber: any ProcessSubscriber) {
-        if let delegate = self.subscribers[subscriber.id] {
-            Task {
-                await delegate.resetData()
-            }
-        }
-    }
-
     func locationManager(didUpdateLocation location: Location) {
         self.location = location
         self.refreshSubscriptions()
     }
 
-    func add(subscriber: any ProcessSubscriber, timeout: TimeInterval) {
+    func add(subscriber: any ProcessRefreshable, timeout: TimeInterval) {
         self.subscriptions.append(ProcessSubscription(id: subscriber.id, timeout: timeout * 60))
         self.subscribers[subscriber.id] = subscriber
     }
 
-    func remove(subscriber: any ProcessSubscriber) {
+    func remove(subscriber: any ProcessRefreshable) {
         self.subscriptions.removeAll { $0.id == id }
         self.subscribers.removeValue(forKey: subscriber.id)
     }

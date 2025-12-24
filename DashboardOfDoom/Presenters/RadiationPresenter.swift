@@ -1,6 +1,6 @@
 import SwiftUI
 
-@Observable class RadiationPresenter: ProcessPresenter, ProcessSubscriber {
+@Observable class RadiationPresenter: ProcessPresenter, ProcessRefreshable {
     private let processController = RadiationController()
     private let processTransformer = RadiationTransformer()
 
@@ -12,7 +12,7 @@ import SwiftUI
 
     func refreshData(location: Location) async -> Void {
         do {
-            if let sensor = try await processController.refreshData(for: location) {
+            if let sensor = try await processController.refreshData(for: location).first {
                 try self.processTransformer.renderData(sensor: sensor)
                 await self.publishData(sensor: sensor)
             }
@@ -20,9 +20,6 @@ import SwiftUI
         catch {
             trace.error("Error refreshing data: %@", error.localizedDescription)
         }
-    }
-
-    func resetData() async {
     }
 
     @MainActor func publishData(sensor: ProcessSensor) async -> Void {

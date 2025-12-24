@@ -14,7 +14,9 @@ class ParticleController: ProcessController {
         self.forecastDuration = 7 * 24 * 60 * 60  // 7 days
     }
 
-    func refreshData(for location: Location) async throws -> ProcessSensor? {
+    func refreshData(for location: Location) async throws -> [ProcessSensor] {
+        var data: [ProcessSensor] = []
+
         do {
             if let interval = Self.calculateMeasurementTimeInterval(span: self.measurementDuration) {
                 if let nearestStation = await Self.fetchNearestStation(location: location, from: interval.from, to: interval.to) {
@@ -30,11 +32,12 @@ class ParticleController: ProcessController {
                                         measurements[selector] = movingAverage(data: actual, windowSize: Self.smoothingFactor)
                                     }
                                 }
-                                return ProcessSensor(
+                                let sensor = ProcessSensor(
                                     name: nearestStation.name, location: nearestStation.location, placemark: placemark,
                                     customData: ["icon": "aqi.medium"],
                                     measurements: measurements,
                                     timestamp: Date.now)
+                                data.append(sensor)
                             }
                         }
                     }
@@ -44,7 +47,7 @@ class ParticleController: ProcessController {
         catch {
             trace.error("Error refreshing particulate matter: %@", error.localizedDescription)
         }
-        return nil
+        return data
     }
 
     private func interpolateMeasurement(measurements: [ProcessValue<Dimension>]) -> [ProcessValue<Dimension>] {
@@ -120,15 +123,15 @@ class ParticleController: ProcessController {
                         nearestStation = sortedStations.first
                     }
                     else {
-                    if let selectedStation = await Self.selectStation(stations: sortedStations) {
-                        nearestStation = selectedStation
-                    }
-                    else {
-                        nearestStation = sortedStations.first
+                        if let selectedStation = await Self.selectStation(stations: sortedStations) {
+                            nearestStation = selectedStation
+                        }
+                        else {
+                            nearestStation = sortedStations.first
+                        }
                     }
                 }
             }
-        }
         }
         catch {
             trace.error("Error fetching stations: %@", error.localizedDescription)

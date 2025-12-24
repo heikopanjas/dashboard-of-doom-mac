@@ -24,7 +24,7 @@ struct Descriptor {
 }
 
 class SurveyController: ProcessController {
-//    private let germany = Constituency(name: "Deutschland", location: Location(latitude: 51.1600585, longitude: 10.4473544))
+    //    private let germany = Constituency(name: "Deutschland", location: Location(latitude: 51.1600585, longitude: 10.4473544))
     private let germany = Constituency(name: "Deutschland", location: Location(latitude: 52.5186, longitude: 13.3763))
     #if os(iOS)
     private static let smoothingFactor = 50
@@ -42,14 +42,22 @@ class SurveyController: ProcessController {
     let officialClowns: [ProcessSelector] = [.survey(.fdp), .survey(.bsw)]
     let realClowns: [ProcessSelector] = [.survey(.fdp), .survey(.bsw), .survey(.freie_waehler), .survey(.volt)]
 
-    func refreshData(for location: Location) async throws -> ProcessSensor? {
+    func refreshData(for location: Location) async throws -> [ProcessSensor] {
+        var data: [ProcessSensor] = []
+
         let scope = UserDefaults.standard.integer(forKey: "electionPollScope")
         if scope == 0 {
-            return try await self.refreshFederalSurveys(for: location)
+            if let sensor = try await self.refreshFederalSurveys(for: location) {
+                data.append(sensor)
+            }
         }
         else {
-        return try await self.refreshLocalSurveys(for: location)
-    }
+            if let sensor = try await self.refreshLocalSurveys(for: location) {
+                data.append(sensor)
+            }
+        }
+
+        return data
     }
 
     private func refreshFederalSurveys(for location: Location) async throws -> ProcessSensor? {
@@ -284,7 +292,7 @@ class SurveyController: ProcessController {
                 for element in elements {
                     if let id = Int(element.key) {
                         if constraints.isEmpty == true || constraints.contains(id) {
-                        if let selector = ProcessSelector.Survey(rawValue: id) {
+                            if let selector = ProcessSelector.Survey(rawValue: id) {
                                 if let party = elements[element.key] as? [String: Any] {
                                     if let shortcut = party["Shortcut"] as? String {
                                         if let name = party["Name"] as? String {
@@ -405,7 +413,7 @@ class SurveyController: ProcessController {
             }
         }
 
-        if let forecast = Self.forecast(data: interpolatedMeasurement, duration: 100) {
+        if let forecast = self.forecastMeasurements(data: interpolatedMeasurement, duration: 100) {
             interpolatedMeasurement.append(contentsOf: forecast)
         }
         return gaussianSmoothing(data: interpolatedMeasurement, windowSize: 51, sigma: 13)
@@ -428,33 +436,33 @@ class SurveyController: ProcessController {
     private func aggregateMeasurement(timestamp: Date, measurements: [ProcessValue<Dimension>], quality: ProcessQuality) -> ProcessValue<Dimension>
     {
         let value = measurements.map(\.value.value).reduce(0, +) / Double(measurements.count)
-        let unit = measurements.count > 0 ? measurements[0].value.unit : UnitPercentage.percent // Use hardcoded unit if no measurements are available
+        let unit = measurements.count > 0 ? measurements[0].value.unit : UnitPercentage.percent  // Use hardcoded unit if no measurements are available
         return ProcessValue<Dimension>(value: Measurement<Dimension>(value: value, unit: unit), quality: quality, timestamp: timestamp)
     }
 
-    private static func forecast(data: [ProcessValue<Dimension>]?, duration: TimeInterval) -> [ProcessValue<Dimension>]? {
+    private func forecastMeasurements(data: [ProcessValue<Dimension>]?, duration: TimeInterval) -> [ProcessValue<Dimension>]? {
         var forecast: [ProcessValue<Dimension>]? = nil
         guard let historicalData = data, historicalData.count > 0 else {
             return nil
         }
         if let maxTimestamp = historicalData.map(\.timestamp).max() {
             let delta = Date.diff(from: maxTimestamp, to: Date.now) ?? 0
-        let unit = historicalData[0].value.unit
-        let historicalDataPoints = historicalData.map { incidence in
-            TimeSeriesPoint(timestamp: incidence.timestamp, value: incidence.value.value)
-        }
-        let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .daily)
-        do {
-            try predictor.addData(historicalDataPoints)
+            let unit = historicalData[0].value.unit
+            let historicalDataPoints = historicalData.map { incidence in
+                TimeSeriesPoint(timestamp: incidence.timestamp, value: incidence.value.value)
+            }
+            let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .daily)
+            do {
+                try predictor.addData(historicalDataPoints)
                 let prediction = try predictor.forecast(duration: (duration + Double(delta)) * 24 * 60 * 60)  // days
-            forecast = prediction.forecasts.map { forecast in
+                forecast = prediction.forecasts.map { forecast in
                     ProcessValue<Dimension>(
                         value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
+                }
             }
-        }
-        catch {
-            trace.error("Forecasting error: \(error)")
-        }
+            catch {
+                trace.error("Forecasting error: \(error)")
+            }
         }
         return forecast
     }

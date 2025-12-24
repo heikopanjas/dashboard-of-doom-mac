@@ -37,17 +37,17 @@ struct DashboardOfDoomApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Force the appearance for the entire application
-        NSApp.appearance = NSAppearance(named: .darkAqua)
+//        NSApp.appearance = NSAppearance(named: .darkAqua)
 
         // Make sure any new windows/popovers also use dark mode
-        NotificationCenter.default.addObserver(
-            forName: NSWindow.didBecomeKeyNotification,
-            object: nil,
-            queue: nil
-        ) { notification in
-            if let window = notification.object as? NSWindow {
-                window.appearance = NSAppearance(named: .darkAqua)
-            }
-        }
+//        NotificationCenter.default.addObserver(
+//            forName: NSWindow.didBecomeKeyNotification,
+//            object: nil,
+//            queue: nil
+//        ) { notification in
+//            if let window = notification.object as? NSWindow {
+//                window.appearance = NSAppearance(named: .darkAqua)
+//            }
+//        }
     }
 }

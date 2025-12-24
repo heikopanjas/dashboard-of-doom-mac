@@ -3,7 +3,8 @@ import Foundation
 import WeatherKit
 
 class WeatherController: ProcessController {
-    func refreshData(for location: Location) async throws -> ProcessSensor? {
+    func refreshData(for location: Location) async throws -> [ProcessSensor] {
+        var data: [ProcessSensor] = []
         var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
 
         let weather = try await WeatherService.shared.weather(for: CLLocation(latitude: location.latitude, longitude: location.longitude))
@@ -51,8 +52,9 @@ class WeatherController: ProcessController {
         }
 
         if let placemark = await LocationManager.reverseGeocodeLocation(latitude: location.latitude, longitude: location.longitude) {
-            return ProcessSensor(name: "", location: location, placemark: placemark, customData: ["icon": current.symbolName], measurements: measurements, timestamp: Date.now)
+            let sensor = ProcessSensor(name: "", location: location, placemark: placemark, customData: ["icon": current.symbolName], measurements: measurements, timestamp: Date.now)
+            data.append(sensor)
         }
-        return nil
+        return data
     }
 }

@@ -73,7 +73,7 @@ struct SurveyChartView: View {
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading) {
                     HStack {
-                    Text("\(self.shortLabels[selector] ?? String(format: "%d <Unknown>", selector.rawValue))")
+                        Text("\(self.shortLabels[selector] ?? String(format: "%d <Unknown>", selector.rawValue))")
                         Spacer()
                     }
                     if selector != .survey(.fascists) && selector != .survey(.clowns) && selector != .survey(.sonstige) {
@@ -98,7 +98,8 @@ struct SurveyChartView: View {
                             y: .value("Value", 5.0)
                         )
                         .interpolationMethod(.catmullRom)
-                        .foregroundStyle(Color.treshold)
+//                        .foregroundStyle(Color.treshold)
+                        .foregroundStyle(Color.red.opacity(0.67))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     }
                     AreaMark(

@@ -24,12 +24,12 @@ struct MapAnnotation: MapContent {
 
     var body: some MapContent {
         if self.simple == false {
-        Annotation("", coordinate: self.location.coordinate, anchor: self.anchor) {
-            #if os(iOS)
-            VStack {
-                Spacer()
+            Annotation("", coordinate: self.location.coordinate, anchor: self.anchor) {
+                #if os(iOS)
+                VStack {
+                    Spacer()
                     Image(systemName: self.icon)
-                Spacer()
+                    Spacer()
                     VStack(alignment: .leading) {
                         Text(self.faceplate)
                             .font(.footnote)
@@ -37,43 +37,43 @@ struct MapAnnotation: MapContent {
                     Spacer()
                 }
                 .frame(width: 81, height: 57)
-            .padding(5)
-            .padding(.horizontal, 5)
-            .background(
-                RoundedRectangle(cornerRadius: 13)
-                    .fill(Color.faceplate(selector: self.selector))
+                .padding(5)
+                .padding(.horizontal, 5)
+                .background(
+                    RoundedRectangle(cornerRadius: 13)
+                        .fill(Color.faceplate(selector: self.selector))
                         .opacity(0.5)
-            )
-            .font(.title)
-            .foregroundStyle(.black)
-            #else
-            VStack {
-                Spacer()
-                if user == true {
-                    Image(systemName: self.icon)
-                        .font(.largeTitle)
-                }
-                else {
-                        Image(systemName: self.icon)
-                        .font(.title)
-                }
-                Spacer()
-                VStack(alignment: .leading) {
-                    Text(self.faceplate)
+                )
+                .font(.title)
+                .foregroundStyle(.black)
+                #else
+                VStack {
                     Spacer()
+                    if user == true {
+                        Image(systemName: self.icon)
+                            .font(.largeTitle)
+                    }
+                    else {
+                        Image(systemName: self.icon)
+                            .font(.title)
+                    }
+                    Spacer()
+                    VStack(alignment: .leading) {
+                        Text(self.faceplate)
+                        Spacer()
+                    }
                 }
+                .frame(width: 87, height: 57)
+                .padding(5)
+                .padding(.horizontal, 5)
+                .background(
+                    RoundedRectangle(cornerRadius: 13)
+                        .fill(Color.faceplate(selector: self.selector))
+                        .opacity(0.5)
+                )
+                .foregroundStyle(.black)
+                #endif
             }
-            .frame( width: 87, height: 57)
-            .padding(5)
-            .padding(.horizontal, 5)
-            .background(
-                RoundedRectangle(cornerRadius: 13)
-                    .fill(Color.faceplate(selector: self.selector))
-                    .opacity(0.77)
-            )
-            .foregroundStyle(.black)
-            #endif
-        }
         }
         Annotation("", coordinate: self.location.coordinate, anchor: .center) {
             VStack {

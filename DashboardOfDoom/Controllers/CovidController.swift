@@ -11,40 +11,41 @@ class CovidController: ProcessController {
         self.forecastDuration = Double(Int(self.measurementDuration / 4)) * self.measurementDistance
     }
 
-    func refreshData(for location: Location) async throws -> ProcessSensor? {
-        var sensor: ProcessSensor? = nil
+    func refreshData(for location: Location) async throws -> [ProcessSensor] {
+        var data: [ProcessSensor] = []
         if let district = try await self.fetchDistrict(for: location) {
             var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
             if let incidence = try await self.fetchIncidence(for: district) {
                 var measurement: [ProcessValue<Dimension>] = []
-                measurement.append(contentsOf: Self.interpolateMeasurements(measurements: incidence, distance: self.measurementDistance))
-                measurement.append(contentsOf: Self.forecastMeasurements(data: incidence, duration: self.forecastDuration))
+                measurement.append(contentsOf: self.interpolateMeasurements(measurements: incidence, distance: self.measurementDistance))
+                measurement.append(contentsOf: self.forecastMeasurements(data: incidence, duration: self.forecastDuration))
                 measurements[.covid(.incidence)] = measurement.sorted(by: { $0.timestamp < $1.timestamp })
             }
             if let cases = try await self.fetchCases(for: district) {
                 var measurement: [ProcessValue<Dimension>] = []
-                measurement.append(contentsOf: Self.interpolateMeasurements(measurements: cases, distance: self.measurementDistance))
-                measurement.append(contentsOf: Self.forecastMeasurements(data: cases, duration: self.forecastDuration))
+                measurement.append(contentsOf: self.interpolateMeasurements(measurements: cases, distance: self.measurementDistance))
+                measurement.append(contentsOf: self.forecastMeasurements(data: cases, duration: self.forecastDuration))
                 measurements[.covid(.cases)] = measurement.sorted(by: { $0.timestamp < $1.timestamp })
             }
             if let deaths = try await self.fetchDeaths(for: district) {
                 var measurement: [ProcessValue<Dimension>] = []
-                measurement.append(contentsOf: Self.interpolateMeasurements(measurements: deaths, distance: self.measurementDistance))
-                measurement.append(contentsOf: Self.forecastMeasurements(data: deaths, duration: self.forecastDuration))
+                measurement.append(contentsOf: self.interpolateMeasurements(measurements: deaths, distance: self.measurementDistance))
+                measurement.append(contentsOf: self.forecastMeasurements(data: deaths, duration: self.forecastDuration))
                 measurements[.covid(.deaths)] = measurement.sorted(by: { $0.timestamp < $1.timestamp })
             }
             if let recovered = try await self.fetchRecovered(for: district) {
                 var measurement: [ProcessValue<Dimension>] = []
-                measurement.append(contentsOf: Self.interpolateMeasurements(measurements: recovered, distance: self.measurementDistance))
-                measurement.append(contentsOf: Self.forecastMeasurements(data: recovered, duration: self.forecastDuration))
+                measurement.append(contentsOf: self.interpolateMeasurements(measurements: recovered, distance: self.measurementDistance))
+                measurement.append(contentsOf: self.forecastMeasurements(data: recovered, duration: self.forecastDuration))
                 measurements[.covid(.recovered)] = measurement.sorted(by: { $0.timestamp < $1.timestamp })
             }
             if let placemark = await LocationManager.reverseGeocodeLocation(location: district.location) {
-                sensor = ProcessSensor(
+                let sensor = ProcessSensor(
                     name: district.name, location: district.location, placemark: placemark, customData: ["name": "COVID-19", "icon": "facemask"], measurements: measurements, timestamp: Date.now)
+                data.append(sensor)
             }
         }
-        return sensor
+        return data
     }
 
     struct District: Identifiable, Equatable {
@@ -208,7 +209,7 @@ class CovidController: ProcessController {
         return Measurement<Dimension>(value: value, unit: data.unit)
     }
 
-    private static func interpolateMeasurements(measurements: [ProcessValue<Dimension>], distance: TimeInterval) -> [ProcessValue<Dimension>] {
+    private func interpolateMeasurements(measurements: [ProcessValue<Dimension>], distance: TimeInterval) -> [ProcessValue<Dimension>] {
         var interpolatedMeasurement: [ProcessValue<Dimension>] = []
         if let start = measurements.first?.timestamp, let end = measurements.last?.timestamp {
             var current = start
@@ -232,7 +233,7 @@ class CovidController: ProcessController {
         return interpolatedMeasurement
     }
 
-    private static func forecastMeasurements(data: [ProcessValue<Dimension>], duration: TimeInterval) -> [ProcessValue<Dimension>] {
+    private func forecastMeasurements(data: [ProcessValue<Dimension>], duration: TimeInterval) -> [ProcessValue<Dimension>] {
         var forecastMeasurements: [ProcessValue<Dimension>] = []
         if data.count > 0 {
             let unit = data[0].value.unit
@@ -244,7 +245,8 @@ class CovidController: ProcessController {
                 try predictor.addData(dataPoints)
                 let prediction = try predictor.forecast(duration: duration)
                 forecastMeasurements = prediction.forecasts.map { forecast in
-                    ProcessValue<Dimension>(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
+//                    ProcessValue<Dimension>(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
+                    ProcessValue<Dimension>(value: Measurement(value: 0.0, unit: unit), quality: .unknown, timestamp: forecast.timestamp)
                 }
             }
             catch {

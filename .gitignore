@@ -144,3 +144,16 @@ Temporary Items
 *.tmp
 tmp/
 temp/
+
+# Artifacts
+*.xcarchive
+*.xcframework
+*.xcframework.zip
+*.xcframework.tar.gz
+*.xcframework.tar.bz2
+*.xcframework.tar.xz
+*.xcframework.tar.lzma
+*.xcframework.tar.lz
+*.xcframework.tar.lzip
+*.xcframework.tar.lzip
+.build/

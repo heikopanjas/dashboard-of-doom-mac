@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-@Observable class SurveyPresenter: ProcessPresenter, ProcessSubscriber {
+@Observable class SurveyPresenter: ProcessPresenter, ProcessRefreshable {
     private let controller = SurveyController()
     private let transformer = SurveyTransformer()
 
@@ -46,7 +46,7 @@ import SwiftUI
 
     func refreshData(location: Location) async -> Void {
         do {
-            if let sensor = try await controller.refreshData(for: location) {
+            if let sensor = try await controller.refreshData(for: location).first {
                 try self.transformer.renderData(sensor: sensor)
                 await self.publishData(sensor: sensor)
             }
@@ -54,10 +54,6 @@ import SwiftUI
         catch {
             trace.error("Error refreshing data: %@", error.localizedDescription)
         }
-    }
-
-    func resetData() async {
-//        await MapPresenter.shared.updateRegion(remove: self.id)
     }
 
     @MainActor func publishData(sensor: ProcessSensor) async -> Void {

@@ -39,16 +39,15 @@ struct RadiationView: View {
                 #endif
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                ForEach(ProcessSelector.Radiation.allCases, id: \.self) { selector in
-                    if self.presenter.isAvailable(selector: .radiation(selector)) {
-                        VStack {
-                            RadiationChartView(selector: .radiation(selector))
+                    ForEach(ProcessSelector.Radiation.allCases, id: \.self) { selector in
+                        if self.presenter.isAvailable(selector: .radiation(selector)) {
+                            VStack {
+                                RadiationChartView(selector: .radiation(selector))
+                            }
+                            .frame(height: 167)
                         }
-                        .frame(height: 167)
                     }
                 }
-            }
-                .padding(.vertical, 5)
             }
         }
     }

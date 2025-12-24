@@ -1,6 +1,6 @@
 import Foundation
 
-@Observable class CovidPresenter: ProcessPresenter, ProcessSubscriber {
+@Observable class CovidPresenter: ProcessPresenter, ProcessRefreshable {
     private let processController = CovidController()
     private let processTransformer = CovidTransformer()
 
@@ -12,7 +12,7 @@ import Foundation
 
     func refreshData(location: Location) async -> Void {
         do {
-            if let sensor = try await processController.refreshData(for: location) {
+            if let sensor = try await processController.refreshData(for: location).first {
                 try self.processTransformer.renderData(sensor: sensor)
                 await self.publishData(sensor: sensor)
             }
@@ -20,9 +20,6 @@ import Foundation
         catch {
             trace.error("Error refreshing data: %@", error.localizedDescription)
         }
-    }
-
-    func resetData() async {
     }
 
     @MainActor func publishData(sensor: ProcessSensor) async {
@@ -35,8 +32,8 @@ import Foundation
         self.trend = self.processTransformer.trend
 
         if UserDefaults.standard.bool(forKey: "showCovid") == true {
-        MapPresenter.shared.updateRegion(for: self.id, with: sensor.location)
-    }
+            MapPresenter.shared.updateRegion(for: self.id, with: sensor.location)
+        }
         else {
             MapPresenter.shared.updateRegion(remove: self.id)
         }

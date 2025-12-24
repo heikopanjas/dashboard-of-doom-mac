@@ -39,16 +39,15 @@ struct ParticleView: View {
                 #endif
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                ForEach(ProcessSelector.Particle.allCases, id: \.self) { selector in
-                    if self.presenter.isAvailable(selector: .particle(selector)) {
-                        VStack {
-                            ParticleChartView(selector: .particle(selector))
+                    ForEach(ProcessSelector.Particle.allCases, id: \.self) { selector in
+                        if self.presenter.isAvailable(selector: .particle(selector)) {
+                            VStack {
+                                ParticleChartView(selector: .particle(selector))
+                            }
+                            .frame(height: 167)
                         }
-                        .frame(height: 167)
                     }
                 }
-            }
-                .padding(.vertical, 5)
             }
         }
     }

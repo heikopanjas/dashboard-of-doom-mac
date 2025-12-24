@@ -39,16 +39,15 @@ struct CovidView: View {
                 #endif
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                ForEach(ProcessSelector.Covid.allCases, id: \.self) { selector in
-                    if self.presenter.isAvailable(selector: .covid(selector)) {
-                        VStack {
-                            CovidChartView(selector: .covid(selector))
+                    ForEach(ProcessSelector.Covid.allCases, id: \.self) { selector in
+                        if self.presenter.isAvailable(selector: .covid(selector)) {
+                            VStack {
+                                CovidChartView(selector: .covid(selector))
+                            }
+                            .frame(height: 167)
                         }
-                        .frame(height: 167)
                     }
                 }
-            }
-                .padding(.vertical, 5)
             }
         }
     }

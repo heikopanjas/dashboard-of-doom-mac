@@ -1,7 +1,6 @@
-
 import SwiftUI
 
-class SettingsPresenter: ObservableObject {
+class SettingsPresenter {
     @AppStorage("showWeather") var showWeather: Bool = true
     @AppStorage("showCovid") var showCovid: Bool = true
     @AppStorage("showLevels") var showLevels: Bool = true
@@ -13,4 +12,3 @@ class SettingsPresenter: ObservableObject {
     @AppStorage("nearestParticleSensor") var nearestParticleSensor: Bool = false
     @AppStorage("electionPollScope") var electionPollScope: Int = 1
 }
-

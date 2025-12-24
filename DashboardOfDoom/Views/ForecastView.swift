@@ -39,16 +39,15 @@ struct ForecastView: View {
                 #endif
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                ForEach(ProcessSelector.Forecast.allCases, id: \.self) { selector in
-                    if self.presenter.isAvailable(selector: .forecast(selector)) {
-                        VStack {
-                            ForecastChartView(selector: .forecast(selector))
+                    ForEach(ProcessSelector.Forecast.allCases, id: \.self) { selector in
+                        if self.presenter.isAvailable(selector: .forecast(selector)) {
+                            VStack {
+                                ForecastChartView(selector: .forecast(selector))
+                            }
+                            .frame(height: 167)
                         }
-                        .frame(height: 167)
                     }
                 }
-            }
-                .padding(.vertical, 5)
             }
         }
     }

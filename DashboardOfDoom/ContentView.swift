@@ -87,11 +87,14 @@ struct ContentView: View {
     var body: some View {
         VStack {
             HStack {
-                Image("dashboard-of-doom-logo")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 200, height: 34)
+                Text("Dashboard of Doom")
+                    .font(.headline)
                     .padding(.top, 10)
+//                Image("dashboard-of-doom-logo")
+//                    .resizable()
+//                    .aspectRatio(contentMode: .fit)
+//                    .frame(width: 200, height: 34)
+//                    .padding(.top, 10)
                 Spacer()
                 HStack(alignment: .bottom) {
                     Menu {
@@ -138,7 +141,7 @@ struct ContentView: View {
                             .padding(.trailing, 10)
                     }
                     Divider()
-                    ContentPanelView(label: "Water", icon: "water.waves") {
+                    ContentPanelView(label: "Level", icon: "water.waves") {
                         LevelView()
                             .padding(5)
                             .padding(.trailing, 10)
@@ -166,8 +169,8 @@ struct ContentView: View {
             .padding(.bottom, 10)
         }
         .frame(width: 1024, height: 1024)
-        .preferredColorScheme(.dark)
-        .foregroundStyle(colorScheme == .dark ? Color.cyan : Color.black)
-        .background(colorScheme == .dark ? Color.black : Color.white)
+//        .preferredColorScheme(.dark)
+//        .foregroundStyle(colorScheme == .dark ? Color.cyan : Color.black)
+//        .background(colorScheme == .dark ? Color.black : Color.white)
     }
 }
