@@ -1,6 +1,6 @@
 # Agent Instructions for Dashboard of Doom (macOS)
 
-*Last updated: November 4, 2025 (Evening - Build System)*
+*Last updated: December 24, 2025 (Settings Window Implementation)*
 
 ## Project Overview
 
@@ -370,6 +370,14 @@ Remember: This application focuses specifically on German environmental data and
 ---
 
 ## Recent Updates & Decisions
+
+### December 24, 2025 (Settings Window Implementation)
+- **Settings Window Architecture**: Implemented NSPanel-based settings window for menu bar extra application
+- **Window Ordering Solution**: Used NSPanel with .popUpMenu level and NSRunningApplication activation to ensure settings window appears in front
+- **AppDelegate Environment Injection**: Made AppDelegate @Observable and passed through SwiftUI environment to access from menu bar extra views
+- **Technical Details**: SwiftUI's Settings scene incompatible with menu bar extras for proper window ordering. NSPanel with NSHostingController provides reliable control over window levels and activation
+- **Implementation Pattern**: Settings persist via @AppStorage directly in SettingsView, no presenter needed. Panel reused across invocations via persistent AppDelegate property
+- **Reasoning**: Menu bar extras lack parent windows for activation context. Direct NSPanel management with aggressive activation (NSRunningApplication.current.activate) and high window level (.popUpMenu) ensures settings appear reliably in front of other windows
 
 ### November 4, 2025 (Evening Update - Build System)
 - **Build Configuration**: Added comprehensive .gitignore file for Xcode project

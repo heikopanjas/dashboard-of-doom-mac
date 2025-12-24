@@ -83,6 +83,7 @@ struct ContentPanelView<Content: View>: View {
 struct ContentView: View {
     @Environment(\.colorScheme) var colorScheme
     @Environment(WeatherPresenter.self) private var viewModel
+    @Environment(AppDelegate.self) private var appDelegate
 
     var body: some View {
         VStack {
@@ -99,6 +100,7 @@ struct ContentView: View {
                 HStack(alignment: .bottom) {
                     Menu {
                         Button("Settings...") {
+                            appDelegate.showSettings()
                         }
                         .keyboardShortcut(",", modifiers: .command)
                         Divider()
