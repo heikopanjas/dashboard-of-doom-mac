@@ -86,28 +86,33 @@ struct ContentView: View {
     var body: some View {
         VStack {
             HStack {
-                Text("Dashboard of Doom")
-                    .font(.headline)
-                    .padding(.top, 10)
-                //                Image("dashboard-of-doom-logo")
-                //                    .resizable()
-                //                    .aspectRatio(contentMode: .fit)
-                //                    .frame(width: 200, height: 34)
-                //                    .padding(.top, 10)
+                if colorScheme == .light {
+                    Text("Dashboard of Doom")
+                        .font(.headline)
+                        .padding(.top, 10)
+                }
+                else {
+                    Image("dashboard-of-doom-logo")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 200, height: 34)
+                        .padding(.top, 10)
+                }
                 Spacer()
-                HStack(alignment: .bottom) {
-                    Menu {
-                        Button("Settings...") {
-                            appDelegate.showSettings()
-                        }
-                        .keyboardShortcut(",", modifiers: .command)
-                        Divider()
-                        Button("Quit") {
-                            NSApplication.shared.terminate(nil)
-                        }
-                        .keyboardShortcut("q", modifiers: .command)
+                HStack(spacing: 12) {
+                    Button {
+                        appDelegate.showSettings()
                     } label: {
                         Image(systemName: "ellipsis.circle")
+                            .imageScale(.large)
+                    }
+                    .buttonStyle(GrowingButtonStyle())
+                    .focusable(false)
+
+                    Button {
+                        NSApplication.shared.terminate(nil)
+                    } label: {
+                        Image(systemName: "togglepower")
                             .imageScale(.large)
                     }
                     .buttonStyle(GrowingButtonStyle())
@@ -161,7 +166,10 @@ struct ContentView: View {
                             .padding(.trailing, 10)
                     }
                 }
+                .background(Color(light: .white, dark: Color(hex: "#000000")))
             }
+            .scrollContentBackground(.hidden)
+            .background(Color(light: .white, dark: Color(hex: "#000000")))
             .padding(.bottom, 10)
         }
         .frame(width: 800, height: 859)

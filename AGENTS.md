@@ -1,6 +1,6 @@
 # Agent Instructions for Dashboard of Doom (macOS)
 
-*Last updated: December 24, 2025 (Settings Window Implementation)*
+*Last updated: January 9, 2026 (ContentView Header UI Simplification)*
 
 ## Project Overview
 
@@ -370,6 +370,15 @@ Remember: This application focuses specifically on German environmental data and
 ---
 
 ## Recent Updates & Decisions
+
+### January 9, 2026 (ContentView Header UI Simplification)
+- **Header Title Display**: Light mode shows "Dashboard of Doom" text, dark mode shows the logo image (`dashboard-of-doom-logo`)
+- **Direct Action Buttons**: Replaced dropdown menu with two direct action buttons in the header bar:
+  - `ellipsis.circle` button → Opens settings window via `appDelegate.showSettings()`
+  - `togglepower` button → Quits application via `NSApplication.shared.terminate(nil)`
+- **Removed AppMenuView**: Deleted `Views/AppMenuView.swift` - buttons now implemented directly in `ContentView.swift`
+- **UX Improvement**: Simplified interaction by eliminating popover menu, saving a click for common actions
+- **Reasoning**: Direct buttons provide faster access to settings and quit functionality without needing a menu. Color scheme-aware header title maintains brand identity while optimizing for dark mode aesthetics
 
 ### December 24, 2025 (Settings Window Implementation)
 - **Settings Window Architecture**: Implemented NSPanel-based settings window for menu bar extra application

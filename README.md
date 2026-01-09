@@ -40,9 +40,10 @@
 
 - **Lightweight Menu Bar Extra**: Quick access to current conditions from system tray
 - **Live Temperature Display**: Real-time temperature in menu bar status item
-- **Popover Interface**: Quick data access without switching applications
+- **Streamlined Header Bar**: Direct action buttons for settings and quit (no menu needed)
+- **Adaptive Branding**: Text title in light mode, logo image in dark mode
 - **Settings Window**: Comprehensive configuration for preferences and data sources
-- **Dark Mode Optimized**: Native macOS appearance integration with dynamic theme support
+- **Dark Mode Optimized**: Native macOS appearance with pure black backgrounds
 - **System Integration**: Native macOS notifications and alerts
 - **Low Resource Usage**: Optimized for background operation with minimal system impact
 
@@ -143,7 +144,7 @@ dashboard-of-doom-mac/
 │   ├── Utilities/                    # Helper functions and tools
 │   ├── Assets.xcassets/              # App icons and image assets
 │   ├── DashboardOfDoomApp.swift      # App entry point
-│   ├── ContentView.swift             # Main application view
+│   ├── ContentView.swift             # Main view with header bar and panels
 │   ├── LocationManager.swift         # Location services manager
 │   ├── NetworkManager.swift          # Network connectivity monitor
 │   ├── ProcessManager.swift          # Subscription coordinator
