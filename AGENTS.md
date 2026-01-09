@@ -1,6 +1,6 @@
 # Agent Instructions for Dashboard of Doom (macOS)
 
-*Last updated: January 9, 2026 (ContentView Header UI Simplification)*
+*Last updated: January 9, 2026 (Settings Reactivity - Sensor and Scope Options)*
 
 ## Project Overview
 
@@ -370,6 +370,24 @@ Remember: This application focuses specifically on German environmental data and
 ---
 
 ## Recent Updates & Decisions
+
+### January 9, 2026 (Settings Reactivity - Sensor and Scope Options)
+- **Bug Fix**: "Use Nearest Sensor" toggles (Level/Particles) and "Federal vs State" poll scope now trigger immediate data refresh
+- **Root Cause**: Settings were only read during periodic data refresh, not when user changed them in settings window
+- **Solution**: 
+  - Added presenter references to `SettingsView` (`levelPresenter`, `particlePresenter`, `surveyPresenter`)
+  - Added `.onChange` modifiers that call `ProcessManager.shared.refreshSubscription(subscriber:)` when settings change
+  - Modified `AppDelegate` to store presenter references, passed from main App via `.onAppear`
+- **Files Changed**: `SettingsView.swift`, `DashboardOfDoomApp.swift`
+- **Reasoning**: When behavioral settings change (not just visibility), the data needs to be re-fetched with the new parameters. Direct presenter access enables immediate refresh
+
+### January 9, 2026 (MapView Settings Reactivity Fix)
+- **Bug Fix**: Map annotations and map region now update immediately when services are enabled/disabled in settings
+- **Root Cause**: `MapView` was using direct `UserDefaults.standard.bool(forKey:)` calls which SwiftUI does not observe for changes
+- **Solution**: Added `@AppStorage` property wrappers to `MapView` for all service visibility settings (`showWeather`, `showCovid`, `showLevels`, `showRadiation`, `showParticles`, `showElectionPolls`)
+- **Map Region Updates**: Added `.onChange` modifiers that call `MapPresenter.shared.updateRegion()` when settings change, ensuring the map zooms to fit visible annotations
+- **Technical Detail**: `@AppStorage` integrates with SwiftUI's observation system, triggering view re-renders when values change. The `updateMapRegion()` helper registers or removes presenter locations from the `MapPresenter` visible region
+- **Reasoning**: Consistent use of `@AppStorage` across views that depend on the same settings ensures reactive UI updates without manual notification mechanisms
 
 ### January 9, 2026 (ContentView Header UI Simplification)
 - **Header Title Display**: Light mode shows "Dashboard of Doom" text, dark mode shows the logo image (`dashboard-of-doom-logo`)

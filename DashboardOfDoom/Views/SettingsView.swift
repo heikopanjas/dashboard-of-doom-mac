@@ -84,6 +84,11 @@ struct RefreshRatePicker: View {
 struct SettingsView: View {
     @State private var selectedTab: SettingsTab = .general
 
+    // Presenters for triggering refreshes when settings change
+    var levelPresenter: LevelPresenter?
+    var particlePresenter: ParticlePresenter?
+    var surveyPresenter: SurveyPresenter?
+
     // Enable toggles
     @AppStorage("showWeather") private var showWeather: Bool = true
     @AppStorage("showCovid") private var showCovid: Bool = true
@@ -153,6 +158,21 @@ struct SettingsView: View {
         }
         .frame(width: 660, height: 400)
         .background(Color(light: .white, dark: Color(hex: "#000000")))
+        .onChange(of: nearestLevelSensor) { _, _ in
+            if let presenter = levelPresenter {
+                ProcessManager.shared.refreshSubscription(subscriber: presenter)
+            }
+        }
+        .onChange(of: nearestParticleSensor) { _, _ in
+            if let presenter = particlePresenter {
+                ProcessManager.shared.refreshSubscription(subscriber: presenter)
+            }
+        }
+        .onChange(of: electionPollScope) { _, _ in
+            if let presenter = surveyPresenter {
+                ProcessManager.shared.refreshSubscription(subscriber: presenter)
+            }
+        }
     }
 
     // MARK: - Tab Content Views

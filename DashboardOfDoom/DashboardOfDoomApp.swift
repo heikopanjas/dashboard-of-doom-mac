@@ -26,6 +26,12 @@ struct DashboardOfDoomApp: App {
                 .environment(surveyPresenter)
                 .environment(colorPresenter)
                 .environment(appDelegate)
+                .onAppear {
+                    // Provide presenters to AppDelegate for settings window
+                    appDelegate.levelPresenter = levelPresenter
+                    appDelegate.particlePresenter = particlePresenter
+                    appDelegate.surveyPresenter = surveyPresenter
+                }
         } label: {
             Text(weatherViewModel.faceplate[.weather(.temperature)] ?? "n/a")
                 .font(.system(.body, design: .monospaced))
@@ -38,6 +44,11 @@ struct DashboardOfDoomApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     var settingsPanel: NSPanel?
     private var themeObserver: NSObjectProtocol?
+
+    // Presenters for settings view to trigger refreshes
+    var levelPresenter: LevelPresenter?
+    var particlePresenter: ParticlePresenter?
+    var surveyPresenter: SurveyPresenter?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Start network monitoring immediately to ensure connectivity before API calls
@@ -80,7 +91,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
 
             // Create new settings panel
-            let settingsView = SettingsView()
+            let settingsView = SettingsView(
+                levelPresenter: self.levelPresenter,
+                particlePresenter: self.particlePresenter,
+                surveyPresenter: self.surveyPresenter
+            )
             let hostingController = NSHostingController(rootView: settingsView)
             hostingController.view.frame = NSRect(x: 0, y: 0, width: 660, height: 400)
 
