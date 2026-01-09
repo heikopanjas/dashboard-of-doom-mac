@@ -44,11 +44,11 @@ class ForecastController: ProcessController {
             }
             measurements[.forecast(.precipitationAmount)] = precipitationAmount
 
-//            let snowfallAmount = forecast.map {
-//                ProcessValue<Dimension>(
-//                    value: Measurement(value: $0.snowfallAmount.value, unit: $0.snowfallAmount.unit), quality: .uncertain, timestamp: $0.date)
-//            }
-//            measurements[.forecast(.snowfallAmount)] = snowfallAmount
+            let snowfallAmount = forecast.map {
+                ProcessValue<Dimension>(
+                    value: Measurement(value: $0.snowfallAmount.value, unit: $0.snowfallAmount.unit), quality: .uncertain, timestamp: $0.date)
+            }
+            measurements[.forecast(.snowfallAmount)] = snowfallAmount
 
             let pressure = forecast.map {
                 ProcessValue<Dimension>(

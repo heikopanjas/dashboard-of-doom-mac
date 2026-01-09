@@ -13,6 +13,7 @@ struct ForecastChartView: View {
         .forecast(.humidity): "Humidity",
         .forecast(.precipitationChance): "Precipitation Chance",
         .forecast(.precipitationAmount): "Precipitation Amount",
+        .forecast(.snowfallAmount): "Snowfall Amount",
         .forecast(.pressure): "Pressure",
         .forecast(.visibility): "Visibility",
         .forecast(.cloudCover): "Cloud Cover",

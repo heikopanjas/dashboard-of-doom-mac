@@ -32,11 +32,12 @@ enum ProcessSelector: Hashable {
         case humidity = 3
         case precipitationChance = 4
         case precipitationAmount = 5
-        case pressure = 6
-        case visibility = 7
-        case cloudCover = 8
-        case windSpeed = 9
-        case windGust = 10
+        case snowfallAmount = 6
+        case pressure = 7
+        case visibility = 8
+        case cloudCover = 9
+        case windSpeed = 10
+        case windGust = 11
     }
 
     enum Covid: Int, CaseIterable {

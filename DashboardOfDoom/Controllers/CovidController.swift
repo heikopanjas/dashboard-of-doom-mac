@@ -15,25 +15,35 @@ class CovidController: ProcessController {
         var data: [ProcessSensor] = []
         if let district = try await self.fetchDistrict(for: location) {
             var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
-            if let incidence = try await self.fetchIncidence(for: district) {
+
+            // Launch all fetches in parallel
+            async let incidenceData = self.fetchIncidence(for: district)
+            async let casesData = self.fetchCases(for: district)
+            async let deathsData = self.fetchDeaths(for: district)
+            async let recoveredData = self.fetchRecovered(for: district)
+
+            // Await all results together
+            let (incidence, cases, deaths, recovered) = try await (incidenceData, casesData, deathsData, recoveredData)
+
+            if let incidence = incidence {
                 var measurement: [ProcessValue<Dimension>] = []
                 measurement.append(contentsOf: self.interpolateMeasurements(measurements: incidence, distance: self.measurementDistance))
                 measurement.append(contentsOf: self.forecastMeasurements(data: incidence, duration: self.forecastDuration))
                 measurements[.covid(.incidence)] = measurement.sorted(by: { $0.timestamp < $1.timestamp })
             }
-            if let cases = try await self.fetchCases(for: district) {
+            if let cases = cases {
                 var measurement: [ProcessValue<Dimension>] = []
                 measurement.append(contentsOf: self.interpolateMeasurements(measurements: cases, distance: self.measurementDistance))
                 measurement.append(contentsOf: self.forecastMeasurements(data: cases, duration: self.forecastDuration))
                 measurements[.covid(.cases)] = measurement.sorted(by: { $0.timestamp < $1.timestamp })
             }
-            if let deaths = try await self.fetchDeaths(for: district) {
+            if let deaths = deaths {
                 var measurement: [ProcessValue<Dimension>] = []
                 measurement.append(contentsOf: self.interpolateMeasurements(measurements: deaths, distance: self.measurementDistance))
                 measurement.append(contentsOf: self.forecastMeasurements(data: deaths, duration: self.forecastDuration))
                 measurements[.covid(.deaths)] = measurement.sorted(by: { $0.timestamp < $1.timestamp })
             }
-            if let recovered = try await self.fetchRecovered(for: district) {
+            if let recovered = recovered {
                 var measurement: [ProcessValue<Dimension>] = []
                 measurement.append(contentsOf: self.interpolateMeasurements(measurements: recovered, distance: self.measurementDistance))
                 measurement.append(contentsOf: self.forecastMeasurements(data: recovered, duration: self.forecastDuration))

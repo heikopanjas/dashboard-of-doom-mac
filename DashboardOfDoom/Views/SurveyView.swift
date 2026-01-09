@@ -40,7 +40,7 @@ struct SurveyView: View {
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                     ForEach(ProcessSelector.Survey.allCases, id: \.self) { selector in
-                        if self.presenter.isAvailable(selector: .survey(selector)) {
+                        if self.presenter.isAvailable(selector: .survey(selector), treshold: 5.0) {
                             VStack {
                                 SurveyChartView(selector: .survey(selector))
                             }

@@ -41,7 +41,7 @@ struct RadiationChartView: View {
                         y: .value("Radiation", measurement.value.value)
                     )
                     .symbolSize(CGSize(width: 7, height: 7))
-                    .annotation(position: .topLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
+                    .annotation(position: .topTrailing, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
                         VStack {
                             Text(String(format: "%@ %@", measurement.timestamp.dateString(), measurement.timestamp.timeString()))
                                 .font(.footnote)

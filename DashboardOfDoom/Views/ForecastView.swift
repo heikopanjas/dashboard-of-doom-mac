@@ -40,7 +40,7 @@ struct ForecastView: View {
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                     ForEach(ProcessSelector.Forecast.allCases, id: \.self) { selector in
-                        if self.presenter.isAvailable(selector: .forecast(selector)) {
+                        if self.presenter.isAvailable(selector: .forecast(selector), treshold: -33.0) {
                             VStack {
                                 ForecastChartView(selector: .forecast(selector))
                             }

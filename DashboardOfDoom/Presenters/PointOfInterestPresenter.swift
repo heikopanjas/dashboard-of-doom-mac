@@ -3,7 +3,7 @@ import SwiftUI
 
 @Observable class PointOfInterestPresenter: Identifiable, LocationManagerDelegate {
     let id = UUID()
-    
+
     private let pointOfInterestController = PointOfInterestController()
     private let locationManager = LocationManager()
     private var location: Location?
@@ -27,11 +27,22 @@ import SwiftUI
 
     @MainActor func refresh() async {
         if let location = self.location {
-            self.pharmacies = await self.pointOfInterestController.fetchPharmacies(location: location)
-            self.hospitals = await self.pointOfInterestController.fetchHospitals(location: location)
-            self.liquorStores = await self.pointOfInterestController.fetchLiquorStores(location: location)
-            self.funeralDirectors = await self.pointOfInterestController.fetchFuneralDirectors(location: location)
-            self.cemeteries = await self.pointOfInterestController.fetchCemeteries(location: location)
+            // Launch all fetches in parallel
+            async let pharmaciesData = self.pointOfInterestController.fetchPharmacies(location: location)
+            async let hospitalsData = self.pointOfInterestController.fetchHospitals(location: location)
+            async let liquorStoresData = self.pointOfInterestController.fetchLiquorStores(location: location)
+            async let funeralDirectorsData = self.pointOfInterestController.fetchFuneralDirectors(location: location)
+            async let cemeteriesData = self.pointOfInterestController.fetchCemeteries(location: location)
+
+            // Await all results together
+            let (pharmacies, hospitals, liquorStores, funeralDirectors, cemeteries) = await (pharmaciesData, hospitalsData, liquorStoresData, funeralDirectorsData, cemeteriesData)
+
+            // Assign results to properties
+            self.pharmacies = pharmacies
+            self.hospitals = hospitals
+            self.liquorStores = liquorStores
+            self.funeralDirectors = funeralDirectors
+            self.cemeteries = cemeteries
         }
     }
 }
@@ -45,4 +56,3 @@ extension PointOfInterestPresenter {
         )
     }
 }
-

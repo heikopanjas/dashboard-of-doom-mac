@@ -58,7 +58,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func showSettings() {
         DispatchQueue.main.async {
             // Force activate the app first using NSRunningApplication
-            NSRunningApplication.current.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+            NSRunningApplication.current.activate(options: [.activateAllWindows])
 
             if let panel = self.settingsPanel {
                 // Panel already exists, just show it

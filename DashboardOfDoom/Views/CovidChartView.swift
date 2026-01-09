@@ -44,7 +44,7 @@ struct CovidChartView: View {
                         y: .value("Value", measurement.value.value)
                     )
                     .symbolSize(CGSize(width: 7, height: 7))
-                    .annotation(position: .topLeading, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
+                    .annotation(position: .topTrailing, spacing: 0, overflowResolution: .init(x: .fit, y: .fit)) {
                         VStack {
                             Text(measurement.timestamp.absoluteString())
                                 .font(.footnote)
