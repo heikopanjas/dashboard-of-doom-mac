@@ -1,6 +1,6 @@
 # Agent Instructions for Dashboard of Doom (macOS)
 
-*Last updated: January 9, 2026 (Settings Reactivity - Sensor and Scope Options)*
+*Last updated: January 9, 2026 (ProcessManager Timer RunLoop Fix)*
 
 ## Project Overview
 
@@ -370,6 +370,14 @@ Remember: This application focuses specifically on German environmental data and
 ---
 
 ## Recent Updates & Decisions
+
+### January 9, 2026 (ProcessManager Timer RunLoop Fix)
+- **Critical Bug Fix**: Subscription system timer was never firing, causing data to never update after initial load
+- **Root Cause**: `Timer.scheduledTimer` was called from inside a `Task` block in `ProcessManager.init()`. Tasks run on a cooperative thread pool where threads lack an active RunLoop, so the timer was scheduled but never fired
+- **Solution**: Wrapped timer scheduling in `DispatchQueue.main.async` to ensure the timer is added to the main RunLoop
+- **Files Changed**: `ProcessManager.swift`
+- **Added Logging**: Added trace log in `updateSubscriptions()` to help verify timer is firing
+- **Reasoning**: Foundation `Timer` requires an active RunLoop on its thread. The main thread always has an active RunLoop, ensuring reliable timer execution
 
 ### January 9, 2026 (Settings Reactivity - Sensor and Scope Options)
 - **Bug Fix**: "Use Nearest Sensor" toggles (Level/Particles) and "Federal vs State" poll scope now trigger immediate data refresh

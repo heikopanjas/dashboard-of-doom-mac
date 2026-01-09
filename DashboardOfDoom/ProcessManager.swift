@@ -38,12 +38,17 @@ public class ProcessManager: Identifiable, LocationManagerDelegate {
     }
 
     private func startUpdateTimer() {
-        Timer.scheduledTimer(withTimeInterval: self.updateInterval, repeats: true) { _ in
-            self.updateSubscriptions()
+        // Timer must be scheduled on main RunLoop to fire properly
+        // When called from a Task, we may be on a background thread without an active RunLoop
+        DispatchQueue.main.async {
+            Timer.scheduledTimer(withTimeInterval: self.updateInterval, repeats: true) { _ in
+                self.updateSubscriptions()
+            }
         }
     }
 
     private func updateSubscriptions() {
+        trace.debug("updateSubscriptions() timer fired, checking \(self.subscriptions.count) subscriptions")
         for subscription in self.subscriptions {
             subscription.update(timeout: self.updateInterval)
             if subscription.isPending() {
