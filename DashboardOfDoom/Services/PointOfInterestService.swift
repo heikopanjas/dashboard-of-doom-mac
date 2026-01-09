@@ -18,13 +18,19 @@ class PointOfInterestService {
             )->.pharmacies;
             .pharmacies out center tags qt;
             """
-        guard let url = URL(string: "https://overpass-api.de/api/interpreter?data=\(query)") else {
+        guard let urlString = "https://overpass-api.de/api/interpreter?data=\(query)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
             return nil
         }
         trace.debug("Fetching nearby pharmacies...")
-        let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
-        trace.debug("Fetched nearby pharmacies.")
-        return data
+        let result = await NetworkManager.shared.performDataRequest(urlString: urlString)
+        switch result {
+            case .success(let data):
+                trace.debug("Fetched nearby pharmacies.")
+                return data
+            case .failure(let error):
+                trace.error("Failed to fetch nearby pharmacies: \(error.localizedDescription)")
+                return nil
+        }
     }
 
     //[out:json][timeout:25][bbox:52.47099,13.36611,52.56901,13.44389];
@@ -44,13 +50,19 @@ class PointOfInterestService {
             )->.hospitals;
             .hospitals out center tags qt;
             """
-        guard let url = URL(string: "https://overpass-api.de/api/interpreter?data=\(query)") else {
+        guard let urlString = "https://overpass-api.de/api/interpreter?data=\(query)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
             return nil
         }
         trace.debug("Fetching nearby hospitals...")
-        let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
-        trace.debug("Fetched nearby hospitals.")
-        return data
+        let result = await NetworkManager.shared.performDataRequest(urlString: urlString)
+        switch result {
+            case .success(let data):
+                trace.debug("Fetched nearby hospitals.")
+                return data
+            case .failure(let error):
+                trace.error("Failed to fetch nearby hospitals: \(error.localizedDescription)")
+                return nil
+        }
     }
 
 //    [out:json][timeout:25][bbox:52.47099,13.36611,52.56901,13.44389];
@@ -78,13 +90,19 @@ class PointOfInterestService {
             )->.spatis;
             .spatis out center tags qt;
             """
-        guard let url = URL(string: "https://overpass-api.de/api/interpreter?data=\(query)") else {
+        guard let urlString = "https://overpass-api.de/api/interpreter?data=\(query)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
             return nil
         }
         trace.debug("Fetching nearby liquor stores...")
-        let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
-        trace.debug("Fetched nearby liquor stores.")
-        return data
+        let result = await NetworkManager.shared.performDataRequest(urlString: urlString)
+        switch result {
+            case .success(let data):
+                trace.debug("Fetched nearby liquor stores.")
+                return data
+            case .failure(let error):
+                trace.error("Failed to fetch nearby liquor stores: \(error.localizedDescription)")
+                return nil
+        }
     }
 
     //[out:json][timeout:25][bbox:52.47099,13.36611,52.56901,13.44389];
@@ -108,13 +126,19 @@ class PointOfInterestService {
             )->.funeral_homes;
             .funeral_homes out center tags qt;
             """
-        guard let url = URL(string: "https://overpass-api.de/api/interpreter?data=\(query)") else {
+        guard let urlString = "https://overpass-api.de/api/interpreter?data=\(query)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
             return nil
         }
         trace.debug("Fetching nearby funeral directors...")
-        let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
-        trace.debug("Fetched nearby funeral directors.")
-        return data
+        let result = await NetworkManager.shared.performDataRequest(urlString: urlString)
+        switch result {
+            case .success(let data):
+                trace.debug("Fetched nearby funeral directors.")
+                return data
+            case .failure(let error):
+                trace.error("Failed to fetch nearby funeral directors: \(error.localizedDescription)")
+                return nil
+        }
     }
 
     //[out:json][timeout:25][bbox:52.47099,13.36611,52.56901,13.44389];
@@ -134,14 +158,18 @@ class PointOfInterestService {
             )->.graveyards;
             .graveyards out center tags qt;
             """
-        guard let url = URL(string: "https://overpass-api.de/api/interpreter?data=\(query)") else {
+        guard let urlString = "https://overpass-api.de/api/interpreter?data=\(query)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
             return nil
         }
         trace.debug("Fetching nearby cemeteries...")
-        let (data, _) = try await URLSession.shared.dataWithRetry(from: url)
-        trace.debug("Fetched nearby cemeteries.")
-        return data
+        let result = await NetworkManager.shared.performDataRequest(urlString: urlString)
+        switch result {
+            case .success(let data):
+                trace.debug("Fetched nearby cemeteries.")
+                return data
+            case .failure(let error):
+                trace.error("Failed to fetch nearby cemeteries: \(error.localizedDescription)")
+                return nil
+        }
     }
 }
-
-

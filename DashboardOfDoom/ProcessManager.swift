@@ -10,9 +10,34 @@ public class ProcessManager: Identifiable, LocationManagerDelegate {
     private let updateInterval: TimeInterval = 60
     private var subscriptions: [ProcessSubscription] = []
     private var subscribers: [UUID: any ProcessRefreshable] = [:]
+    private var hasPerformedInitialRefresh: Bool = false
 
     private init() {
         self.locationManager.delegate = self
+
+        // Wait for network to be ready before starting timer
+        Task {
+            await waitForNetworkReady()
+            startUpdateTimer()
+        }
+    }
+
+    private func waitForNetworkReady() async {
+        // Ensure NetworkManager is started
+        await NetworkManager.shared.startMonitoring()
+
+        // Wait up to 30 seconds for initial network availability
+        for _ in 0..<30 {
+            let isConnected = await NetworkManager.shared.isConnected
+            if isConnected {
+                return
+            }
+            try? await Task.sleep(for: .seconds(1))
+        }
+        // Continue anyway after timeout
+    }
+
+    private func startUpdateTimer() {
         Timer.scheduledTimer(withTimeInterval: self.updateInterval, repeats: true) { _ in
             self.updateSubscriptions()
         }
@@ -34,7 +59,9 @@ public class ProcessManager: Identifiable, LocationManagerDelegate {
 
     public func refreshSubscriptions() {
         if let location = self.location {
+            trace.debug("refreshSubscriptions() called, subscribers count: \(self.subscribers.count)")
             for delegate in self.subscribers.values {
+                trace.debug("Calling refreshData on subscriber: \(delegate.id)")
                 Task {
                     await delegate.refreshData(location: location)
                 }
@@ -60,8 +87,18 @@ public class ProcessManager: Identifiable, LocationManagerDelegate {
     }
 
     func locationManager(didUpdateLocation location: Location) {
+        trace.debug("ProcessManager received location update: \(location.latitude), \(location.longitude)")
         self.location = location
-        self.refreshSubscriptions()
+
+        // Only perform initial refresh once, when we first get a location
+        // Subsequent location updates don't trigger refreshes - the timer handles those
+        if !hasPerformedInitialRefresh {
+            hasPerformedInitialRefresh = true
+            trace.debug("Performing initial data refresh with location")
+            self.refreshSubscriptions()
+        } else {
+            trace.debug("Ignoring location update (initial refresh already performed)")
+        }
     }
 
     func add(subscriber: any ProcessRefreshable, timeout: TimeInterval) {

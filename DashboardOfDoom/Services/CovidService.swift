@@ -13,70 +13,80 @@ class CovidService {
 
         let urlString = "https://overpass-api.de/api/interpreter?data=\(encodedQuery)"
 
-        trace.debug("Fetching covid measurement districts...")
+        trace.debug("Fetching covid districts near location: \(location.latitude), \(location.longitude), radius: \(radius)m")
+        trace.debug("Overpass API URL length: \(urlString.count) chars")
+
+        let networkStatus = await NetworkManager.shared.isConnected
+        trace.debug("Network status before districts request: \(networkStatus ? "connected" : "disconnected")")
+
         let result = await NetworkManager.shared.performDataRequest(urlString: urlString)
         switch result {
             case .success(let data):
-        trace.debug("Fetched covid measurement districts.")
-        return data
+                trace.debug("Fetched covid districts successfully, data size: \(data.count) bytes")
+                return data
             case .failure(let error):
-                trace.error("Failed to fetch covid measurement districts: \(error.localizedDescription)")
+                let networkStatusAfter = await NetworkManager.shared.isConnected
+                trace.error("Failed to fetch covid districts - Error: \(error)")
+                trace.error("  Location: \(location.latitude), \(location.longitude), radius: \(radius)m")
+                trace.error("  Network before: \(networkStatus), after: \(networkStatusAfter)")
+                trace.error("  URL length: \(urlString.count) chars")
+                trace.error("  Query: \(query)")
                 return nil
         }
     }
 
     static func fetchIncidence(id: String, duration: Double = 100.0) async throws -> Data? {
-        trace.debug("Fetching covid incidence measurements...")
+        trace.debug("Fetching covid incidence for district: \(id)")
         let urlString = "https://api.corona-zahlen.org/districts/\(id)/history/incidence/\(Int(duration))"
         let result = await NetworkManager.shared.performDataRequest(urlString: urlString)
         switch result {
             case .success(let data):
-        trace.debug("Fetched covid incidence measurements.")
+        trace.debug("Fetched covid incidence for district: \(id)")
         return data
             case .failure(let error):
-                trace.error("Failed to fetch covid incidence measurements: \(error.localizedDescription)")
+                trace.error("Failed to fetch covid incidence for district: \(id): \(error.localizedDescription)")
                 return nil
         }
     }
 
     static func fetchCases(id: String, duration: Double = 100.0) async throws -> Data? {
-        trace.debug("Fetching covid cases measurements...")
+        trace.debug("Fetching covid cases for district: \(id)")
         let urlString = "https://api.corona-zahlen.org/districts/\(id)/history/cases/\(Int(duration))"
         let result = await NetworkManager.shared.performDataRequest(urlString: urlString)
         switch result {
             case .success(let data):
-        trace.debug("Fetched covid cases measurements.")
+        trace.debug("Fetched covid cases for district: \(id)")
         return data
             case .failure(let error):
-                trace.error("Failed to fetch covid cases measurements: \(error.localizedDescription)")
+                trace.error("Failed to fetch covid cases for district: \(id): \(error.localizedDescription)")
                 return nil
         }
     }
 
     static func fetchDeaths(id: String, duration: Double = 100.0) async throws -> Data? {
-        trace.debug("Fetching covid deaths measurements...")
+        trace.debug("Fetching covid deaths for district: \(id)")
         let urlString = "https://api.corona-zahlen.org/districts/\(id)/history/deaths/\(Int(duration))"
         let result = await NetworkManager.shared.performDataRequest(urlString: urlString)
         switch result {
             case .success(let data):
-        trace.debug("Fetched covid deaths measurements.")
+        trace.debug("Fetched covid deaths for district: \(id)")
         return data
             case .failure(let error):
-                trace.error("Failed to fetch covid deaths measurements: \(error.localizedDescription)")
+                trace.error("Failed to fetch covid deaths for district: \(id): \(error.localizedDescription)")
                 return nil
         }
     }
 
     static func fetchRecovered(id: String, duration: Double = 100.0) async throws -> Data? {
-        trace.debug("Fetching covid recovered measurements...")
+        trace.debug("Fetching covid recovered for district: \(id)")
         let urlString = "https://api.corona-zahlen.org/districts/\(id)/history/recovered/\(Int(duration))"
         let result = await NetworkManager.shared.performDataRequest(urlString: urlString)
         switch result {
             case .success(let data):
-        trace.debug("Fetched covid recovered measurements.")
+        trace.debug("Fetched covid recovered for district: \(id)")
         return data
             case .failure(let error):
-                trace.error("Failed to fetch covid recovered measurements: \(error.localizedDescription)")
+                trace.error("Failed to fetch covid recovered for district: \(id): \(error.localizedDescription)")
                 return nil
         }
     }

@@ -20,7 +20,7 @@ struct MapSizeModifier: ViewModifier {
         }
         #else
         content
-            .frame(height: 733)
+            .frame(height: 600)
         #endif
     }
 }
@@ -143,22 +143,16 @@ struct ContentView: View {
                             .padding(.trailing, 10)
                     }
                     Divider()
-                    ContentPanelView(label: "Level", icon: "water.waves") {
+                    ContentPanelView(label: "Environmental Indicators", icon: "water.waves") {
                         LevelView()
                             .padding(5)
                             .padding(.trailing, 10)
-                    }
-                    Divider()
-                    ContentPanelView(label: "Radiation", icon: "atom") {
-                        RadiationView()
-                            .padding(5)
-                            .padding(.trailing, 10)
-                    }
-                    Divider()
-                    ContentPanelView(label: "Particulate Matter", icon: "aqi.medium") {
-                        ParticleView()
-                            .padding(5)
-                            .padding(.trailing, 10)
+//                        RadiationView()
+//                            .padding(5)
+//                            .padding(.trailing, 10)
+//                        ParticleView()
+//                            .padding(5)
+//                            .padding(.trailing, 10)
                     }
                     Divider()
                     ContentPanelView(label: "Election Polls", icon: "popcorn") {
@@ -170,7 +164,7 @@ struct ContentView: View {
             }
             .padding(.bottom, 10)
         }
-        .frame(width: 1024, height: 1024)
+        .frame(width: 800, height: 850)
 //        .preferredColorScheme(.dark)
 //        .foregroundStyle(colorScheme == .dark ? Color.cyan : Color.black)
 //        .background(colorScheme == .dark ? Color.black : Color.white)

@@ -7,6 +7,7 @@ import SwiftUI
 
     override init() {
         super.init()
+        trace.debug("SurveyPresenter init() called, ID: \(self.id)")
         let processManager = ProcessManager.shared
         processManager.add(subscriber: self, timeout: 30)  // 30 minutes
     }
@@ -45,6 +46,7 @@ import SwiftUI
     }
 
     func refreshData(location: Location) async -> Void {
+        trace.debug("SurveyPresenter.refreshData() called, ID: \(self.id)")
         do {
             if let sensor = try await controller.refreshData(for: location).first {
                 try self.transformer.renderData(sensor: sensor)

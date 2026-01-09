@@ -145,20 +145,24 @@ class SurveyController: ProcessController {
         var sensorLocation = germany.location
         var parliamentId = 0  // Bundestag
 
+        // Fetch polls data once and reuse it
+        guard let data = try await SurveyService.fetchPolls() else {
+            return nil
+        }
+
         if let constituency = try await LocationManager.fetchConstituency(location: location) {
-            if let data = try await SurveyService.fetchPolls() {
-                if let parliaments = try await parseParliaments(from: data) {
-                    for parliament in parliaments where parliament.name.contains(constituency) {
-                        sensorName = constituency
-                        sensorLocation = Self.parliamentCoordinates[constituency] ?? location
-                        parliamentId = parliament.id
-                        break
-                    }
+            if let parliaments = try await parseParliaments(from: data) {
+                for parliament in parliaments where parliament.name.contains(constituency) {
+                    sensorName = constituency
+                    sensorLocation = Self.parliamentCoordinates[constituency] ?? location
+                    parliamentId = parliament.id
+                    break
                 }
             }
         }
 
-        if let data = try await SurveyService.fetchPolls() {
+        // Reuse the data we already fetched
+        do {
             if let polls = try await parsePolls(from: data, for: parliamentId) {
                 let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
                 if sortedPolls.count > 0 {
@@ -209,6 +213,8 @@ class SurveyController: ProcessController {
                     }
                 }
             }
+        } catch {
+            trace.error("Error processing survey data: \(error)")
         }
         return sensor
     }

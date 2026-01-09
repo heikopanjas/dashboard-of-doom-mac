@@ -91,10 +91,10 @@ actor NetworkManager {
 
         // Only post notification if status actually changed
         if wasConnected != isConnected {
-        await MainActor.run {
-            NotificationCenter.default.post(name: .networkStatusChanged, object: nil)
+            await MainActor.run {
+                NotificationCenter.default.post(name: .networkStatusChanged, object: nil)
+            }
         }
-    }
     }
 
     func stopMonitoring() {
@@ -154,7 +154,7 @@ actor NetworkManager {
 
         // For autostart scenarios, give network more time to initialize
         if !initialConnectionCheckCompleted {
-            let waitResult = await waitForConnection(timeoutSeconds: 30)
+            let waitResult = await waitForConnection(timeoutSeconds: 10)
             if case .failure = waitResult {
                 return .failure(.networkUnavailable)
             }
@@ -165,12 +165,12 @@ actor NetworkManager {
             // For autostart, do an additional connectivity check
             let connectivityResult = await checkActualConnectivity()
             if case .failure = connectivityResult {
-            // Wait for network to become available
-            let waitResult = await waitForConnection(timeoutSeconds: 60)
-            if case .failure = waitResult {
-                return .failure(.networkUnavailable)
+                // Wait for network to become available
+                let waitResult = await waitForConnection(timeoutSeconds: 15)
+                if case .failure = waitResult {
+                    return .failure(.networkUnavailable)
+                }
             }
-        }
         }
 
         // Validate URL
@@ -253,6 +253,27 @@ actor NetworkManager {
             case .success((let data, let httpResponse)):
                 // Check status code
                 guard (200 ... 299).contains(httpResponse.statusCode) else {
+                    // Retry on 5xx server errors (transient issues)
+                    if (500 ... 599).contains(httpResponse.statusCode) && attempt < maxRetryAttempts {
+                        let delaySeconds = min(pow(2.0, Double(attempt)), 60.0)
+                        trace.debug("Server error \(httpResponse.statusCode), retrying in \(delaySeconds)s (attempt \(attempt)/\(maxRetryAttempts))")
+
+                        do {
+                            try await Task.sleep(for: .seconds(delaySeconds))
+                        }
+                        catch {
+                            return .failure(.taskCancelled)
+                        }
+
+                        return await attemptRequest(
+                            urlString: urlString,
+                            method: method,
+                            body: body,
+                            headers: headers,
+                            decoder: decoder,
+                            attempt: attempt + 1
+                        )
+                    }
                     return .failure(.serverError(statusCode: httpResponse.statusCode))
                 }
 
@@ -317,9 +338,9 @@ actor NetworkManager {
                 try? await Task.sleep(for: .seconds(timeoutSeconds))
                 let didComplete = await connectionWaiter.tryComplete()
                 if didComplete {
-                connectionMonitor.cancel()
-                continuation.resume(returning: .failure(.timeout))
-            }
+                    connectionMonitor.cancel()
+                    continuation.resume(returning: .failure(.timeout))
+                }
             }
 
             connectionMonitor.start(queue: monitorQueue)
@@ -328,8 +349,8 @@ actor NetworkManager {
                     Task {
                         let didComplete = await connectionWaiter.tryComplete()
                         if didComplete {
-                    timeoutTask.cancel()
-                    connectionMonitor.cancel()
+                            timeoutTask.cancel()
+                            connectionMonitor.cancel()
 
                             // Verify actual connectivity before reporting success
                             let connectivityResult = await self.checkActualConnectivity()
@@ -373,7 +394,7 @@ actor NetworkManager {
 
         // For autostart scenarios, give network more time to initialize
         if !initialConnectionCheckCompleted {
-            let waitResult = await waitForConnection(timeoutSeconds: 30)
+            let waitResult = await waitForConnection(timeoutSeconds: 10)
             if case .failure = waitResult {
                 return .failure(.networkUnavailable)
             }
@@ -385,7 +406,7 @@ actor NetworkManager {
             let connectivityResult = await checkActualConnectivity()
             if case .failure = connectivityResult {
                 // Wait for network to become available
-                let waitResult = await waitForConnection(timeoutSeconds: 60)
+                let waitResult = await waitForConnection(timeoutSeconds: 15)
                 if case .failure = waitResult {
                     return .failure(.networkUnavailable)
                 }
@@ -421,6 +442,26 @@ actor NetworkManager {
 
             // Check status code
             guard (200 ... 299).contains(httpResponse.statusCode) else {
+                // Retry on 5xx server errors (transient issues)
+                if (500 ... 599).contains(httpResponse.statusCode) && attempt < maxRetryAttempts {
+                    let delaySeconds = min(pow(2.0, Double(attempt)), 60.0)
+                    trace.debug("Server error \(httpResponse.statusCode), retrying in \(delaySeconds)s (attempt \(attempt)/\(maxRetryAttempts))")
+
+                    do {
+                        try await Task.sleep(for: .seconds(delaySeconds))
+                    }
+                    catch {
+                        return .failure(.taskCancelled)
+                    }
+
+                    return await attemptDataRequest(
+                        urlString: urlString,
+                        method: method,
+                        body: body,
+                        headers: headers,
+                        attempt: attempt + 1
+                    )
+                }
                 return .failure(.serverError(statusCode: httpResponse.statusCode))
             }
 

@@ -16,15 +16,15 @@ class RadiationService {
     }
 
     static func fetchMeasurements(for id: String) async throws -> Data? {
-        trace.debug("Fetching radiation measurements...")
+        trace.debug("Fetching radiation measurements for station ID: \(id)")
         let urlString = "https://www.imis.bfs.de/ogc/opendata/ows?service=WFS&version=1.1.0&request=GetFeature&typeName=opendata:odlinfo_timeseries_odl_1h&outputFormat=application/json&viewparams=kenn:\(id)"
         let result = await NetworkManager.shared.performDataRequest(urlString: urlString)
         switch result {
             case .success(let data):
-                trace.debug("Fetched radiation measurements.")
+                trace.debug("Fetched radiation measurements for station ID: \(id)")
                 return data
             case .failure(let error):
-                trace.error("Failed to fetch radiation measurements: \(error.localizedDescription)")
+                trace.error("Failed to fetch radiation measurements for station ID: \(id): \(error.localizedDescription)")
             return nil
         }
     }

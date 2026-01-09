@@ -47,23 +47,11 @@ struct MapAnnotation: MapContent {
                 .font(.title)
                 .foregroundStyle(.black)
                 #else
-                VStack {
-                    Spacer()
-                    if user == true {
-                        Image(systemName: self.icon)
-                            .font(.largeTitle)
-                    }
-                    else {
-                        Image(systemName: self.icon)
-                            .font(.title)
-                    }
-                    Spacer()
-                    VStack(alignment: .leading) {
-                        Text(self.faceplate)
-                        Spacer()
-                    }
+                HStack {
+                    Image(systemName: self.icon)
+                    Text(self.faceplate)
                 }
-                .frame(width: 87, height: 57)
+                .frame(width: 111, height: 23)
                 .padding(5)
                 .padding(.horizontal, 5)
                 .background(

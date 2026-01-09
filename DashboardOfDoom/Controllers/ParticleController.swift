@@ -19,12 +19,21 @@ class ParticleController: ProcessController {
 
         do {
             if let interval = Self.calculateMeasurementTimeInterval(span: self.measurementDuration) {
-                if let nearestStation = await Self.fetchNearestStation(location: location, from: interval.from, to: interval.to) {
-                    if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestStation.location) {
-                        if var measurements = try await Self.fetchMeasurements(station: nearestStation, from: interval.from, to: interval.to) {
+                if let result = await Self.fetchNearestStation(location: location, from: interval.from, to: interval.to) {
+                    if let placemark = await LocationManager.reverseGeocodeLocation(location: result.station.location) {
+                        // Use cached measurements if available, otherwise fetch them
+                        var measurements: [ProcessSelector: [ProcessValue<Dimension>]]?
+                        if let cached = result.cachedMeasurements {
+                            trace.debug("Using cached measurements for station: \(result.station.code)")
+                            measurements = cached
+                        } else {
+                            measurements = try await Self.fetchMeasurements(station: result.station, from: interval.from, to: interval.to)
+                        }
+
+                        if var measurements = measurements {
                             if let forecastInterval = Self.calculateForecastTimeInterval(span: self.forecastDuration) {
                                 if let forecast = try await Self.fetchForecasts(
-                                    station: nearestStation, from: forecastInterval.from, to: forecastInterval.to)
+                                    station: result.station, from: forecastInterval.from, to: forecastInterval.to)
                                 {
                                     for (selector, values) in measurements {
                                         var actual = self.interpolateMeasurement(measurements: values)
@@ -33,7 +42,7 @@ class ParticleController: ProcessController {
                                     }
                                 }
                                 let sensor = ProcessSensor(
-                                    name: nearestStation.name, location: nearestStation.location, placemark: placemark,
+                                    name: result.station.name, location: result.station.location, placemark: placemark,
                                     customData: ["icon": "aqi.medium"],
                                     measurements: measurements,
                                     timestamp: Date.now)
@@ -108,8 +117,13 @@ class ParticleController: ProcessController {
         let location: Location
     }
 
-    private static func fetchNearestStation(location: Location, from: Date, to: Date) async -> Station? {
-        var nearestStation: Station? = nil
+    struct StationResult {
+        let station: Station
+        let cachedMeasurements: [ProcessSelector: [ProcessValue<Dimension>]]?
+    }
+
+    private static func fetchNearestStation(location: Location, from: Date, to: Date) async -> StationResult? {
+        var result: StationResult? = nil
         do {
             if let data = try await ParticleService.fetchStations(from: from, to: to) {
                 let unsortedStations = try await Self.parseStations(from: data)
@@ -120,14 +134,16 @@ class ParticleController: ProcessController {
                     }
 
                     if UserDefaults.standard.bool(forKey: "nearestParticleSensor") == true {
-                        nearestStation = sortedStations.first
+                        if let station = sortedStations.first {
+                            result = StationResult(station: station, cachedMeasurements: nil)
+                        }
                     }
                     else {
-                        if let selectedStation = await Self.selectStation(stations: sortedStations) {
-                            nearestStation = selectedStation
+                        if let stationResult = await Self.selectStation(stations: sortedStations, from: from, to: to) {
+                            result = stationResult
                         }
-                        else {
-                            nearestStation = sortedStations.first
+                        else if let station = sortedStations.first {
+                            result = StationResult(station: station, cachedMeasurements: nil)
                         }
                     }
                 }
@@ -136,7 +152,7 @@ class ParticleController: ProcessController {
         catch {
             trace.error("Error fetching stations: %@", error.localizedDescription)
         }
-        return nearestStation
+        return result
     }
 
     private static func parseStations(from data: Data) async throws -> [Station] {
@@ -160,19 +176,17 @@ class ParticleController: ProcessController {
         return stations
     }
 
-    private static func selectStation(stations: [Station]) async -> Station? {
-        var selectedStation: Station? = nil
-        let to = Date.now.addingTimeInterval(-1 * 24 * 60 * 60)
-        let from = to.addingTimeInterval(-1 * 24 * 60 * 60)
+    private static func selectStation(stations: [Station], from: Date, to: Date) async -> StationResult? {
+        // Fetch measurements for the full range and check if the station has relevant data
         for station in stations {
             if let measurements = try? await fetchMeasurements(station: station, from: from, to: to) {
                 if stationHasRelevantMeasurements(measurements) == true {
-                    selectedStation = station
-                    break
+                    trace.debug("Selected station \(station.code) with cached measurements")
+                    return StationResult(station: station, cachedMeasurements: measurements)
                 }
             }
         }
-        return selectedStation
+        return nil
     }
 
     private static func stationHasRelevantMeasurements(_ measurements: [ProcessSelector: [ProcessValue<Dimension>]]) -> Bool {

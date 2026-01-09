@@ -40,6 +40,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var settingsPanel: NSPanel?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Start network monitoring immediately to ensure connectivity before API calls
+        Task {
+            await NetworkManager.shared.startMonitoring()
+        }
+
         // Force the appearance for the entire application
 //        NSApp.appearance = NSAppearance(named: .darkAqua)
 

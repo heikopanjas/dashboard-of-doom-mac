@@ -41,13 +41,26 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
         var needsUpdate = false
         if self.location == nil {
             needsUpdate = true
+            trace.debug("Location update: no previous location")
         }
         else if self.significantLocationChange(previous: self.location, current: location) {
             needsUpdate = true
+            if let prev = self.location {
+                let distance = haversineDistance(location_0: prev, location_1: location)
+                trace.debug("Location update: significant change, distance=\(distance.converted(to: .meters).value)m")
+            }
         }
+        else {
+            if let prev = self.location {
+                let distance = haversineDistance(location_0: prev, location_1: location)
+                trace.debug("Location update: ignored (within deadband), distance=\(distance.converted(to: .meters).value)m")
+            }
+        }
+
         if needsUpdate == true {
             self.location = location
             if let delegate = self.delegate {
+                trace.debug("Notifying delegate of location change")
                 delegate.locationManager(didUpdateLocation: location)
             }
         }

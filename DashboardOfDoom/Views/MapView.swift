@@ -57,28 +57,28 @@ struct MapView: View {
                     Map(position: viewModel.binding(for: \.region), interactionModes: []) {
                         MapAnnotation(
                             presenter: weather, selector: .weather(.temperature), user: true,
-                            simple: UserDefaults.standard.bool(forKey: "showWeather") == false, anchor: .topTrailing)
+                            simple: UserDefaults.standard.bool(forKey: "showWeather") == false)
 
                         if UserDefaults.standard.bool(forKey: "showCovid") == true {
-                            MapAnnotation(presenter: incidence, selector: .covid(.incidence), anchor: .bottomLeading)
+                            MapAnnotation(presenter: incidence, selector: .covid(.incidence))
                         }
 
                         if UserDefaults.standard.bool(forKey: "showParticles") == true {
                             if let selector = particle.measurements.first?.key {
-                                MapAnnotation(presenter: particle, selector: selector, anchor: .bottomTrailing)
+                                MapAnnotation(presenter: particle, selector: selector)
                             }
                         }
 
                         if UserDefaults.standard.bool(forKey: "showLevels") == true {
-                            MapAnnotation(presenter: water, selector: .water(.level), anchor: .bottomLeading)
+                            MapAnnotation(presenter: water, selector: .water(.level))
                         }
 
                         if UserDefaults.standard.bool(forKey: "showRadiation") == true {
-                            MapAnnotation(presenter: radiation, selector: .radiation(.total), anchor: .bottomLeading)
+                            MapAnnotation(presenter: radiation, selector: .radiation(.total))
                         }
 
                         if UserDefaults.standard.bool(forKey: "showElectionPolls") == true {
-                            MapAnnotation(presenter: surveys, selector: .survey(.fascists), anchor: .topLeading)
+                            MapAnnotation(presenter: surveys, selector: .survey(.fascists))
                         }
                     }
                     .allowsHitTesting(false)
