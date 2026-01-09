@@ -7,7 +7,8 @@ import Foundation
     override init() {
         super.init()
         let processManager = ProcessManager.shared
-        processManager.add(subscriber: self, timeout: 360)  // 6  hours
+        let interval = UserDefaults.standard.integer(forKey: "covidRefreshInterval")
+        processManager.add(subscriber: self, timeout: TimeInterval(interval > 0 ? interval : 360))
     }
 
     func refreshData(location: Location) async -> Void {

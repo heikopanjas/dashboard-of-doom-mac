@@ -7,7 +7,8 @@ import SwiftUI
     override init() {
         super.init()
         let processManager = ProcessManager.shared
-        processManager.add(subscriber: self, timeout: 30)  // 30 minutes
+        let interval = UserDefaults.standard.integer(forKey: "particleRefreshInterval")
+        processManager.add(subscriber: self, timeout: TimeInterval(interval > 0 ? interval : 30))
     }
 
     func refreshData(location: Location) async -> Void {

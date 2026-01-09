@@ -7,7 +7,8 @@ import SwiftUI
     override init() {
         super.init()
         let processManager = ProcessManager.shared
-        processManager.add(subscriber: self, timeout: 15)  // 15 minutes
+        let interval = UserDefaults.standard.integer(forKey: "levelRefreshInterval")
+        processManager.add(subscriber: self, timeout: TimeInterval(interval > 0 ? interval : 15))
     }
 
     func refreshData(location: Location) async -> Void {

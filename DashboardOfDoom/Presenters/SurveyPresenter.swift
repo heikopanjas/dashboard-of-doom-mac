@@ -9,7 +9,8 @@ import SwiftUI
         super.init()
         trace.debug("SurveyPresenter init() called, ID: \(self.id)")
         let processManager = ProcessManager.shared
-        processManager.add(subscriber: self, timeout: 30)  // 30 minutes
+        let interval = UserDefaults.standard.integer(forKey: "surveyRefreshInterval")
+        processManager.add(subscriber: self, timeout: TimeInterval(interval > 0 ? interval : 360))
     }
 
     func gradient(selector: ProcessSelector) -> LinearGradient {

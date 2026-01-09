@@ -17,7 +17,6 @@ struct DashboardOfDoomApp: App {
     var body: some Scene {
         MenuBarExtra {
             ContentView()
-                .preferredColorScheme(.dark)
                 .environment(weatherViewModel)
                 .environment(forecastPresenter)
                 .environment(covidPresenter)
@@ -38,6 +37,7 @@ struct DashboardOfDoomApp: App {
 @Observable
 class AppDelegate: NSObject, NSApplicationDelegate {
     var settingsPanel: NSPanel?
+    private var themeObserver: NSObjectProtocol?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Start network monitoring immediately to ensure connectivity before API calls
@@ -45,19 +45,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             await NetworkManager.shared.startMonitoring()
         }
 
-        // Force the appearance for the entire application
-//        NSApp.appearance = NSAppearance(named: .darkAqua)
+        // Apply initial theme
+        updateAppearance()
 
-        // Make sure any new windows/popovers also use dark mode
-//        NotificationCenter.default.addObserver(
-//            forName: NSWindow.didBecomeKeyNotification,
-//            object: nil,
-//            queue: nil
-//        ) { notification in
-//            if let window = notification.object as? NSWindow {
-//                window.appearance = NSAppearance(named: .darkAqua)
-//            }
-//        }
+        // Observe theme setting changes
+        themeObserver = NotificationCenter.default.addObserver(
+            forName: UserDefaults.didChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.updateAppearance()
+        }
+    }
+
+    func updateAppearance() {
+        let alwaysUseDarkTheme = UserDefaults.standard.bool(forKey: "alwaysUseDarkTheme")
+        // Default to true if key doesn't exist (first launch)
+        let useDark = UserDefaults.standard.object(forKey: "alwaysUseDarkTheme") == nil ? true : alwaysUseDarkTheme
+        NSApp.appearance = useDark ? NSAppearance(named: .darkAqua) : nil
     }
 
     func showSettings() {
@@ -77,10 +82,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             // Create new settings panel
             let settingsView = SettingsView()
             let hostingController = NSHostingController(rootView: settingsView)
-            hostingController.view.frame = NSRect(x: 0, y: 0, width: 450, height: 400)
+            hostingController.view.frame = NSRect(x: 0, y: 0, width: 660, height: 400)
 
             let panel = NSPanel(
-                contentRect: NSRect(x: 0, y: 0, width: 450, height: 400),
+                contentRect: NSRect(x: 0, y: 0, width: 660, height: 400),
                 styleMask: [.titled, .closable, .nonactivatingPanel],
                 backing: .buffered,
                 defer: false

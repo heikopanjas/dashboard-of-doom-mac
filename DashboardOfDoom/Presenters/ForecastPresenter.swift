@@ -7,7 +7,8 @@ import SwiftUI
     override init() {
         super.init()
         let processManager = ProcessManager.shared
-        processManager.add(subscriber: self, timeout: 5)  // 5 minutes
+        let interval = UserDefaults.standard.integer(forKey: "weatherRefreshInterval")
+        processManager.add(subscriber: self, timeout: TimeInterval(interval > 0 ? interval : 5))
     }
 
     func refreshData(location: Location) async -> Void {

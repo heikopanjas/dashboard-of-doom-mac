@@ -1,4 +1,3 @@
-import LaunchAtLogin
 import SwiftUI
 
 struct GrowingButtonStyle: ButtonStyle {
@@ -39,7 +38,7 @@ struct ContentPanelStyle: DisclosureGroupStyle {
                 }
                 .padding(.vertical, 8)
                 .padding(.trailing)
-                .frame(height: 23)
+                .frame(height: 17)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -73,7 +72,6 @@ struct ContentPanelView<Content: View>: View {
                     Text(self.label)
                 }
                 .padding()
-                .fontWeight(.light)
             }
         )
         .disclosureGroupStyle(ContentPanelStyle())
@@ -91,11 +89,11 @@ struct ContentView: View {
                 Text("Dashboard of Doom")
                     .font(.headline)
                     .padding(.top, 10)
-//                Image("dashboard-of-doom-logo")
-//                    .resizable()
-//                    .aspectRatio(contentMode: .fit)
-//                    .frame(width: 200, height: 34)
-//                    .padding(.top, 10)
+                //                Image("dashboard-of-doom-logo")
+                //                    .resizable()
+                //                    .aspectRatio(contentMode: .fit)
+                //                    .frame(width: 200, height: 34)
+                //                    .padding(.top, 10)
                 Spacer()
                 HStack(alignment: .bottom) {
                     Menu {
@@ -103,11 +101,6 @@ struct ContentView: View {
                             appDelegate.showSettings()
                         }
                         .keyboardShortcut(",", modifiers: .command)
-                        Divider()
-                        LaunchAtLogin.Toggle()
-                        Divider()
-                        Button("About...") {
-                        }
                         Divider()
                         Button("Quit") {
                             NSApplication.shared.terminate(nil)
@@ -123,6 +116,7 @@ struct ContentView: View {
             }
             .padding()
             .frame(height: 34)
+            .background(Color(light: .white, dark: Color(hex: "#000000")))
             ScrollView {
                 VStack {
                     MapView()
@@ -143,16 +137,22 @@ struct ContentView: View {
                             .padding(.trailing, 10)
                     }
                     Divider()
-                    ContentPanelView(label: "Environmental Indicators", icon: "water.waves") {
+                    ContentPanelView(label: "Level", icon: "water.waves") {
                         LevelView()
                             .padding(5)
                             .padding(.trailing, 10)
-//                        RadiationView()
-//                            .padding(5)
-//                            .padding(.trailing, 10)
-//                        ParticleView()
-//                            .padding(5)
-//                            .padding(.trailing, 10)
+                    }
+                    Divider()
+                    ContentPanelView(label: "Radiation", icon: "atom") {
+                        RadiationView()
+                            .padding(5)
+                            .padding(.trailing, 10)
+                    }
+                    Divider()
+                    ContentPanelView(label: "Particulate Matter", icon: "aqi.medium") {
+                        ParticleView()
+                            .padding(5)
+                            .padding(.trailing, 10)
                     }
                     Divider()
                     ContentPanelView(label: "Election Polls", icon: "popcorn") {
@@ -164,9 +164,8 @@ struct ContentView: View {
             }
             .padding(.bottom, 10)
         }
-        .frame(width: 800, height: 850)
-//        .preferredColorScheme(.dark)
-//        .foregroundStyle(colorScheme == .dark ? Color.cyan : Color.black)
-//        .background(colorScheme == .dark ? Color.black : Color.white)
+        .frame(width: 800, height: 859)
+        .foregroundStyle(Color(light: .primary, dark: .cyan))
+        .background(Color(light: .white, dark: Color(hex: "#000000")))
     }
 }
