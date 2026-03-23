@@ -38,7 +38,7 @@ class ParticleController: ProcessController {
                                     for (selector, values) in measurements {
                                         var actual = self.interpolateMeasurement(measurements: values)
                                         actual.append(contentsOf: forecast[selector] ?? [])
-                                        measurements[selector] = movingAverage(data: actual, windowSize: Self.smoothingFactor)
+                                        measurements[selector] = actual
                                     }
                                 }
                                 let sensor = ProcessSensor(

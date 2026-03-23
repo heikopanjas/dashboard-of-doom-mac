@@ -11,7 +11,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		42EADC232D5D0EF100CC3BF3 /* DashboardOfDoom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DashboardOfDoom.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		42EADC232D5D0EF100CC3BF3 /* Dashboard of Doom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Dashboard of Doom.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -45,7 +45,7 @@
 		42EADC242D5D0EF100CC3BF3 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				42EADC232D5D0EF100CC3BF3 /* DashboardOfDoom.app */,
+				42EADC232D5D0EF100CC3BF3 /* Dashboard of Doom.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -73,7 +73,7 @@
 				42325BC42D5D322B00CF6970 /* LaunchAtLogin */,
 			);
 			productName = DashboardOfDoom;
-			productReference = 42EADC232D5D0EF100CC3BF3 /* DashboardOfDoom.app */;
+			productReference = 42EADC232D5D0EF100CC3BF3 /* Dashboard of Doom.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -288,10 +288,10 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 6.3.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.panjas.DashboardOfDoom-macOS";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.panjas.dashboard-of-doom";
+				PRODUCT_NAME = "Dashboard of Doom";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "DashboardOfDoom macOS";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "Dashboard of Doom macOS";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -329,10 +329,10 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MARKETING_VERSION = 6.3.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.panjas.DashboardOfDoom-macOS";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.panjas.dashboard-of-doom";
+				PRODUCT_NAME = "Dashboard of Doom";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "DashboardOfDoom macOS";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "Dashboard of Doom macOS";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};

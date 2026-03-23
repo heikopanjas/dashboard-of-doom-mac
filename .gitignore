@@ -157,3 +157,4 @@ temp/
 *.xcframework.tar.lzip
 *.xcframework.tar.lzip
 .build/
+buildServer.json

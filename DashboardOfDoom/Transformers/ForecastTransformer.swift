@@ -14,7 +14,7 @@ class ForecastTransformer: ProcessTransformer {
         for (selector, measurement) in measurements {
             if let value = measurement.first {
                 if value.value.unit is UnitTemperature {
-                    range[selector] = -20.0 ... 47.0
+                    range[selector] = -33.0 ... 47.0
                 }
                 else if value.value.unit is UnitPercentage {
                     range[selector] = 0.0 ... 100.0

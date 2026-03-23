@@ -10,7 +10,7 @@ struct ForecastView: View {
                 ActivityIndicator()
             }
             else {
-                #if os(macOS)
+#if os(macOS)
                 HStack(alignment: .bottom) {
                     HStack {
                         Image(systemName: "safari")
@@ -21,7 +21,7 @@ struct ForecastView: View {
                         .foregroundColor(.gray)
                 }
                 .font(.footnote)
-                #else
+#else
                 VStack(alignment: .leading) {
                     HStack {
                         Image(systemName: "safari")
@@ -36,11 +36,12 @@ struct ForecastView: View {
                     .foregroundColor(.gray)
                 }
                 .font(.footnote)
-                #endif
+#endif
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                     ForEach(ProcessSelector.Forecast.allCases, id: \.self) { selector in
-                        if self.presenter.isAvailable(selector: .forecast(selector), treshold: -33.0) {
+                        let threshold = self.computeThreshold(selector: selector)
+                        if self.presenter.isAvailable(selector: .forecast(selector), treshold: threshold) {
                             VStack {
                                 ForecastChartView(selector: .forecast(selector))
                             }
@@ -50,5 +51,13 @@ struct ForecastView: View {
                 }
             }
         }
+
+    }
+
+    func computeThreshold(selector: ProcessSelector.Forecast) -> Double {
+        if selector == .temperature || selector == .apparentTemperature || selector == .dewPoint  {
+            return -33.0
+        }
+        return 0.0
     }
 }

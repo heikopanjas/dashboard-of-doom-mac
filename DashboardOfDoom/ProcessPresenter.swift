@@ -41,12 +41,11 @@ import Foundation
         return sensor?.placemark ?? "<Unknown>"
     }
 
-    func isAvailable(selector: ProcessSelector, treshold: Double? = nil) -> Bool {
-        let floor = treshold ?? 0.0
+    func isAvailable(selector: ProcessSelector, treshold: Double = 0.0) -> Bool {
         if let measurements = self.measurements[selector] {
             if measurements.count > 0 {
                 for measurement in measurements where measurement.quality != .unknown {
-                    if measurement.value.value > floor {
+                    if measurement.value.value > treshold {
                         return true
                     }
                 }

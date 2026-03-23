@@ -44,33 +44,42 @@ struct ParticleChartView: View {
             }
             Chart {
                 ForEach(presenter.measurements[selector] ?? []) { measurement in
-//                    if selector == .particle(.pm10) {
-//                        LineMark(
-//                            x: .value("Date", measurement.timestamp),
-//                            y: .value("Particle", 40.0)
-//                        )
-//                        .interpolationMethod(.linear)
-//                        .foregroundStyle(Color.treshold)
-//                        .lineStyle(StrokeStyle(lineWidth: 1))
-//                    }
-//                    else if selector == .particle(.pm25) {
-//                        LineMark(
-//                            x: .value("Date", measurement.timestamp),
-//                            y: .value("Particle", 25.0)
-//                        )
-//                        .interpolationMethod(.linear)
-//                        .foregroundStyle(Color.treshold)
-//                        .lineStyle(StrokeStyle(lineWidth: 1))
-//                    }
-//                    else if selector == .particle(.no2) {
-//                        LineMark(
-//                            x: .value("Date", measurement.timestamp),
-//                            y: .value("Particle", 40.0)
-//                        )
-//                        .interpolationMethod(.linear)
-//                        .foregroundStyle(Color.treshold)
-//                        .lineStyle(StrokeStyle(lineWidth: 1))
-//                    }
+                   if selector == .particle(.pm10) {
+                       LineMark(
+                           x: .value("Date", measurement.timestamp),
+                           y: .value("Particle", 40.0)
+                       )
+                        .interpolationMethod(.catmullRom)
+                        .foregroundStyle(Color.red.opacity(0.67))
+                        .lineStyle(StrokeStyle(lineWidth: 1))
+                   }
+                   else if selector == .particle(.pm25) {
+                       LineMark(
+                           x: .value("Date", measurement.timestamp),
+                           y: .value("Particle", 25.0)
+                       )
+                        .interpolationMethod(.catmullRom)
+                        .foregroundStyle(Color.red.opacity(0.67))
+                        .lineStyle(StrokeStyle(lineWidth: 1))
+                   }
+                   else if selector == .particle(.no2) {
+                       LineMark(
+                           x: .value("Date", measurement.timestamp),
+                           y: .value("Particle", 40.0)
+                       )
+                        .interpolationMethod(.catmullRom)
+                        .foregroundStyle(Color.red.opacity(0.67))
+                        .lineStyle(StrokeStyle(lineWidth: 1))
+                   }
+                   else if selector == .particle(.o3) {
+                       LineMark(
+                           x: .value("Date", measurement.timestamp),
+                           y: .value("Particle", 120.0)
+                       )
+                        .interpolationMethod(.catmullRom)
+                        .foregroundStyle(Color.red.opacity(0.67))
+                        .lineStyle(StrokeStyle(lineWidth: 1))
+                   }
                     AreaMark(
                         x: .value("Date", Date.round(from: measurement.timestamp, strategy: .previousHour) ?? Date.now),
                         yStart: .value("Particle", presenter.range[selector]?.lowerBound ?? 0.0),
@@ -162,4 +171,3 @@ struct ParticleChartView: View {
         }
     }
 }
-
