@@ -49,7 +49,7 @@ struct ContentView: View {
                 VStack {
                     MapView()
                         .padding(.horizontal)
-                        .cornerRadius(13)
+                        .clipShape(.rect(cornerRadius: 13))
                         .padding(.vertical, 5)
                         .modifier(MapSizeModifier())
                     Divider()

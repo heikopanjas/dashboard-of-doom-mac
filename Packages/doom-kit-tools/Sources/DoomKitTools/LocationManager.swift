@@ -2,8 +2,9 @@ import CoreLocation
 import DoomKitCore
 import Foundation
 
-public class LocationManager: NSObject, CLLocationManagerDelegate {
-    public static let houseOfWorldCultures = Location(latitude: 52.51889, longitude: 13.36528)
+@MainActor
+public final class LocationManager: NSObject, CLLocationManagerDelegate {
+    public nonisolated static let houseOfWorldCultures = Location(latitude: 52.51889, longitude: 13.36528)
     private var locationManager = CLLocationManager()
     public var location: Location?
     public var onLocationUpdate: ((Location) -> Void)?
@@ -26,11 +27,16 @@ public class LocationManager: NSObject, CLLocationManagerDelegate {
         self.locationManager.startUpdatingLocation()
     }
 
-    public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        if let lastLocation = locations.last {
-            let latitude = lastLocation.coordinate.latitude
-            let longitude = lastLocation.coordinate.longitude
-            self.updateLocation(location: Location(latitude: latitude, longitude: longitude))
+    public nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let lastLocation = locations.last else {
+            return
+        }
+        let location = Location(
+            latitude: lastLocation.coordinate.latitude,
+            longitude: lastLocation.coordinate.longitude
+        )
+        Task { @MainActor in
+            self.updateLocation(location: location)
         }
     }
 
@@ -69,7 +75,7 @@ public class LocationManager: NSObject, CLLocationManagerDelegate {
         return distance > deadband
     }
 
-    public static func reverseGeocodeLocation(latitude: Double, longitude: Double, fullAddress: Bool = true) async -> String? {
+    public nonisolated static func reverseGeocodeLocation(latitude: Double, longitude: Double, fullAddress: Bool = true) async -> String? {
         var formattedPlacemark: String?
         do {
             let geocoder = CLGeocoder()
@@ -80,13 +86,13 @@ public class LocationManager: NSObject, CLLocationManagerDelegate {
             }
         }
         catch {
-            print("Failed to reverse geocode location: \(error)")
+            trace.error("Failed to reverse geocode location: %@", error.localizedDescription)
             formattedPlacemark = nil
         }
         return formattedPlacemark
     }
 
-    public static func fetchConstituency(location: Location) async throws -> String? {
+    public nonisolated static func fetchConstituency(location: Location) async throws -> String? {
         var constituency: String? = nil
         do {
             let geocoder = CLGeocoder()
@@ -105,16 +111,16 @@ public class LocationManager: NSObject, CLLocationManagerDelegate {
             }
         }
         catch {
-            print("Failed to reverse geocode location: \(error)")
+            trace.error("Failed to reverse geocode location: %@", error.localizedDescription)
         }
         return constituency
     }
 
-    public static func reverseGeocodeLocation(location: Location, fullAddress: Bool = true) async -> String? {
+    public nonisolated static func reverseGeocodeLocation(location: Location, fullAddress: Bool = true) async -> String? {
         return await self.reverseGeocodeLocation(latitude: location.latitude, longitude: location.longitude, fullAddress: fullAddress)
     }
 
-    static private func formatPlacemarkLong(placemark: CLPlacemark) -> String? {
+    nonisolated static private func formatPlacemarkLong(placemark: CLPlacemark) -> String? {
         var formattedPlacemark = ""
 
         if let name = placemark.name {
@@ -135,7 +141,7 @@ public class LocationManager: NSObject, CLLocationManagerDelegate {
         return formattedPlacemark
     }
 
-    static private func formatPlacemarkShort(placemark: CLPlacemark) -> String? {
+    nonisolated static private func formatPlacemarkShort(placemark: CLPlacemark) -> String? {
         var formattedPlacemark = ""
         if let locality = placemark.locality {
             formattedPlacemark += locality

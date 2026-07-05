@@ -19,7 +19,7 @@ struct ParticleView: View {
                     }
                     Spacer()
                     Text("Last update: \(Date.absoluteString(date: self.presenter.sensor?.timestamp))")
-                        .foregroundColor(.gray)
+                        .foregroundStyle(.gray)
                 }
                 .font(.footnote)
                 #else
@@ -29,12 +29,12 @@ struct ParticleView: View {
                         Text(String(format: "%@", self.presenter.placemark))
                         Spacer()
                     }
-                    .foregroundColor(.accentColor)
+                    .foregroundStyle(.tint)
                     HStack {
                         Text("Last update: \(Date.absoluteString(date: self.presenter.timestamp))")
                         Spacer()
                     }
-                    .foregroundColor(.gray)
+                    .foregroundStyle(.gray)
                 }
                 .font(.footnote)
                 #endif

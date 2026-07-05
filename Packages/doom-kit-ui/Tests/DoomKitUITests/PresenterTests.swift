@@ -20,8 +20,8 @@ func hazardPresenterFetchesHazardsOnLocationUpdate() async {
     presenter.updateLocation(Location(latitude: 52.0, longitude: 13.0))
     try? await Task.sleep(for: .milliseconds(100))
 
-    #expect(presenter.hazards?.count == 1)
-    #expect(presenter.hazards?.first?.headline == "Test")
+    #expect(presenter.hazards.count == 1)
+    #expect(presenter.hazards.first?.headline == "Test")
 }
 
 @Test
@@ -41,7 +41,7 @@ func hazardPresenterRefreshWithoutLocationDoesNothing() async {
 
     await presenter.refresh()
 
-    #expect(presenter.hazards == nil)
+    #expect(presenter.hazards.isEmpty == true)
 }
 
 @Test
@@ -62,9 +62,9 @@ func pointOfInterestPresenterFetchesAllCategories() async {
     presenter.updateLocation(Location(latitude: 52.0, longitude: 13.0))
     try? await Task.sleep(for: .milliseconds(150))
 
-    #expect(presenter.pharmacies?.count == 1)
-    #expect(presenter.hospitals?.count == 1)
-    #expect(presenter.liquorStores?.count == 1)
-    #expect(presenter.funeralDirectors?.count == 1)
-    #expect(presenter.cemeteries?.count == 1)
+    #expect(presenter.pharmacies.count == 1)
+    #expect(presenter.hospitals.count == 1)
+    #expect(presenter.liquorStores.count == 1)
+    #expect(presenter.funeralDirectors.count == 1)
+    #expect(presenter.cemeteries.count == 1)
 }

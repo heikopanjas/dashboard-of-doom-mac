@@ -23,6 +23,6 @@ struct SettingsToolbarButton: View {
         }
         .buttonStyle(.plain)
         .focusable(false)
-        .foregroundColor(.primary)
+        .foregroundStyle(.primary)
     }
 }

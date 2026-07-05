@@ -2,7 +2,7 @@ import DoomKitCore
 import DoomKitTools
 import Foundation
 
-public final class CovidController: ProcessControllerProtocol, @unchecked Sendable {
+public final class CovidController: ProcessControllerProtocol, Sendable {
     private let measurementDistance: TimeInterval
     private let measurementDuration: Double
     private let forecastDuration: TimeInterval
@@ -53,7 +53,8 @@ public final class CovidController: ProcessControllerProtocol, @unchecked Sendab
             }
             if let placemark = await LocationManager.reverseGeocodeLocation(location: district.location) {
                 let sensor = ProcessSensor(
-                    name: district.name, location: district.location, placemark: placemark, customData: ProcessMetadata(["name": "COVID-19", "icon": "facemask"]), measurements: measurements, timestamp: Date.now)
+                    name: district.name, location: district.location, placemark: placemark,
+                    customData: ProcessMetadata(["name": "COVID-19", "icon": "facemask"]), measurements: measurements, timestamp: Date.now)
                 data.append(sensor)
             }
         }
@@ -110,7 +111,6 @@ public final class CovidController: ProcessControllerProtocol, @unchecked Sendab
         }
         return districts
     }
-
 
     private func fetchIncidence(for district: District) async throws -> [ProcessValue<Dimension>]? {
         var incidence: [ProcessValue<Dimension>]? = nil
@@ -257,7 +257,7 @@ public final class CovidController: ProcessControllerProtocol, @unchecked Sendab
                 try predictor.addData(dataPoints)
                 let prediction = try predictor.forecast(duration: duration)
                 forecastMeasurements = prediction.forecasts.map { forecast in
-//                    ProcessValue<Dimension>(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
+                    //                    ProcessValue<Dimension>(value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
                     ProcessValue<Dimension>(value: Measurement(value: 0.0, unit: unit), quality: .unknown, timestamp: forecast.timestamp)
                 }
             }

@@ -2,7 +2,6 @@ import DoomKitCore
 import Foundation
 import Observation
 
-@MainActor
 @Observable
 open class ProcessDataPresenter: ProcessPresenter, ProcessRefreshProtocol {
     private let fetchSensor: @Sendable (Location) async throws -> ProcessSensor?

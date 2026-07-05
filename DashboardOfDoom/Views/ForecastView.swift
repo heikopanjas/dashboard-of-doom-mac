@@ -11,7 +11,7 @@ struct ForecastView: View {
                 ActivityIndicator()
             }
             else {
-#if os(macOS)
+                #if os(macOS)
                 HStack(alignment: .bottom) {
                     HStack {
                         Image(systemName: "safari")
@@ -19,30 +19,30 @@ struct ForecastView: View {
                     }
                     Spacer()
                     Text("Last update: \(Date.absoluteString(date: self.presenter.timestamp))")
-                        .foregroundColor(.gray)
+                        .foregroundStyle(.gray)
                 }
                 .font(.footnote)
-#else
+                #else
                 VStack(alignment: .leading) {
                     HStack {
                         Image(systemName: "safari")
                         Text(String(format: "%@", self.presenter.placemark))
                         Spacer()
                     }
-                    .foregroundColor(.accentColor)
+                    .foregroundStyle(.tint)
                     HStack {
                         Text("Last update: \(Date.absoluteString(date: self.presenter.timestamp))")
                         Spacer()
                     }
-                    .foregroundColor(.gray)
+                    .foregroundStyle(.gray)
                 }
                 .font(.footnote)
-#endif
+                #endif
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                     ForEach(ProcessSelector.Forecast.allCases, id: \.self) { selector in
                         let threshold = self.computeThreshold(selector: selector)
-                        if self.presenter.isAvailable(selector: .forecast(selector), treshold: threshold) {
+                        if self.presenter.isAvailable(selector: .forecast(selector), threshold: threshold) {
                             VStack {
                                 ForecastChartView(selector: .forecast(selector))
                             }
@@ -56,7 +56,7 @@ struct ForecastView: View {
     }
 
     func computeThreshold(selector: ProcessSelector.Forecast) -> Double {
-        if selector == .temperature || selector == .apparentTemperature || selector == .dewPoint  {
+        if selector == .temperature || selector == .apparentTemperature || selector == .dewPoint {
             return -33.0
         }
         return 0.0

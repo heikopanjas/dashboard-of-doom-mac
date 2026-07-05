@@ -81,11 +81,11 @@ struct SurveyChartView: View {
                         #if os(iOS)
                         Text("\(String.truncate(self.fullLabels[selector], maxLength: 53) ?? String(format: "%d <Unknown>", selector.rawValue))")
                             .font(.footnote)
-                            .foregroundColor(.gray)
+                            .foregroundStyle(.gray)
                         #else
                         Text("\(self.fullLabels[selector] ?? String(format: "%d <Unknown>", selector.rawValue))")
                             .font(.callout)
-                            .foregroundColor(.gray)
+                            .foregroundStyle(.gray)
                         #endif
                     }
                 }
@@ -99,7 +99,7 @@ struct SurveyChartView: View {
                             y: .value("Value", 5.0)
                         )
                         .interpolationMethod(.catmullRom)
-//                        .foregroundStyle(Color.treshold)
+                        //                        .foregroundStyle(Color.threshold)
                         .foregroundStyle(Color.red.opacity(0.67))
                         .lineStyle(StrokeStyle(lineWidth: 1))
                     }

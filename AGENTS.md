@@ -1,6 +1,6 @@
 # Project Instructions for AI Coding Agents
 
-**Last updated:** 2026-07-05 (one primary type per file refactor)
+**Last updated:** 2026-07-05 (convention + concurrency fixes)
 
 <!-- {preamble} -->
 
@@ -163,6 +163,16 @@ Automatically bump the project version after every code change and include it in
 <!-- {changelog} -->
 
 ## Recent Updates & Decisions
+
+### 2026-07-05 (convention + concurrency fixes)
+
+- Presenter/controller array APIs return non-optional `[Hazard]`/`[PointOfInterest]` (never optional arrays); simplified controller accumulation
+- Isolated `LocationManager` to `@MainActor` with a `nonisolated` delegate hop and `nonisolated` static geocoders/`houseOfWorldCultures`; removed the data race on shared mutable state
+- Removed redundant `@MainActor` from `ProcessDataPresenter` and its subclasses (inherited from `ProcessPresenter`); dropped `MainActor.run` in `NetworkManager`; `CovidController` conforms to `Sendable` (not `@unchecked`)
+- Extracted `NetworkManager`'s `ConnectionWaiter` and `SettingsView`'s eight tab-content properties into their own `View` files (one primary type per file)
+- Migrated deprecated SwiftUI APIs: `foregroundColor` → `foregroundStyle`, `cornerRadius` → `clipShape(.rect(cornerRadius:))`
+- Applied explicit `self.` + Boolean-literal conditions in `NetworkManager`/`LocationManager`/`SettingsView`; renamed `treshold` → `threshold` (incl. `Color`); replaced `print` logging with `trace`; deleted dead `GridView` and `ARIMAPredictor.example()`
+- Bumped app version to 7.0.5 (build 143)
 
 ### 2026-07-05 (one primary type per file refactor)
 

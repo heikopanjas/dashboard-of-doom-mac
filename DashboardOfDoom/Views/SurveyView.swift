@@ -7,7 +7,7 @@ struct SurveyView: View {
 
     var body: some View {
         VStack {
-            if presenter.timestamp == nil {
+            if self.presenter.timestamp == nil {
                 ActivityIndicator()
             }
             else {
@@ -15,33 +15,33 @@ struct SurveyView: View {
                 HStack(alignment: .bottom) {
                     HStack {
                         Image(systemName: "safari")
-                        Text(String(format: "%@", self.presenter.placemark))
+                        Text(self.presenter.placemark)
                     }
                     Spacer()
                     Text("Last update: \(Date.absoluteString(date: self.presenter.timestamp))")
-                        .foregroundColor(.gray)
+                        .foregroundStyle(.gray)
                 }
                 .font(.footnote)
                 #else
                 VStack(alignment: .leading) {
                     HStack {
                         Image(systemName: "safari")
-                        Text(String(format: "%@", self.presenter.placemark))
+                        Text(self.presenter.placemark)
                         Spacer()
                     }
-                    .foregroundColor(.accentColor)
+                    .foregroundStyle(.tint)
                     HStack {
                         Text("Last update: \(Date.absoluteString(date: self.presenter.timestamp))")
                         Spacer()
                     }
-                    .foregroundColor(.gray)
+                    .foregroundStyle(.gray)
                 }
                 .font(.footnote)
                 #endif
 
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                     ForEach(ProcessSelector.Survey.allCases, id: \.self) { selector in
-                        if self.presenter.isAvailable(selector: .survey(selector), treshold: 5.0) {
+                        if self.presenter.isAvailable(selector: .survey(selector), threshold: 5.0) {
                             VStack {
                                 SurveyChartView(selector: .survey(selector))
                             }

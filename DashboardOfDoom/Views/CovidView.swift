@@ -19,7 +19,7 @@ struct CovidView: View {
                     }
                     Spacer()
                     Text("Last update: \(Date.absoluteString(date: self.presenter.timestamp))")
-                        .foregroundColor(.gray)
+                        .foregroundStyle(.gray)
                 }
                 .font(.footnote)
                 #else
@@ -29,12 +29,12 @@ struct CovidView: View {
                         Text(String(format: "%@", self.presenter.placemark))
                         Spacer()
                     }
-                    .foregroundColor(.accentColor)
+                    .foregroundStyle(.tint)
                     HStack {
                         Text("Last update: \(Date.absoluteString(date: self.presenter.timestamp))")
                         Spacer()
                     }
-                    .foregroundColor(.gray)
+                    .foregroundStyle(.gray)
                 }
                 .font(.footnote)
                 #endif

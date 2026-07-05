@@ -8,24 +8,24 @@ public final class PointOfInterestPresenter: Identifiable {
     public let id = UUID()
 
     private var location: Location?
-    private let fetchPharmacies: @Sendable (Location) async -> [PointOfInterest]?
-    private let fetchHospitals: @Sendable (Location) async -> [PointOfInterest]?
-    private let fetchLiquorStores: @Sendable (Location) async -> [PointOfInterest]?
-    private let fetchFuneralDirectors: @Sendable (Location) async -> [PointOfInterest]?
-    private let fetchCemeteries: @Sendable (Location) async -> [PointOfInterest]?
+    private let fetchPharmacies: @Sendable (Location) async -> [PointOfInterest]
+    private let fetchHospitals: @Sendable (Location) async -> [PointOfInterest]
+    private let fetchLiquorStores: @Sendable (Location) async -> [PointOfInterest]
+    private let fetchFuneralDirectors: @Sendable (Location) async -> [PointOfInterest]
+    private let fetchCemeteries: @Sendable (Location) async -> [PointOfInterest]
 
-    public var pharmacies: [PointOfInterest]? = nil
-    public var hospitals: [PointOfInterest]? = nil
-    public var liquorStores: [PointOfInterest]? = nil
-    public var funeralDirectors: [PointOfInterest]? = nil
-    public var cemeteries: [PointOfInterest]? = nil
+    public var pharmacies: [PointOfInterest] = []
+    public var hospitals: [PointOfInterest] = []
+    public var liquorStores: [PointOfInterest] = []
+    public var funeralDirectors: [PointOfInterest] = []
+    public var cemeteries: [PointOfInterest] = []
 
     public init(
-        fetchPharmacies: @escaping @Sendable (Location) async -> [PointOfInterest]?,
-        fetchHospitals: @escaping @Sendable (Location) async -> [PointOfInterest]?,
-        fetchLiquorStores: @escaping @Sendable (Location) async -> [PointOfInterest]?,
-        fetchFuneralDirectors: @escaping @Sendable (Location) async -> [PointOfInterest]?,
-        fetchCemeteries: @escaping @Sendable (Location) async -> [PointOfInterest]?
+        fetchPharmacies: @escaping @Sendable (Location) async -> [PointOfInterest],
+        fetchHospitals: @escaping @Sendable (Location) async -> [PointOfInterest],
+        fetchLiquorStores: @escaping @Sendable (Location) async -> [PointOfInterest],
+        fetchFuneralDirectors: @escaping @Sendable (Location) async -> [PointOfInterest],
+        fetchCemeteries: @escaping @Sendable (Location) async -> [PointOfInterest]
     ) {
         self.fetchPharmacies = fetchPharmacies
         self.fetchHospitals = fetchHospitals
@@ -36,12 +36,9 @@ public final class PointOfInterestPresenter: Identifiable {
 
     public func updateLocation(_ location: Location) {
         self.location = location
-        Task { @MainActor in
-            await self.refresh()
-        }
+        Task { await self.refresh() }
     }
 
-    @MainActor
     public func refresh() async {
         if let location = self.location {
             let fetchPharmacies = self.fetchPharmacies

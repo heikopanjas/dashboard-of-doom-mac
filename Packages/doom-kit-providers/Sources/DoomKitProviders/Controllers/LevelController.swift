@@ -25,7 +25,8 @@ public final class LevelController: ProcessControllerProtocol {
             }
             if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestStation.location) {
                 let sensor = ProcessSensor(
-                    name: nearestStation.name, location: nearestStation.location, placemark: placemark, customData: ProcessMetadata(["icon": "water.waves"]),
+                    name: nearestStation.name, location: nearestStation.location, placemark: placemark,
+                    customData: ProcessMetadata(["icon": "water.waves"]),
                     measurements: measurements,
                     timestamp: Date.now)
                 data.append(sensor)
@@ -248,14 +249,14 @@ public final class LevelController: ProcessControllerProtocol {
                 try predictor.addData(dataPoints)
                 let prediction = try predictor.forecast(duration: duration)
                 forecastMeasurements = prediction.forecasts.map { forecast in
-//                    ProcessValue<Dimension>(
-//                        value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
+                    //                    ProcessValue<Dimension>(
+                    //                        value: Measurement(value: forecast.value, unit: unit), quality: .uncertain, timestamp: forecast.timestamp)
                     ProcessValue<Dimension>(
                         value: Measurement(value: 0.0, unit: unit), quality: .unknown, timestamp: forecast.timestamp)
                 }
             }
             catch {
-                print("Forecasting error: \(error)")
+                trace.error("Forecasting error: %@", error.localizedDescription)
             }
         }
         return forecastMeasurements

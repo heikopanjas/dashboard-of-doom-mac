@@ -11,7 +11,6 @@ public actor NetworkManager {
     private var isMonitoringStarted = false
     private var initialConnectionCheckCompleted = false
 
-    // Maximum number of retry attempts
     private let maxRetryAttempts = 5
 
     public enum ConnectionType {
@@ -21,14 +20,13 @@ public actor NetworkManager {
         case unknown
     }
 
-    private init() {
-        // Don't start monitoring immediately - wait for explicit call
-    }
+    private init() {}
 
     private nonisolated func setupMonitor() {
-        monitor.pathUpdateHandler = { [weak self] path in
-            guard let self = self else { return }
-
+        self.monitor.pathUpdateHandler = { [weak self] path in
+            guard let self = self else {
+                return
+            }
             Task {
                 await self.updateConnectionStatus(path: path)
             }
@@ -36,24 +34,24 @@ public actor NetworkManager {
     }
 
     public func startMonitoring() async {
-        guard !isMonitoringStarted else { return }
+        guard self.isMonitoringStarted == false else {
+            return
+        }
 
-        setupMonitor()
-        monitor.start(queue: monitorQueue)
-        isMonitoringStarted = true
+        self.setupMonitor()
+        self.monitor.start(queue: self.monitorQueue)
+        self.isMonitoringStarted = true
 
-        // Wait for initial connection status check with timeout
-        await waitForInitialConnectionCheck()
+        await self.waitForInitialConnectionCheck()
     }
 
     private func waitForInitialConnectionCheck() async {
-        // Wait up to 5 seconds for initial connection status
         let timeout = Task {
             try? await Task.sleep(for: .seconds(5))
             await self.setInitialConnectionCheckCompleted()
         }
 
-        while !initialConnectionCheckCompleted {
+        while self.initialConnectionCheckCompleted == false {
             try? await Task.sleep(for: .milliseconds(100))
             if timeout.isCancelled {
                 break
@@ -64,50 +62,47 @@ public actor NetworkManager {
     }
 
     private func setInitialConnectionCheckCompleted() async {
-        initialConnectionCheckCompleted = true
+        self.initialConnectionCheckCompleted = true
     }
 
     private func updateConnectionStatus(path: NWPath) async {
-        let wasConnected = isConnected
-        isConnected = path.status == .satisfied
-        getConnectionType(path)
+        let wasConnected = self.isConnected
+        self.isConnected = path.status == .satisfied
+        self.getConnectionType(path)
 
-        // Mark initial check as completed
-        if !initialConnectionCheckCompleted {
-            initialConnectionCheckCompleted = true
+        if self.initialConnectionCheckCompleted == false {
+            self.initialConnectionCheckCompleted = true
         }
 
-        // Only post notification if status actually changed
-        if wasConnected != isConnected {
-            await MainActor.run {
-                NotificationCenter.default.post(name: .networkStatusChanged, object: nil)
-            }
+        if wasConnected != self.isConnected {
+            NotificationCenter.default.post(name: .networkStatusChanged, object: nil)
         }
     }
 
     public func stopMonitoring() {
-        guard isMonitoringStarted else { return }
-        monitor.cancel()
-        isMonitoringStarted = false
-        initialConnectionCheckCompleted = false
+        guard self.isMonitoringStarted else {
+            return
+        }
+        self.monitor.cancel()
+        self.isMonitoringStarted = false
+        self.initialConnectionCheckCompleted = false
     }
 
     private func getConnectionType(_ path: NWPath) {
         if path.usesInterfaceType(.wifi) {
-            connectionType = .wifi
+            self.connectionType = .wifi
         }
         else if path.usesInterfaceType(.cellular) {
-            connectionType = .cellular
+            self.connectionType = .cellular
         }
         else if path.usesInterfaceType(.wiredEthernet) {
-            connectionType = .ethernet
+            self.connectionType = .ethernet
         }
         else {
-            connectionType = .unknown
+            self.connectionType = .unknown
         }
     }
 
-    // Perform network request using Result type rather than throws
     public func performRequest<T: Decodable>(
         urlString: String,
         method: String = "GET",
@@ -115,13 +110,11 @@ public actor NetworkManager {
         headers: [String: String]? = nil,
         decoder: JSONDecoder = JSONDecoder()
     ) async -> Result<T, NetworkError> {
-
-        // Ensure monitoring is started before making requests
-        if !isMonitoringStarted {
-            await startMonitoring()
+        if self.isMonitoringStarted == false {
+            await self.startMonitoring()
         }
 
-        return await attemptRequest(
+        return await self.attemptRequest(
             urlString: urlString,
             method: method,
             body: body,
@@ -139,34 +132,27 @@ public actor NetworkManager {
         decoder: JSONDecoder,
         attempt: Int
     ) async -> Result<T, NetworkError> {
-
-        // For autostart scenarios, give network more time to initialize
-        if !initialConnectionCheckCompleted {
-            let waitResult = await waitForConnection(timeoutSeconds: 10)
+        if self.initialConnectionCheckCompleted == false {
+            let waitResult = await self.waitForConnection(timeoutSeconds: 10)
             if case .failure = waitResult {
                 return .failure(.networkUnavailable)
             }
         }
 
-        // Check network availability with enhanced verification
-        if !isConnected {
-            // For autostart, do an additional connectivity check
-            let connectivityResult = await checkActualConnectivity()
+        if self.isConnected == false {
+            let connectivityResult = await self.checkActualConnectivity()
             if case .failure = connectivityResult {
-                // Wait for network to become available
-                let waitResult = await waitForConnection(timeoutSeconds: 15)
+                let waitResult = await self.waitForConnection(timeoutSeconds: 15)
                 if case .failure = waitResult {
                     return .failure(.networkUnavailable)
                 }
             }
         }
 
-        // Validate URL
         guard let url = URL(string: urlString) else {
             return .failure(.invalidURL)
         }
 
-        // Setup request
         var request = URLRequest(url: url)
         request.httpMethod = method
 
@@ -180,7 +166,6 @@ public actor NetworkManager {
             request.httpBody = body
         }
 
-        // Perform network request
         let dataResult: Result<(Data, HTTPURLResponse), NetworkError>
 
         do {
@@ -193,7 +178,6 @@ public actor NetworkManager {
             dataResult = .success((data, httpResponse))
         }
         catch let urlError as URLError {
-            // Map URLErrors to NetworkErrors
             let networkError: NetworkError
             switch urlError.code {
                 case .notConnectedToInternet, .networkConnectionLost:
@@ -206,12 +190,9 @@ public actor NetworkManager {
                     networkError = .invalidResponse
             }
 
-            // Handle retry
-            if attempt < maxRetryAttempts {
-                // Calculate exponential backoff time
+            if attempt < self.maxRetryAttempts {
                 let delaySeconds = min(pow(2.0, Double(attempt)), 60.0)
 
-                // Use a standard Task.sleep without try
                 do {
                     try await Task.sleep(for: .seconds(delaySeconds))
                 }
@@ -219,8 +200,7 @@ public actor NetworkManager {
                     return .failure(.taskCancelled)
                 }
 
-                // Retry
-                return await attemptRequest(
+                return await self.attemptRequest(
                     urlString: urlString,
                     method: method,
                     body: body,
@@ -236,16 +216,13 @@ public actor NetworkManager {
             return .failure(.invalidResponse)
         }
 
-        // Process response
         switch dataResult {
             case .success((let data, let httpResponse)):
-                // Check status code
                 guard (200 ... 299).contains(httpResponse.statusCode) else {
-                    // Retry on 5xx server errors (transient issues)
-                    if (500 ... 599).contains(httpResponse.statusCode) && attempt < maxRetryAttempts {
+                    if (500 ... 599).contains(httpResponse.statusCode) && attempt < self.maxRetryAttempts {
                         let delaySeconds = min(pow(2.0, Double(attempt)), 60.0)
                         trace.debug(
-                            "Server error \(httpResponse.statusCode), retrying in \(delaySeconds)s (attempt \(attempt)/\(maxRetryAttempts))")
+                            "Server error \(httpResponse.statusCode), retrying in \(delaySeconds)s (attempt \(attempt)/\(self.maxRetryAttempts))")
 
                         do {
                             try await Task.sleep(for: .seconds(delaySeconds))
@@ -254,7 +231,7 @@ public actor NetworkManager {
                             return .failure(.taskCancelled)
                         }
 
-                        return await attemptRequest(
+                        return await self.attemptRequest(
                             urlString: urlString,
                             method: method,
                             body: body,
@@ -266,7 +243,6 @@ public actor NetworkManager {
                     return .failure(.serverError(statusCode: httpResponse.statusCode))
                 }
 
-                // Decode response
                 do {
                     let decodedData = try decoder.decode(T.self, from: data)
                     return .success(decodedData)
@@ -280,16 +256,14 @@ public actor NetworkManager {
         }
     }
 
-    // Add a method to actually test connectivity beyond just monitor status
     private func checkActualConnectivity() async -> Result<Void, NetworkError> {
-        // Try to connect to a reliable endpoint to verify actual connectivity
         guard let url = URL(string: "https://www.apple.com/library/test/success.html") else {
             return .failure(.invalidURL)
         }
 
         var request = URLRequest(url: url)
         request.timeoutInterval = 10
-        request.httpMethod = "HEAD"  // Use HEAD to minimize data usage
+        request.httpMethod = "HEAD"
 
         do {
             let (_, response) = try await URLSession.shared.data(for: request)
@@ -307,22 +281,16 @@ public actor NetworkManager {
         }
     }
 
-    // Wait for network connection using Result type with proper Swift 6 concurrency
     private func waitForConnection(timeoutSeconds: Double) async -> Result<Void, NetworkError> {
-        if isConnected {
-            // Double-check with actual connectivity test
-            return await checkActualConnectivity()
+        if self.isConnected {
+            return await self.checkActualConnectivity()
         }
 
-        // Use async/await pattern with actor for safe state management
         return await withCheckedContinuation { continuation in
             let connectionMonitor = NWPathMonitor()
             let monitorQueue = DispatchQueue(label: "ConnectionWaitMonitor")
-
-            // Use actor to manage completion state safely
             let connectionWaiter = ConnectionWaiter()
 
-            // Create a task for the timeout
             let timeoutTask = Task {
                 try? await Task.sleep(for: .seconds(timeoutSeconds))
                 let didComplete = await connectionWaiter.tryComplete()
@@ -341,7 +309,6 @@ public actor NetworkManager {
                             timeoutTask.cancel()
                             connectionMonitor.cancel()
 
-                            // Verify actual connectivity before reporting success
                             let connectivityResult = await self.checkActualConnectivity()
                             continuation.resume(returning: connectivityResult)
                         }
@@ -351,20 +318,17 @@ public actor NetworkManager {
         }
     }
 
-    // Perform network request returning raw Data (without JSON decoding)
     public func performDataRequest(
         urlString: String,
         method: String = "GET",
         body: Data? = nil,
         headers: [String: String]? = nil
     ) async -> Result<Data, NetworkError> {
-
-        // Ensure monitoring is started before making requests
-        if !isMonitoringStarted {
-            await startMonitoring()
+        if self.isMonitoringStarted == false {
+            await self.startMonitoring()
         }
 
-        return await attemptDataRequest(
+        return await self.attemptDataRequest(
             urlString: urlString,
             method: method,
             body: body,
@@ -380,34 +344,27 @@ public actor NetworkManager {
         headers: [String: String]?,
         attempt: Int
     ) async -> Result<Data, NetworkError> {
-
-        // For autostart scenarios, give network more time to initialize
-        if !initialConnectionCheckCompleted {
-            let waitResult = await waitForConnection(timeoutSeconds: 10)
+        if self.initialConnectionCheckCompleted == false {
+            let waitResult = await self.waitForConnection(timeoutSeconds: 10)
             if case .failure = waitResult {
                 return .failure(.networkUnavailable)
             }
         }
 
-        // Check network availability with enhanced verification
-        if !isConnected {
-            // For autostart, do an additional connectivity check
-            let connectivityResult = await checkActualConnectivity()
+        if self.isConnected == false {
+            let connectivityResult = await self.checkActualConnectivity()
             if case .failure = connectivityResult {
-                // Wait for network to become available
-                let waitResult = await waitForConnection(timeoutSeconds: 15)
+                let waitResult = await self.waitForConnection(timeoutSeconds: 15)
                 if case .failure = waitResult {
                     return .failure(.networkUnavailable)
                 }
             }
         }
 
-        // Validate URL
         guard let url = URL(string: urlString) else {
             return .failure(.invalidURL)
         }
 
-        // Setup request
         var request = URLRequest(url: url)
         request.httpMethod = method
 
@@ -421,7 +378,6 @@ public actor NetworkManager {
             request.httpBody = body
         }
 
-        // Perform network request
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
 
@@ -429,12 +385,11 @@ public actor NetworkManager {
                 return .failure(.invalidResponse)
             }
 
-            // Check status code
             guard (200 ... 299).contains(httpResponse.statusCode) else {
-                // Retry on 5xx server errors (transient issues)
-                if (500 ... 599).contains(httpResponse.statusCode) && attempt < maxRetryAttempts {
+                if (500 ... 599).contains(httpResponse.statusCode) && attempt < self.maxRetryAttempts {
                     let delaySeconds = min(pow(2.0, Double(attempt)), 60.0)
-                    trace.debug("Server error \(httpResponse.statusCode), retrying in \(delaySeconds)s (attempt \(attempt)/\(maxRetryAttempts))")
+                    trace.debug(
+                        "Server error \(httpResponse.statusCode), retrying in \(delaySeconds)s (attempt \(attempt)/\(self.maxRetryAttempts))")
 
                     do {
                         try await Task.sleep(for: .seconds(delaySeconds))
@@ -443,7 +398,7 @@ public actor NetworkManager {
                         return .failure(.taskCancelled)
                     }
 
-                    return await attemptDataRequest(
+                    return await self.attemptDataRequest(
                         urlString: urlString,
                         method: method,
                         body: body,
@@ -454,11 +409,9 @@ public actor NetworkManager {
                 return .failure(.serverError(statusCode: httpResponse.statusCode))
             }
 
-            // Return raw data without decoding
             return .success(data)
         }
         catch let urlError as URLError {
-            // Map URLErrors to NetworkErrors
             let networkError: NetworkError
             switch urlError.code {
                 case .notConnectedToInternet, .networkConnectionLost:
@@ -471,12 +424,9 @@ public actor NetworkManager {
                     networkError = .invalidResponse
             }
 
-            // Handle retry
-            if attempt < maxRetryAttempts {
-                // Calculate exponential backoff time
+            if attempt < self.maxRetryAttempts {
                 let delaySeconds = min(pow(2.0, Double(attempt)), 60.0)
 
-                // Use a standard Task.sleep without try
                 do {
                     try await Task.sleep(for: .seconds(delaySeconds))
                 }
@@ -484,8 +434,7 @@ public actor NetworkManager {
                     return .failure(.taskCancelled)
                 }
 
-                // Retry
-                return await attemptDataRequest(
+                return await self.attemptDataRequest(
                     urlString: urlString,
                     method: method,
                     body: body,
@@ -499,72 +448,5 @@ public actor NetworkManager {
         catch {
             return .failure(.invalidResponse)
         }
-    }
-}
-
-/**
- * Actor that manages the completion state for network connection waiting.
- *
- * This actor prevents race conditions when multiple concurrent tasks are waiting
- * for network connectivity. It ensures that only one task can "claim" the completion
- * state, preventing duplicate continuation resumptions that would cause runtime crashes.
- *
- * ## Usage Pattern:
- * ```swift
- * let waiter = ConnectionWaiter()
- * let didComplete = await waiter.tryComplete()
- * if didComplete {
- *     // This task won the race and should handle the completion
- *     continuation.resume(returning: result)
- * }
- * // If didComplete is false, another task already handled completion
- * ```
- *
- * ## Why This Design:
- * - **Thread Safety**: Actor isolation prevents data races on the `isCompleted` flag
- * - **Race Condition Prevention**: Only the first caller gets `true`, others get `false`
- * - **Swift 6 Compliance**: Eliminates shared mutable state in concurrent contexts
- * - **Crash Prevention**: Prevents multiple `continuation.resume()` calls that cause crashes
- */
-private actor ConnectionWaiter {
-    /// Tracks whether completion has already been claimed by a task
-    private var isCompleted = false
-
-    /// Attempts to claim the completion state atomically.
-    ///
-    /// This method implements a "test-and-set" operation that's safe for concurrent access.
-    /// Only the first caller will receive `true`, indicating they should handle the completion.
-    /// Subsequent callers receive `false`, indicating completion was already handled.
-    ///
-    /// - Returns: `true` if this call successfully claimed completion, `false` if already completed
-    ///
-    /// ## Implementation Details:
-    /// The method checks the current state and atomically updates it if not already completed.
-    /// This prevents the race condition where multiple tasks might think they need to
-    /// resume the same continuation.
-    ///
-    /// ## Example Race Condition This Prevents:
-    /// ```
-    /// // WITHOUT this actor (problematic):
-    /// var hasResumed = false  // Shared mutable state
-    ///
-    /// // Task 1: Checks hasResumed (false), sets to true, calls continuation.resume()
-    /// // Task 2: Checks hasResumed (might still be false), sets to true, calls continuation.resume()
-    /// // Result: CRASH - continuation resumed twice
-    ///
-    /// // WITH this actor (safe):
-    /// // Task 1: Calls tryComplete() -> returns true, handles completion
-    /// // Task 2: Calls tryComplete() -> returns false, does nothing
-    /// // Result: Safe - only one task handles completion
-    /// ```
-    func tryComplete() -> Bool {
-        // If already completed, return false (another task already handled it)
-        guard !isCompleted else {
-            return false
-        }
-
-        // Atomically claim completion
-        isCompleted = true
-        return true
     }
 }

@@ -24,12 +24,10 @@ final class AppProcessControl {
 
     func start() -> Void {
         self.locationManager.onLocationUpdate = { location in
+            self.hazardPresenter?.updateLocation(location)
+            self.pointOfInterestPresenter?.updateLocation(location)
             Task {
                 await self.processManager.updateLocation(location)
-                await MainActor.run {
-                    self.hazardPresenter?.updateLocation(location)
-                    self.pointOfInterestPresenter?.updateLocation(location)
-                }
             }
         }
         Task {

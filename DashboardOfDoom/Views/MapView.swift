@@ -36,9 +36,9 @@ struct MapView: View {
                     Text(String(format: "%@", sensor.placemark ?? "<Unknown>"))
                     Spacer()
                     Text("Last update: \(Date.absoluteString(date: sensor.timestamp))")
-                        .foregroundColor(.gray)
+                        .foregroundStyle(.gray)
                 }
-//                .padding(.vertical, 5)
+                //                .padding(.vertical, 5)
                 .padding(.leading, 5)
                 .font(.footnote)
                 #else
@@ -50,7 +50,7 @@ struct MapView: View {
                     }
                     HStack {
                         Text("Last update: \(Date.absoluteString(date: sensor.timestamp))")
-                            .foregroundColor(.gray)
+                            .foregroundStyle(.gray)
                         Spacer()
                     }
                 }
@@ -114,7 +114,8 @@ struct MapView: View {
     private func updateMapRegion(for presenter: ProcessPresenter, visible: Bool) {
         if visible, let sensor = presenter.sensor {
             MapPresenter.shared.updateRegion(for: presenter.id, with: sensor.location)
-        } else {
+        }
+        else {
             MapPresenter.shared.updateRegion(remove: presenter.id)
         }
     }

@@ -47,11 +47,11 @@ open class ProcessPresenter {
         self.trend = snapshot.trend
     }
 
-    public func isAvailable(selector: ProcessSelector, treshold: Double = 0.0) -> Bool {
+    public func isAvailable(selector: ProcessSelector, threshold: Double = 0.0) -> Bool {
         if let measurements = self.measurements[selector] {
             if measurements.isEmpty == false {
                 for measurement in measurements where measurement.quality != .unknown {
-                    if measurement.value.value > treshold {
+                    if measurement.value.value > threshold {
                         return true
                     }
                 }

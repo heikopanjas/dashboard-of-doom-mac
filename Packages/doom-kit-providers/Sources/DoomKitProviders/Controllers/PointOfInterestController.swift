@@ -7,8 +7,8 @@ public final class PointOfInterestController {
 
     public init() {}
 
-    public func fetchPharmacies(location: Location) async -> [PointOfInterest]? {
-        var pharmacies: [PointOfInterest]? = nil
+    public func fetchPharmacies(location: Location) async -> [PointOfInterest] {
+        var pharmacies: [PointOfInterest] = []
         do {
             if let data = try await PointOfInterestService.fetchPharmacies(location: location, radius: self.radius) {
                 pharmacies = try Self.parsePointsOfInterest(from: data)
@@ -20,8 +20,8 @@ public final class PointOfInterestController {
         return pharmacies
     }
 
-    public func fetchHospitals(location: Location) async -> [PointOfInterest]? {
-        var hospitals: [PointOfInterest]? = nil
+    public func fetchHospitals(location: Location) async -> [PointOfInterest] {
+        var hospitals: [PointOfInterest] = []
         do {
             if let data = try await PointOfInterestService.fetchHospitals(location: location, radius: self.radius) {
                 hospitals = try Self.parsePointsOfInterest(from: data)
@@ -33,8 +33,8 @@ public final class PointOfInterestController {
         return hospitals
     }
 
-    public func fetchLiquorStores(location: Location) async -> [PointOfInterest]? {
-        var liquorStores: [PointOfInterest]? = nil
+    public func fetchLiquorStores(location: Location) async -> [PointOfInterest] {
+        var liquorStores: [PointOfInterest] = []
         do {
             if let data = try await PointOfInterestService.fetchLiquorStores(location: location, radius: self.radius) {
                 liquorStores = try Self.parsePointsOfInterest(from: data)
@@ -46,8 +46,8 @@ public final class PointOfInterestController {
         return liquorStores
     }
 
-    public func fetchFuneralDirectors(location: Location) async -> [PointOfInterest]? {
-        var funeralDirectors: [PointOfInterest]? = nil
+    public func fetchFuneralDirectors(location: Location) async -> [PointOfInterest] {
+        var funeralDirectors: [PointOfInterest] = []
         do {
             if let data = try await PointOfInterestService.fetchFuneralDirectors(location: location, radius: self.radius) {
                 funeralDirectors = try Self.parsePointsOfInterest(from: data)
@@ -59,8 +59,8 @@ public final class PointOfInterestController {
         return funeralDirectors
     }
 
-    public func fetchCemeteries(location: Location) async -> [PointOfInterest]? {
-        var cemeteries: [PointOfInterest]? = nil
+    public func fetchCemeteries(location: Location) async -> [PointOfInterest] {
+        var cemeteries: [PointOfInterest] = []
         do {
             if let data = try await PointOfInterestService.fetchCemeteries(location: location, radius: self.radius) {
                 cemeteries = try Self.parsePointsOfInterest(from: data)
@@ -72,8 +72,8 @@ public final class PointOfInterestController {
         return cemeteries
     }
 
-    private static func parsePointsOfInterest(from data: Data) throws -> [PointOfInterest]? {
-        var pointsOfInterest: [PointOfInterest]? = nil
+    private static func parsePointsOfInterest(from data: Data) throws -> [PointOfInterest] {
+        var pointsOfInterest: [PointOfInterest] = []
         if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
             if let elements = json["elements"] as? [[String: Any]] {
                 for element in elements {
@@ -82,13 +82,8 @@ public final class PointOfInterestController {
                             if let latitude = element["lat"] as? Double, let longitude = element["lon"] as? Double {
                                 if let tags = element["tags"] as? [String: Any] {
                                     if let name = tags["name"] as? String {
-                                        let pointOfInterest = PointOfInterest(name: name, location: Location(latitude: latitude, longitude: longitude))
-                                        if pointsOfInterest == nil {
-                                            pointsOfInterest = [pointOfInterest]
-                                        }
-                                        else {
-                                            pointsOfInterest?.append(pointOfInterest)
-                                        }
+                                        pointsOfInterest.append(
+                                            PointOfInterest(name: name, location: Location(latitude: latitude, longitude: longitude)))
                                     }
                                 }
                             }
@@ -98,13 +93,8 @@ public final class PointOfInterestController {
                                 if let latitude = center["lat"] as? Double, let longitude = center["lon"] as? Double {
                                     if let tags = element["tags"] as? [String: Any] {
                                         if let name = tags["name"] as? String {
-                                            let pointOfInterest = PointOfInterest(name: name, location: Location(latitude: latitude, longitude: longitude))
-                                            if pointsOfInterest == nil {
-                                                pointsOfInterest = [pointOfInterest]
-                                            }
-                                            else {
-                                                pointsOfInterest?.append(pointOfInterest)
-                                            }
+                                            pointsOfInterest.append(
+                                                PointOfInterest(name: name, location: Location(latitude: latitude, longitude: longitude)))
                                         }
                                     }
                                 }

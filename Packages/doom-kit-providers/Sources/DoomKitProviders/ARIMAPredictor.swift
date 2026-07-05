@@ -196,25 +196,3 @@ class ARIMAPredictor {
 
     private func averageTimeDelta() -> TimeInterval { return interval.interval }
 }
-
-extension ARIMAPredictor {
-    static func example() {
-        let now = Date()
-        let sampleData = (0 ..< 100).map { i in
-            TimeSeriesPoint(timestamp: now.addingTimeInterval(Double(i) * 3600), value: sin(Double(i) * 0.1) * 10 + Double.random(in: -1 ... 1))
-        }
-
-        let predictor = ARIMAPredictor(parameters: ARIMAParameters(p: 2, d: 1, q: 1), interval: .hourly)
-
-        do {
-            try predictor.addData(sampleData)
-            let forecast = try predictor.forecast(duration: 24 * 3600)
-
-            print("Forecast points:")
-            for (point, interval) in zip(forecast.forecasts, forecast.confidenceIntervals) {
-                print("Time: \(point.timestamp), Value: \(point.value), CI: (\(interval.lower), \(interval.upper))")
-            }
-        }
-        catch { print("Forecasting error: \(error)") }
-    }
-}

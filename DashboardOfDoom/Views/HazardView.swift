@@ -7,37 +7,35 @@ struct HazardView: View {
 
     var body: some View {
         VStack {
-            if let values = presenter.hazards  {
-                ForEach(values, id: \.id) { value in
-                    VStack {
-                        Spacer()
-                        if let placemark = value.placemark {
-                            HStack {
-                                Image(systemName: "safari")
-                                Text(placemark)
-                                Spacer()
-                            }
-                            .font(.footnote)
-                            .foregroundColor(.accentColor)
-                        }
-                        Spacer()
+            ForEach(self.presenter.hazards, id: \.id) { value in
+                VStack {
+                    Spacer()
+                    if let placemark = value.placemark {
                         HStack {
-                            Text(value.headline)
-                                .font(.headline)
-                            Spacer()
-                        }
-                        .foregroundColor(.accentColor)
-                        Spacer()
-                        HStack {
-                            Text(value.description)
+                            Image(systemName: "safari")
+                            Text(placemark)
                             Spacer()
                         }
                         .font(.footnote)
-                        .foregroundColor(.accentColor)
+                        .foregroundStyle(.tint)
+                    }
+                    Spacer()
+                    HStack {
+                        Text(value.headline)
+                            .font(.headline)
                         Spacer()
                     }
-                    Divider()
+                    .foregroundStyle(.tint)
+                    Spacer()
+                    HStack {
+                        Text(value.description)
+                        Spacer()
+                    }
+                    .font(.footnote)
+                    .foregroundStyle(.tint)
+                    Spacer()
                 }
+                Divider()
             }
         }
     }
