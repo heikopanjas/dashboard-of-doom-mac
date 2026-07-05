@@ -7,7 +7,7 @@ APP_NAME="Dashboard of Doom"
 BUILD_DIR="./build"
 ARCHIVE_PATH="${BUILD_DIR}/${APP_NAME}.xcarchive"
 EXPORT_PATH="${BUILD_DIR}/export"
-EXPORT_PLIST="ExportOptions.plist"
+EXPORT_PLIST="exportOptions.plist"
 NOTARIZE_PROFILE="DashboardOfDoom-Notarize"
 DESTINATION="generic/platform=macOS"
 
