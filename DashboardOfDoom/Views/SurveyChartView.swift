@@ -1,4 +1,5 @@
 import Charts
+import DoomKit
 import SwiftUI
 
 struct SurveyChartView: View {

@@ -1,4 +1,5 @@
 import Charts
+import DoomKit
 import SwiftUI
 
 struct ForecastChartView: View {
@@ -87,7 +88,7 @@ struct ForecastChartView: View {
                             Text(String(format: "%@ %@", measurement.timestamp.dateString(), measurement.timestamp.timeString()))
                                 .font(.footnote)
                             HStack {
-                                if let icon = measurement.customData?["icon"] as? String {
+                                if let icon = measurement.customData?.string(for: "icon") {
                                     Image(systemName: icon)
                                 }
                                 Text(String(format: "%.1f%@", measurement.value.value, measurement.value.unit.symbol))
@@ -117,7 +118,7 @@ struct ForecastChartView: View {
                                 Text(String(format: "%@ %@", timestamp.dateString(), timestamp.timeString()))
                                     .font(.footnote)
                                 HStack {
-                                    if let icon = measurement.customData?["icon"] as? String {
+                                    if let icon = measurement.customData?.string(for: "icon") {
                                         Image(systemName: icon)
                                     }
                                     Text(String(format: "%.1f%@", measurement.value.value, measurement.value.unit.symbol))

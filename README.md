@@ -70,9 +70,23 @@
 
 ### Architecture Pattern
 
-- **MVP (Model-View-Presenter)**: Optimized for menu bar applications with reactive state management
+- **Layered packages**: Shared logic lives in local Swift packages under `Packages/`; the app target owns composition, SwiftUI views, and macOS-specific policy
+- **MVP (Model-View-Presenter)**: Presenters hold `@Observable` state consumed by SwiftUI views
 - **Environment-Based Injection**: SwiftUI environment pattern for presenter dependencies
 - **Observable State**: Modern `@Observable` macro for reactive UI updates
+
+### Package Layout
+
+```text
+Packages/
+├── doom-kit-core/       # Domain models, units, ProcessManager actor, protocols
+├── doom-kit-tools/      # NetworkManager, LocationManager, Trace, geospatial helpers
+├── doom-kit-providers/  # Services, controllers, transformers, forecasting helpers
+├── doom-kit-ui/         # ProcessPresenter, process data presenters, HazardPresenter, PointOfInterestPresenter
+└── doom-kit/            # Meta-package re-exporting all four products
+```
+
+The app links the `DoomKit` product and wires runtime dependencies in `DashboardOfDoom/Composition/`.
 
 ### Core Architecture Components
 
@@ -99,8 +113,8 @@
 
 #### Key Design Patterns
 
-- **Subscription System**: `ProcessManager` coordinates periodic data updates
-- **Observer Pattern**: `ProcessSubscriber` protocol for reactive components
+- **Subscription System**: `ProcessManager` actor coordinates periodic data updates via closure-backed subscriptions
+- **Refresh Protocol**: `ProcessRefreshProtocol` adapts presenters into core subscriptions at the app composition root
 - **Transformer Pattern**: Clean separation of data processing from presentation
 - **Quality Assessment**: Built-in measurement validation and confidence scoring
 
@@ -132,23 +146,16 @@
 
 ```text
 dashboard-of-doom-mac/
-├── DashboardOfDoom/                  # macOS Application Source
-│   ├── Controllers/                  # Data orchestration layer
-│   ├── Services/                     # API communication services
-│   ├── Presenters/                   # State management (MVP)
-│   ├── Transformers/                 # Data processing pipeline
+├── Packages/                         # Local Swift packages (doom-kit-*)
+├── DashboardOfDoom/                  # macOS app target
+│   ├── Composition/                  # AppProcessControl, AppFactories
+│   ├── Presenters/                   # App-local presenter state
 │   ├── Views/                        # SwiftUI user interfaces
-│   ├── Models/                       # Core data structures
 │   ├── Extensions/                   # Swift utility extensions
-│   ├── Units/                        # Measurement unit definitions
-│   ├── Utilities/                    # Helper functions and tools
 │   ├── Assets.xcassets/              # App icons and image assets
 │   ├── DashboardOfDoomApp.swift      # App entry point
 │   ├── ContentView.swift             # Main view with header bar and panels
-│   ├── LocationManager.swift         # Location services manager
-│   ├── NetworkManager.swift          # Network connectivity monitor
-│   ├── ProcessManager.swift          # Subscription coordinator
-│   └── ProcessSubscriber.swift       # Reactive update protocol
+│   └── ProcessPresenter.swift        # Base presenter type
 ├── DashboardOfDoom.xcodeproj/        # Xcode project file
 ├── AGENTS.md                         # AI agent instructions
 ├── LICENSE                           # MIT License
@@ -250,6 +257,7 @@ git push origin feature/your-feature-name
 
 ### Testing Strategy
 
+- **Package tests**: Swift Testing targets in `Packages/doom-kit-*` (core process control, geospatial helpers, transformers, UI presenters)
 - **Unit Tests**: Core business logic and data transformations
 - **Integration Tests**: API communication and data pipeline validation
 - **UI Tests**: SwiftUI interface behavior and user interaction flows

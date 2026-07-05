@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		42325BC52D5D322B00CF6970 /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = 42325BC42D5D322B00CF6970 /* LaunchAtLogin */; };
+		42A1B0012F1A000100A1B001 /* DoomKit in Frameworks */ = {isa = PBXBuildFile; productRef = 42A1B0032F1A000100A1B001 /* DoomKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				42325BC52D5D322B00CF6970 /* LaunchAtLogin in Frameworks */,
+				42A1B0012F1A000100A1B001 /* DoomKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,6 +73,7 @@
 			name = DashboardOfDoom;
 			packageProductDependencies = (
 				42325BC42D5D322B00CF6970 /* LaunchAtLogin */,
+				42A1B0032F1A000100A1B001 /* DoomKit */,
 			);
 			productName = DashboardOfDoom;
 			productReference = 42EADC232D5D0EF100CC3BF3 /* Dashboard of Doom.app */;
@@ -102,6 +105,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				42325BC32D5D322B00CF6970 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */,
+				42A1B0022F1A000100A1B001 /* XCLocalSwiftPackageReference "doom-kit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 42EADC242D5D0EF100CC3BF3 /* Products */;
@@ -266,7 +270,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 137;
+				CURRENT_PROJECT_VERSION = 142;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = "";
@@ -287,7 +291,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 6.3.0;
+				MARKETING_VERSION = 7.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.panjas.dashboard-of-doom";
 				PRODUCT_NAME = "Dashboard of Doom";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -307,7 +311,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 137;
+				CURRENT_PROJECT_VERSION = 142;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = "";
@@ -328,7 +332,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				MARKETING_VERSION = 6.3.0;
+				MARKETING_VERSION = 7.0.4;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.panjas.dashboard-of-doom";
 				PRODUCT_NAME = "Dashboard of Doom";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -372,11 +376,23 @@
 		};
 /* End XCRemoteSwiftPackageReference section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		42A1B0022F1A000100A1B001 /* XCLocalSwiftPackageReference "doom-kit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/doom-kit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		42325BC42D5D322B00CF6970 /* LaunchAtLogin */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 42325BC32D5D322B00CF6970 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */;
 			productName = LaunchAtLogin;
+		};
+		42A1B0032F1A000100A1B001 /* DoomKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 42A1B0022F1A000100A1B001 /* XCLocalSwiftPackageReference "doom-kit" */;
+			productName = DoomKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

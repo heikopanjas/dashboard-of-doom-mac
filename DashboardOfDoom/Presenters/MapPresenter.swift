@@ -1,4 +1,4 @@
-import Foundation
+import DoomKit
 import MapKit
 import SwiftUI
 
@@ -60,20 +60,16 @@ import SwiftUI
     }
 
     private static func makeBoundingRectangle(centerCoordinate: CLLocationCoordinate2D, widthMeters: Double, heightMeters: Double) -> MKMapRect {
-        // Convert center coordinate to map point
         let centerPoint = MKMapPoint(centerCoordinate)
 
-        // Calculate points per meter at this latitude
         let metersPerPoint = MKMetersPerMapPointAtLatitude(centerCoordinate.latitude)
 
         let actualWidthMeters = (widthMeters < 1000.0) ? 1000.0 : widthMeters
         let actualHeightMeters = (heightMeters < 1000.0) ? 1000.0 : heightMeters
 
-        // Convert meters to points
         let widthPoints = actualWidthMeters / metersPerPoint
         let heightPoints = actualHeightMeters / metersPerPoint
 
-        // Create rect centered on the point
         return MKMapRect(
             x: centerPoint.x - widthPoints / 2,
             y: centerPoint.y - heightPoints / 2,
@@ -85,7 +81,6 @@ import SwiftUI
 }
 
 extension MapPresenter {
-    // Creates a binding for any property
     func binding<Value>(for keyPath: ReferenceWritableKeyPath<MapPresenter, Value>) -> Binding<Value> {
         Binding(
             get: { self[keyPath: keyPath] },

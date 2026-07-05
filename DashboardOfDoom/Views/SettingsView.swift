@@ -1,85 +1,6 @@
+import DoomKit
 import LaunchAtLogin
 import SwiftUI
-
-// MARK: - Settings Tab
-
-enum SettingsTab: String, CaseIterable {
-    case general = "General"
-    case weather = "Weather"
-    case covid = "COVID-19"
-    case level = "Level"
-    case radiation = "Radiation"
-    case particles = "Particles"
-    case polls = "Polls"
-    case about = "About"
-
-    var icon: String {
-        switch self {
-        case .general: return "gear"
-        case .weather: return "cloud.sun"
-        case .covid: return "facemask"
-        case .level: return "water.waves"
-        case .radiation: return "atom"
-        case .particles: return "aqi.medium"
-        case .polls: return "chart.bar"
-        case .about: return "info.circle"
-        }
-    }
-}
-
-// MARK: - Toolbar Button
-
-struct SettingsToolbarButton: View {
-    let tab: SettingsTab
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 2) {
-                Image(systemName: tab.icon)
-                    .font(.system(size: 20))
-                    .frame(height: 24)
-                Text(tab.rawValue)
-                    .font(.system(size: 10))
-            }
-            .frame(width: 64, height: 46)
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(isSelected ? Color.primary.opacity(0.1) : Color.clear)
-            )
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .focusable(false)
-        .foregroundColor(.primary)
-    }
-}
-
-// MARK: - Refresh Rate Picker
-
-struct RefreshRatePicker: View {
-    let label: String
-    @Binding var interval: Int
-
-    private let intervals: [(label: String, minutes: Int)] = [
-        ("5 minutes", 5),
-        ("15 minutes", 15),
-        ("30 minutes", 30),
-        ("1 hour", 60),
-        ("6 hours", 360)
-    ]
-
-    var body: some View {
-        Picker(label, selection: $interval) {
-            ForEach(intervals, id: \.minutes) { option in
-                Text(option.label).tag(option.minutes)
-            }
-        }
-    }
-}
-
-// MARK: - Settings View
 
 struct SettingsView: View {
     @State private var selectedTab: SettingsTab = .general
@@ -136,22 +57,22 @@ struct SettingsView: View {
             // Content
             Group {
                 switch selectedTab {
-                case .general:
-                    generalContent
-                case .weather:
-                    weatherContent
-                case .covid:
-                    covidContent
-                case .level:
-                    levelContent
-                case .radiation:
-                    radiationContent
-                case .particles:
-                    particlesContent
-                case .polls:
-                    pollsContent
-                case .about:
-                    aboutContent
+                    case .general:
+                        generalContent
+                    case .weather:
+                        weatherContent
+                    case .covid:
+                        covidContent
+                    case .level:
+                        levelContent
+                    case .radiation:
+                        radiationContent
+                    case .particles:
+                        particlesContent
+                    case .polls:
+                        pollsContent
+                    case .about:
+                        aboutContent
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -160,17 +81,53 @@ struct SettingsView: View {
         .background(Color(light: .white, dark: Color(hex: "#000000")))
         .onChange(of: nearestLevelSensor) { _, _ in
             if let presenter = levelPresenter {
-                ProcessManager.shared.refreshSubscription(subscriber: presenter)
+                Task {
+                    await AppProcessControl.shared.refreshSubscription(presenterId: presenter.id)
+                }
             }
         }
         .onChange(of: nearestParticleSensor) { _, _ in
             if let presenter = particlePresenter {
-                ProcessManager.shared.refreshSubscription(subscriber: presenter)
+                Task {
+                    await AppProcessControl.shared.refreshSubscription(presenterId: presenter.id)
+                }
             }
         }
         .onChange(of: electionPollScope) { _, _ in
             if let presenter = surveyPresenter {
-                ProcessManager.shared.refreshSubscription(subscriber: presenter)
+                Task {
+                    await AppProcessControl.shared.refreshSubscription(presenterId: presenter.id)
+                }
+            }
+        }
+        .onChange(of: weatherRefreshInterval) { _, _ in
+            Task {
+                await AppProcessControl.shared.reregisterProcessPresenters(forIntervalKey: "weatherRefreshInterval")
+            }
+        }
+        .onChange(of: covidRefreshInterval) { _, _ in
+            Task {
+                await AppProcessControl.shared.reregisterProcessPresenters(forIntervalKey: "covidRefreshInterval")
+            }
+        }
+        .onChange(of: levelRefreshInterval) { _, _ in
+            Task {
+                await AppProcessControl.shared.reregisterProcessPresenters(forIntervalKey: "levelRefreshInterval")
+            }
+        }
+        .onChange(of: radiationRefreshInterval) { _, _ in
+            Task {
+                await AppProcessControl.shared.reregisterProcessPresenters(forIntervalKey: "radiationRefreshInterval")
+            }
+        }
+        .onChange(of: particleRefreshInterval) { _, _ in
+            Task {
+                await AppProcessControl.shared.reregisterProcessPresenters(forIntervalKey: "particleRefreshInterval")
+            }
+        }
+        .onChange(of: surveyRefreshInterval) { _, _ in
+            Task {
+                await AppProcessControl.shared.reregisterProcessPresenters(forIntervalKey: "surveyRefreshInterval")
             }
         }
     }
@@ -291,15 +248,19 @@ struct SettingsView: View {
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0") (\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"))")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+            Text(
+                "Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0") (\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"))"
+            )
+            .font(.subheadline)
+            .foregroundColor(.secondary)
 
-            Text("A macOS menu bar application providing real-time environmental and public health data for Germany. Integrates weather, air quality, water levels, radiation, COVID-19 statistics, and election polls from official German federal APIs.")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
+            Text(
+                "A macOS menu bar application providing real-time environmental and public health data for Germany. Integrates weather, air quality, water levels, radiation, COVID-19 statistics, and election polls from official German federal APIs."
+            )
+            .font(.caption)
+            .foregroundColor(.secondary)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 40)
 
             Spacer()
 
