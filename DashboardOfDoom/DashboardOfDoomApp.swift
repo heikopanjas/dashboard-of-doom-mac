@@ -3,6 +3,8 @@ import SwiftUI
 
 @main
 struct DashboardOfDoomApp: App {
+    @AppStorage("alwaysUseDarkTheme") private var alwaysUseDarkTheme: Bool = true
+
     @State var weatherViewModel = WeatherPresenter()
     @State var forecastPresenter = ForecastPresenter()
     @State var covidPresenter = CovidPresenter()
@@ -26,6 +28,7 @@ struct DashboardOfDoomApp: App {
                 .environment(surveyPresenter)
                 .environment(colorPresenter)
                 .environment(appDelegate)
+                .preferredColorScheme(alwaysUseDarkTheme ? .dark : nil)
                 .onAppear {
                     // Provide presenters to AppDelegate for settings window
                     appDelegate.levelPresenter = levelPresenter

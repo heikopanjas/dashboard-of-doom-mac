@@ -1,7 +1,52 @@
 import MapKit
 import SwiftUI
 
+#if os(macOS)
+private struct MapAppearanceView: NSViewRepresentable {
+    let colorScheme: ColorScheme
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        applyAppearance(from: view)
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        applyAppearance(from: nsView)
+    }
+
+    private func applyAppearance(from view: NSView) {
+        DispatchQueue.main.async {
+            var ancestor = view.superview
+            while let currentView = ancestor {
+                if let mapView = findMapView(in: currentView) {
+                    mapView.appearance = NSAppearance(
+                        named: colorScheme == .dark ? .darkAqua : .aqua
+                    )
+                    mapView.needsDisplay = true
+                    return
+                }
+                ancestor = currentView.superview
+            }
+        }
+    }
+
+    private func findMapView(in view: NSView) -> MKMapView? {
+        if let mapView = view as? MKMapView {
+            return mapView
+        }
+        for subview in view.subviews {
+            if let mapView = findMapView(in: subview) {
+                return mapView
+            }
+        }
+        return nil
+    }
+}
+#endif
+
 struct MapView: View {
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(WeatherPresenter.self) private var weather
     @Environment(CovidPresenter.self) private var incidence
     @Environment(LevelPresenter.self) private var water
@@ -37,7 +82,7 @@ struct MapView: View {
                     Text("Last update: \(Date.absoluteString(date: sensor.timestamp))")
                         .foregroundColor(.gray)
                 }
-//                .padding(.vertical, 5)
+                //                .padding(.vertical, 5)
                 .padding(.leading, 5)
                 .font(.footnote)
                 #else
@@ -90,6 +135,9 @@ struct MapView: View {
                         }
                     }
                     .allowsHitTesting(false)
+                    #if os(macOS)
+                    .background(MapAppearanceView(colorScheme: colorScheme))
+                    #endif
                 }
             }
         }
@@ -113,7 +161,8 @@ struct MapView: View {
     private func updateMapRegion(for presenter: ProcessPresenter, visible: Bool) {
         if visible, let sensor = presenter.sensor {
             MapPresenter.shared.updateRegion(for: presenter.id, with: sensor.location)
-        } else {
+        }
+        else {
             MapPresenter.shared.updateRegion(remove: presenter.id)
         }
     }

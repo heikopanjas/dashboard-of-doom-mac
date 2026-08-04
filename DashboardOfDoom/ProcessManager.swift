@@ -14,6 +14,12 @@ public class ProcessManager: Identifiable, LocationManagerDelegate {
 
     private init() {
         self.locationManager.delegate = self
+        if let fallbackLocation = self.locationManager.location {
+            self.location = fallbackLocation
+            trace.debug(
+                "Using fallback location: \(fallbackLocation.latitude), \(fallbackLocation.longitude)"
+            )
+        }
 
         // Wait for network to be ready before starting timer
         Task {
@@ -27,7 +33,7 @@ public class ProcessManager: Identifiable, LocationManagerDelegate {
         await NetworkManager.shared.startMonitoring()
 
         // Wait up to 30 seconds for initial network availability
-        for _ in 0..<30 {
+        for _ in 0 ..< 30 {
             let isConnected = await NetworkManager.shared.isConnected
             if isConnected {
                 return
@@ -101,7 +107,8 @@ public class ProcessManager: Identifiable, LocationManagerDelegate {
             hasPerformedInitialRefresh = true
             trace.debug("Performing initial data refresh with location")
             self.refreshSubscriptions()
-        } else {
+        }
+        else {
             trace.debug("Ignoring location update (initial refresh already performed)")
         }
     }
@@ -109,6 +116,11 @@ public class ProcessManager: Identifiable, LocationManagerDelegate {
     func add(subscriber: any ProcessRefreshable, timeout: TimeInterval) {
         self.subscriptions.append(ProcessSubscription(id: subscriber.id, timeout: timeout * 60))
         self.subscribers[subscriber.id] = subscriber
+        if let location = self.location {
+            Task {
+                await subscriber.refreshData(location: location)
+            }
+        }
     }
 
     func remove(subscriber: any ProcessRefreshable) {
