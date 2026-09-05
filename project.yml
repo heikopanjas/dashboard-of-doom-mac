@@ -85,6 +85,12 @@ settings:
       MTL_ENABLE_DEBUG_INFO: 'NO'
       SWIFT_COMPILATION_MODE: wholemodule
 packages:
+  DoomKitProcess:
+    path: doom-kit-process
+  DoomKitNetwork:
+    path: doom-kit-network
+  DoomKitLocation:
+    path: doom-kit-location
   LaunchAtLogin-Modern:
     url: https://github.com/sindresorhus/LaunchAtLogin-Modern
     branch: main
@@ -104,7 +110,7 @@ targets:
         CODE_SIGN_IDENTITY[sdk=macosx*]: Developer ID Application
         CODE_SIGN_STYLE: Manual
         COMBINE_HIDPI_IMAGES: 'YES'
-        CURRENT_PROJECT_VERSION: '137'
+        CURRENT_PROJECT_VERSION: '139'
         DEAD_CODE_STRIPPING: 'YES'
         DEVELOPMENT_ASSET_PATHS: ''
         DEVELOPMENT_TEAM: ''
@@ -124,7 +130,7 @@ targets:
         - "$(inherited)"
         - "@executable_path/../Frameworks"
         MACOSX_DEPLOYMENT_TARGET: '15.0'
-        MARKETING_VERSION: 6.3.0
+        MARKETING_VERSION: 6.3.2
         PRODUCT_BUNDLE_IDENTIFIER: com.panjas.dashboard-of-doom
         PRODUCT_NAME: Dashboard of Doom
         PROVISIONING_PROFILE_SPECIFIER: ''
@@ -132,6 +138,9 @@ targets:
         SWIFT_EMIT_LOC_STRINGS: 'YES'
         SWIFT_VERSION: '5.0'
     dependencies:
+    - package: DoomKitProcess
+    - package: DoomKitNetwork
+    - package: DoomKitLocation
     - package: LaunchAtLogin-Modern
       product: LaunchAtLogin
 schemes:

@@ -1,3 +1,4 @@
+import DoomKitLocation
 import Foundation
 
 class Hazard: Identifiable {

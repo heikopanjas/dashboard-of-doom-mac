@@ -1,3 +1,5 @@
+import DoomKitProcess
+import DoomKitLocation
 import Foundation
 
 class CovidController: ProcessController {
@@ -49,7 +51,7 @@ class CovidController: ProcessController {
                 measurement.append(contentsOf: self.forecastMeasurements(data: recovered, duration: self.forecastDuration))
                 measurements[.covid(.recovered)] = measurement.sorted(by: { $0.timestamp < $1.timestamp })
             }
-            if let placemark = await LocationManager.reverseGeocodeLocation(location: district.location) {
+            if let placemark = await GeocodingService.reverseGeocodeLocation(location: district.location) {
                 let sensor = ProcessSensor(
                     name: district.name, location: district.location, placemark: placemark, customData: ["name": "COVID-19", "icon": "facemask"], measurements: measurements, timestamp: Date.now)
                 data.append(sensor)

@@ -1,6 +1,6 @@
 # Agent Instructions for Dashboard of Doom (macOS)
 
-*Last updated: September 5, 2026 (Build Script Consolidation)*
+*Last updated: September 5, 2026 (Process Module Expansion)*
 
 ## Project Overview
 
@@ -12,7 +12,7 @@ Dashboard of Doom is a sophisticated macOS menu bar application providing real-t
 - **Fully Functional**: Complete data pipeline from API integration to UI presentation
 - **macOS Menu Bar App**: Lightweight menu bar extra with settings window
 - **Production Ready**: Comprehensive error handling, retry mechanisms, and quality assessment
-- **Modern Swift**: Uses async/await with Swift 5 language mode throughout the codebase
+- **Modern Swift**: Uses async/await; app uses Swift 5 language mode, local packages use Swift 6 with Swift tools 6.2
 - **State Management**: Full `@Observable` implementation for reactive UI updates
 - **Mathematical Analysis**: Advanced forecasting and trend analysis capabilities
 
@@ -44,8 +44,8 @@ Controllers → Services → Transformers → Presenters → Views
 5. **Views**: SwiftUI interfaces with environment-based dependency injection
 
 #### Key Design Patterns
-- **Subscription System**: `ProcessManager` coordinates periodic data updates with configurable timeouts
-- **Observer Pattern**: `ProcessSubscriber` protocol for reactive components with location-based updates
+- **Subscription System**: package-owned `ProcessCoordinator`, constructed by `AppProcess.shared`, supplies location/readiness to `DoomKitProcess.ProcessManager<Context>`
+- **Observation**: typed per-consumer AsyncStream state for location/connectivity; `ProcessRefreshable` is a public package presenter contract
 - **Transformer Pattern**: Clean separation of data processing from presentation logic
 - **Quality Assessment**: Built-in measurement validation with `.good`, `.uncertain`, `.bad`, `.unknown` states
 - **Mathematical Analysis**: Moving averages, exponential smoothing, and ARIMA forecasting
@@ -197,9 +197,10 @@ Controllers → Services → Transformers → Presenters → Views
 - Memory-conscious caching strategies
 
 ### Data Updates & Subscription System
-- **ProcessManager**: Centralized subscription coordinator with location-based updates
-- **ProcessSubscriber Protocol**: Standardized interface for reactive data consumers
-- **ProcessSubscription**: Individual subscription management with configurable timeouts
+- **ProcessCoordinator**: package-owned stream observation, app-injected Berlin fallback, first-measurement refresh, and bounded startup readiness
+- **DoomKitProcess.ProcessManager**: main-actor UUID registrations, cancellable 60-second scheduling, and cancel/restart refresh generations
+- **ProcessRefreshable Protocol**: Standardized interface for reactive data consumers
+- **ProcessManager registrations**: UUID subscription management with configurable intervals
 - **Intelligent Refresh**: Different intervals based on data type and update frequency:
   - Weather: Real-time updates with 5-minute fallback
   - Air Quality: 30-minute intervals with immediate alerts
@@ -235,7 +236,22 @@ Controllers → Services → Transformers → Presenters → Views
 - Keep the existing signing configuration, app identity, and WeatherKit entitlement unless explicitly changing them; configure signing in the spec, including SDK-specific overrides
 - Generated project files are ignored, except the tracked package lockfile at `DashboardOfDoom.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`
 - Preserve locked dependency revisions during unrelated changes
-- There is no test target currently; define future test targets in `project.yml`
+- Local package tests: run `swift test --package-path doom-kit-location`, then `doom-kit-network`, then `doom-kit-process`; tests use injected dependencies and no live network
+- There is no app test target currently; define future app test targets in `project.yml`
+
+### Local Package Boundaries
+
+- `doom-kit-location` / `DoomKitLocation`: location values, provider-independent state streams and movement filtering, separate async geocoding
+- `doom-kit-network` / `DoomKitNetwork`: network actor, typed state streams, injectable monitoring/transport/timing, shared request execution
+- `doom-kit-process` / `DoomKitProcess`: process models, geographic helpers, open observable presenter and transformer bases, coordinator, generic main-actor scheduler and injected clock; local dependencies on DoomKitLocation and DoomKitNetwork
+- All packages use Swift tools 6.2 and Swift 6 language mode; keep the app in Swift 5 mode
+- Packages declare macOS 15 and iOS 26; iOS is unvalidated and has no app integration here
+- Each state consumer owns a separate latest-value stream and explicitly cancelled task; stop finishes all streams and restart requires new subscriptions
+- Location initialization does not request permission or track; the private Core Location provider starts explicitly with kilometer accuracy
+- Native `CLLocationUpdate.liveUpdates()` is a planned provider replacement; validate accuracy, authorization, delivery, cancellation, and background behavior separately
+- Refresh closures must check cancellation after awaits and immediately before synchronous publication; use per-refresh transformer state
+- Keep concrete presenters, Berlin fallback configuration, settings, and the starting `AppProcess.shared` factory in the app; shared process models and coordinator lifecycle policy belong to DoomKitProcess
+- Preserve the unrelated theme notification observer
 
 ### Git Conventions
 
@@ -340,9 +356,9 @@ fix: update `ProcessManager` with "nested 'quotes'" & $special chars!
 2. **Define Data Models**: Create parsing structures with proper error handling
 3. **Implement Controller**: Add data orchestration with quality assessment
 4. **Create Transformer**: Build UI-ready data processing with mathematical analysis
-5. **Develop Presenter**: Implement `@Observable` presenter with `ProcessSubscriber` conformance
+5. **Develop Presenter**: Implement `@Observable` presenter with `ProcessRefreshable` conformance
 6. **Update Views**: Add environment injection and platform-specific UI code
-7. **Configure Subscription**: Register with `ProcessManager` using appropriate timeout intervals
+7. **Configure Subscription**: Register presenters with `AppProcess.shared` using appropriate refresh intervals
 8. **Add Custom Units**: Implement `Dimension` subclasses with `@unchecked Sendable` if needed
 
 ### Implementing New Views
@@ -359,7 +375,7 @@ fix: update `ProcessManager` with "nested 'quotes'" & $special chars!
 3. **Transformer Layer**: Process data with quality scoring and mathematical analysis
 4. **Presenter Layer**: Publish processed data through `@Observable` properties
 5. **View Layer**: Update UI reactively through environment injection and state binding
-6. **Subscription Management**: Coordinate updates through `ProcessManager` with location awareness
+6. **Subscription Management**: Coordinate updates through `ProcessCoordinator` with location awareness
 
 Remember: This application focuses specifically on German environmental data and should maintain its regional focus while providing comprehensive, reliable monitoring capabilities.
 

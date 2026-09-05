@@ -1,3 +1,5 @@
+import DoomKitProcess
+import DoomKitLocation
 import CoreLocation
 import Foundation
 import WeatherKit
@@ -51,7 +53,7 @@ class WeatherController: ProcessController {
             measurements[.weather(.windGust)] = [ProcessValue(value: windGust, quality: .good)]
         }
 
-        if let placemark = await LocationManager.reverseGeocodeLocation(latitude: location.latitude, longitude: location.longitude) {
+        if let placemark = await GeocodingService.reverseGeocodeLocation(latitude: location.latitude, longitude: location.longitude) {
             let sensor = ProcessSensor(name: "", location: location, placemark: placemark, customData: ["icon": current.symbolName], measurements: measurements, timestamp: Date.now)
             data.append(sensor)
         }

@@ -1,29 +1,49 @@
+import DoomKitLocation
 import Foundation
 import SwiftUI
 
-@Observable class HazardPresenter: Identifiable, LocationManagerDelegate {
+@MainActor @Observable class HazardPresenter: Identifiable {
     let id = UUID()
 
     private let hazardController = HazardController()
-    private let locationManager = LocationManager()
+    private let locationManager = AppLocation.shared
+    private var locationTask: Task<Void, Never>?
+    private var refreshTask: Task<Void, Never>?
     private var location: Location?
 
     var hazards: [Hazard]? = nil
 
     init() {
-        self.locationManager.delegate = self
+        let updates = self.locationManager.updates()
+        self.locationTask = Task { [weak self] in
+            var previous: Location?
+            for await state in updates {
+                guard state.origin == .measured, state.location != previous else { continue }
+                previous = state.location
+                self?.locationManager(didUpdateLocation: state.location)
+            }
+        }
+        self.locationManager.start()
+    }
+
+    isolated deinit {
+        self.locationTask?.cancel()
+        self.refreshTask?.cancel()
     }
 
     func locationManager(didUpdateLocation location: Location) {
         self.location = location
-        Task {
-            await self.refresh()
+        self.refreshTask?.cancel()
+        self.refreshTask = Task { [weak self] in
+            await self?.refresh()
         }
     }
 
     @MainActor func refresh() async {
         if let location = self.location {
-            self.hazards = await self.hazardController.fetchHazards(location: location)
+            let hazards = await self.hazardController.fetchHazards(location: location)
+            guard Task.isCancelled == false else { return }
+            self.hazards = hazards
         }
     }
 }

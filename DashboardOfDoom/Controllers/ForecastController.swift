@@ -1,3 +1,5 @@
+import DoomKitProcess
+import DoomKitLocation
 import CoreLocation
 import Foundation
 import WeatherKit
@@ -6,7 +8,7 @@ class ForecastController: ProcessController {
     func refreshData(for location: Location) async throws -> [ProcessSensor] {
         var data: [ProcessSensor] = []
 
-        if let placemark = await LocationManager.reverseGeocodeLocation(location: location) {
+        if let placemark = await GeocodingService.reverseGeocodeLocation(location: location) {
             var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
 
             let weather = try await WeatherService.shared.weather(for: CLLocation(latitude: location.latitude, longitude: location.longitude))

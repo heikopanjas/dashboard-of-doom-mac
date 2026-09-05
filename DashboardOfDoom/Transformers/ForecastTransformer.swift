@@ -1,3 +1,4 @@
+import DoomKitProcess
 import Foundation
 
 class ForecastTransformer: ProcessTransformer {

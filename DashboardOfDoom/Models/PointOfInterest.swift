@@ -1,3 +1,4 @@
+import DoomKitLocation
 import Foundation
 
 class PointOfInterest: Identifiable {

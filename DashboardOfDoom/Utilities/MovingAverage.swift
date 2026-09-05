@@ -1,3 +1,4 @@
+import DoomKitProcess
 import Foundation
 
 func movingAverage(data: [ProcessValue<Dimension>], windowSize: Int) -> [ProcessValue<Dimension>] {

@@ -1,3 +1,4 @@
+import DoomKitProcess
 import Foundation
 
 func exponentialMovingAverage(data: [ProcessValue<Dimension>], alpha: Double) -> [ProcessValue<Dimension>] {

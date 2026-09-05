@@ -1,3 +1,4 @@
+import DoomKitProcess
 import Foundation
 
 /// Applies Gaussian smoothing to the `value` field of ProcessValue elements,

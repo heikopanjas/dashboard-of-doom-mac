@@ -1,3 +1,4 @@
+import DoomKitProcess
 import LaunchAtLogin
 import SwiftUI
 
@@ -160,17 +161,17 @@ struct SettingsView: View {
         .background(Color(light: .white, dark: Color(hex: "#000000")))
         .onChange(of: nearestLevelSensor) { _, _ in
             if let presenter = levelPresenter {
-                ProcessManager.shared.refreshSubscription(subscriber: presenter)
+                AppProcess.shared.refreshSubscription(subscriber: presenter)
             }
         }
         .onChange(of: nearestParticleSensor) { _, _ in
             if let presenter = particlePresenter {
-                ProcessManager.shared.refreshSubscription(subscriber: presenter)
+                AppProcess.shared.refreshSubscription(subscriber: presenter)
             }
         }
         .onChange(of: electionPollScope) { _, _ in
             if let presenter = surveyPresenter {
-                ProcessManager.shared.refreshSubscription(subscriber: presenter)
+                AppProcess.shared.refreshSubscription(subscriber: presenter)
             }
         }
     }

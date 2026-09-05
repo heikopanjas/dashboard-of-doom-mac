@@ -1,3 +1,4 @@
+import DoomKitLocation
 import Foundation
 
 func calculateBoundingBox(center: Location, radiusInMeters: Double) -> (minLatitude: Double, minLongitude: Double, maxLatitude: Double, maxLongitude: Double) {

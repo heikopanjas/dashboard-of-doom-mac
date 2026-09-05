@@ -1,3 +1,5 @@
+import DoomKitProcess
+import DoomKitNetwork
 import AppKit
 import SwiftUI
 
@@ -47,6 +49,7 @@ struct DashboardOfDoomApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     var settingsPanel: NSPanel?
     private var themeObserver: NSObjectProtocol?
+    private var shutdownTask: Task<Void, Never>?
 
     // Presenters for settings view to trigger refreshes
     var levelPresenter: LevelPresenter?
@@ -54,10 +57,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var surveyPresenter: SurveyPresenter?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Start network monitoring immediately to ensure connectivity before API calls
-        Task {
-            await NetworkManager.shared.startMonitoring()
-        }
+        AppProcess.shared.start()
 
         // Apply initial theme
         updateAppearance()
@@ -70,6 +70,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         ) { [weak self] _ in
             self?.updateAppearance()
         }
+    }
+
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        AppProcess.shared.stop()
+        self.shutdownTask?.cancel()
+        self.shutdownTask = Task {
+            await NetworkManager.shared.stopMonitoring()
+            sender.reply(toApplicationShouldTerminate: true)
+        }
+        return .terminateLater
+    }
+
+    deinit {
+        self.shutdownTask?.cancel()
     }
 
     func updateAppearance() {

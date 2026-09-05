@@ -1,3 +1,4 @@
+import DoomKitNetwork
 import Foundation
 
 class HazardService {

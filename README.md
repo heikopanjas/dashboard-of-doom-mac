@@ -99,8 +99,8 @@
 
 #### Key Design Patterns
 
-- **Subscription System**: `ProcessManager` coordinates periodic data updates
-- **Observer Pattern**: `ProcessSubscriber` protocol for reactive components
+- **Subscription System**: `AppProcess.shared` constructs the package coordinator that connects location/network streams to `DoomKitProcess.ProcessManager`
+- **Observer Pattern**: `ProcessRefreshable` protocol for reactive components
 - **Transformer Pattern**: Clean separation of data processing from presentation
 - **Quality Assessment**: Built-in measurement validation and confidence scoring
 
@@ -145,10 +145,11 @@ dashboard-of-doom-mac/
 │   ├── Assets.xcassets/              # App icons and image assets
 │   ├── DashboardOfDoomApp.swift      # App entry point
 │   ├── ContentView.swift             # Main view with header bar and panels
-│   ├── LocationManager.swift         # Location services manager
-│   ├── NetworkManager.swift          # Network connectivity monitor
-│   ├── ProcessManager.swift          # Subscription coordinator
-│   └── ProcessSubscriber.swift       # Reactive update protocol
+│   ├── AppLocation.swift             # App-owned fallback and location lifecycle
+│   └── AppProcess.swift              # Constructs and starts the package coordinator
+├── doom-kit-location/               # DoomKitLocation package and tests
+├── doom-kit-network/                # DoomKitNetwork package and tests
+├── doom-kit-process/                # Process models, coordinator, presenter/transformer bases, scheduler and tests
 ├── project.yml                      # Authoritative XcodeGen specification
 ├── DashboardOfDoom.xcodeproj/        # Generated project; package lockfile tracked
 ├── AGENTS.md                         # AI agent instructions
@@ -185,9 +186,9 @@ dashboard-of-doom-mac/
 ### Prerequisites
 
 - **macOS 15.0+** (Sequoia or later)
-- **Xcode 16.3+** with macOS 15 SDK
+- **Xcode 26.2+** with Swift 6.2 and macOS SDK
 - **XcodeGen 2.46.0+** (`brew install xcodegen`)
-- **Swift compiler bundled with Xcode**; the app uses Swift 5 language mode
+- **Swift 6.2+ compiler**; the app stays in Swift 5 language mode and local packages use Swift 6
 - **Apple Developer Account** (for code signing)
 
 ### Installation & Setup
@@ -285,6 +286,28 @@ recorded in `DashboardOfDoom.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
 This lockfile remains tracked even though the rest of the project is generated.
 Keep lockfile changes intentional when updating dependencies. Initial package
 checkout requires network access.
+
+See [package validation](PACKAGE_VALIDATION.md) for completed checks and remaining
+interactive smoke tests.
+
+The three local packages declare macOS 15 and iOS 26; only macOS is validated.
+The app remains macOS-only, using Swift 5 language mode. See
+[DoomKitLocation](doom-kit-location/README.md),
+[DoomKitNetwork](doom-kit-network/README.md), and
+[DoomKitProcess](doom-kit-process/README.md) for API and lifecycle contracts.
+Native location live updates are a planned provider replacement, not implemented
+in this extraction. iOS integration and validation remain deferred.
+
+Run package tests before the signed app build:
+
+```bash
+swift test --package-path doom-kit-location
+swift test --package-path doom-kit-network
+swift test --package-path doom-kit-process
+swift test -c release --package-path doom-kit-process
+./build.sh
+./build.sh --release
+```
 
 There is currently no app test target. Build script tests use Python 3 and mock
 external tools, including notarization; they perform no uploads:

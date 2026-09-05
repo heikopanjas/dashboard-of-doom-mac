@@ -1,3 +1,5 @@
+import DoomKitProcess
+import DoomKitLocation
 import Foundation
 
 class ParticleController: ProcessController {
@@ -20,7 +22,7 @@ class ParticleController: ProcessController {
         do {
             if let interval = Self.calculateMeasurementTimeInterval(span: self.measurementDuration) {
                 if let result = await Self.fetchNearestStation(location: location, from: interval.from, to: interval.to) {
-                    if let placemark = await LocationManager.reverseGeocodeLocation(location: result.station.location) {
+                    if let placemark = await GeocodingService.reverseGeocodeLocation(location: result.station.location) {
                         // Use cached measurements if available, otherwise fetch them
                         var measurements: [ProcessSelector: [ProcessValue<Dimension>]]?
                         if let cached = result.cachedMeasurements {

@@ -1,3 +1,5 @@
+import DoomKitProcess
+import DoomKitLocation
 import Foundation
 
 private struct Poll {
@@ -109,7 +111,7 @@ class SurveyController: ProcessController {
                     }
 
                     measurements = await self.interpolateMeasurements(measurements: await self.aggregateMeasurements(measurements: measurements))
-                    if let placemark = await LocationManager.reverseGeocodeLocation(location: sensorLocation) {
+                    if let placemark = await GeocodingService.reverseGeocodeLocation(location: sensorLocation) {
                         sensor = ProcessSensor(
                             name: sensorName, location: sensorLocation, placemark: placemark, customData: ["icon": "popcorn"],
                             measurements: measurements, timestamp: Date.now)
@@ -150,7 +152,7 @@ class SurveyController: ProcessController {
             return nil
         }
 
-        if let constituency = try await LocationManager.fetchConstituency(location: location) {
+        if let constituency = try await GeocodingService.fetchConstituency(location: location) {
             if let parliaments = try await parseParliaments(from: data) {
                 for parliament in parliaments where parliament.name.contains(constituency) {
                     sensorName = constituency
@@ -206,7 +208,7 @@ class SurveyController: ProcessController {
                     }
 
                     measurements = await self.interpolateMeasurements(measurements: await self.aggregateMeasurements(measurements: measurements))
-                    if let placemark = await LocationManager.reverseGeocodeLocation(location: sensorLocation) {
+                    if let placemark = await GeocodingService.reverseGeocodeLocation(location: sensorLocation) {
                         sensor = ProcessSensor(
                             name: sensorName, location: sensorLocation, placemark: placemark, customData: ["icon": "popcorn"],
                             measurements: measurements, timestamp: Date.now)

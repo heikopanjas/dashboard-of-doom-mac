@@ -1,3 +1,5 @@
+import DoomKitProcess
+import DoomKitLocation
 import Foundation
 
 class HazardController {
@@ -33,7 +35,7 @@ class HazardController {
                             if let nearestLocation = hazard.location {
 //                                let distance = haversineDistance(location_0: location, location_1: nearestLocation).converted(to: UnitLength.kilometers)
 //                                if distance.value < 167.0 {  // Only include hazards within 100km
-                                if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestLocation, fullAddress: false) {
+                                if let placemark = await GeocodingService.reverseGeocodeLocation(location: nearestLocation, fullAddress: false) {
                                         hazard.placemark = placemark
                                         if hazards == nil {
                                             hazards = [hazard]

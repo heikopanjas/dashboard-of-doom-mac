@@ -1,3 +1,5 @@
+import DoomKitProcess
+import DoomKitLocation
 import Foundation
 
 class LevelController: ProcessController {
@@ -21,7 +23,7 @@ class LevelController: ProcessController {
                 measurement.append(contentsOf: self.forecastMeasurements(data: measurement, duration: self.forecastDuration))
                 measurements[.water(.level)] = measurement.sorted(by: { $0.timestamp < $1.timestamp })
             }
-            if let placemark = await LocationManager.reverseGeocodeLocation(location: nearestStation.location) {
+            if let placemark = await GeocodingService.reverseGeocodeLocation(location: nearestStation.location) {
                 let sensor = ProcessSensor(
                     name: nearestStation.name, location: nearestStation.location, placemark: placemark, customData: ["icon": "water.waves"],
                     measurements: measurements,

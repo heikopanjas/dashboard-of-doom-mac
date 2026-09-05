@@ -1,14 +1,15 @@
+import DoomKitProcess
+import DoomKitLocation
 import Foundation
 import SwiftUI
 
 @Observable class SurveyPresenter: ProcessPresenter, ProcessRefreshable {
     private let controller = SurveyController()
-    private let transformer = SurveyTransformer()
 
-    override init() {
-        super.init()
+    init() {
+        super.init(coordinator: AppProcess.shared)
         trace.debug("SurveyPresenter init() called, ID: \(self.id)")
-        let processManager = ProcessManager.shared
+        let processManager = AppProcess.shared
         let interval = UserDefaults.standard.integer(forKey: "surveyRefreshInterval")
         processManager.add(subscriber: self, timeout: TimeInterval(interval > 0 ? interval : 360))
     }
@@ -50,23 +51,28 @@ import SwiftUI
         trace.debug("SurveyPresenter.refreshData() called, ID: \(self.id)")
         do {
             if let sensor = try await controller.refreshData(for: location).first {
-                try self.transformer.renderData(sensor: sensor)
-                await self.publishData(sensor: sensor)
+                try Task.checkCancellation()
+                let transformer = SurveyTransformer()
+                try transformer.renderData(sensor: sensor)
+                try Task.checkCancellation()
+                self.publishData(sensor: sensor, transformer: transformer)
             }
         }
+        catch is CancellationError { return }
         catch {
+            guard Task.isCancelled == false else { return }
             trace.error("Error refreshing data: %@", error.localizedDescription)
         }
     }
 
-    @MainActor func publishData(sensor: ProcessSensor) async -> Void {
+    @MainActor func publishData(sensor: ProcessSensor, transformer: SurveyTransformer) -> Void {
         self.sensor = sensor
         self.timestamp = sensor.timestamp
-        self.measurements = self.transformer.measurements
-        self.current = self.transformer.current
-        self.faceplate = self.transformer.faceplate
-        self.range = self.transformer.range
-        self.trend = self.transformer.trend
+        self.measurements = transformer.measurements
+        self.current = transformer.current
+        self.faceplate = transformer.faceplate
+        self.range = transformer.range
+        self.trend = transformer.trend
 
         if UserDefaults.standard.bool(forKey: "showElectionPolls") == true {
         MapPresenter.shared.updateRegion(for: self.id, with: sensor.location)

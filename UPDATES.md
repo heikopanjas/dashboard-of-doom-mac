@@ -4,6 +4,30 @@ This file is the append-only log of project decisions and notable changes, maint
 
 <!-- {changelog} -->
 
+### 2026-09-05 (v6.3.2, process module expansion, 21:05)
+
+- moved all ten remaining process files into doom-kit-process, with local location and network dependencies and public model/helper contracts.
+- opened presenter and transformer bases for app subclasses; retained arbitrary metadata and weak, observation-excluded coordinator cleanup.
+- made coordinator construction inactive and injectable; appprocess supplies managers and starts it at the existing first-presenter initialization point.
+- retained fallback, first-measurement and settings refresh behavior, with cancellation generations and restart coverage.
+- rationale: consolidate process contracts and lifecycle implementation in the agreed single module while preserving app behavior.
+- version bump: 6.3.1 to 6.3.2, build 138 to 139 (PATCH - internal refactor).
+
+
+### 2026-09-05 (v6.3.1, 20:40 CEST extract update packages)
+
+- extracted local doom-kit-location, doom-kit-network, and doom-kit-process packages with swift tools 6.2 and swift 6 language mode; kept the app in swift 5 mode
+- declared macos 15 and ios 26 package support; ios validation and integration remain deferred
+- replaced location delegates and network notifications with bounded per-consumer state streams and explicit lifecycle ownership
+- isolated the initial core location delegate behind an injectable provider; native live updates remain a follow-up with separate behavior validation
+- consolidated raw and decoded network requests, added injectable monitoring and timing, and replaced readiness polling with bounded observation
+- moved scheduling into an independent main-actor generic manager with uuid removal, registration replacement, and cancel/restart generations
+- kept fallback, measured-location, startup, and settings policy in the app coordinator; added per-refresh transformers and cancellation checks before publication
+- added deterministic package tests and documented cancellation, shutdown, restart, and injection contracts
+- rationale: make update providers replaceable while fixing stale refresh publication and lifecycle leaks
+- version bump: 6.3.0 to 6.3.1, build 138 (patch - internal extraction and refresh cancellation fixes)
+
+
 ### 2026-09-05 (v6.3.0, 19:54 CEST consolidate build script)
 
 - made build.sh default to a signed debug build, with separate release and notarization modes

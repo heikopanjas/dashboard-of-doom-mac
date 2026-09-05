@@ -1,3 +1,4 @@
+import DoomKitProcess
 import Foundation
 
 class RadiationTransformer: ProcessTransformer {

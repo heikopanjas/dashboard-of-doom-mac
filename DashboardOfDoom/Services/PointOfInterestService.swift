@@ -1,3 +1,5 @@
+import DoomKitNetwork
+import DoomKitLocation
 import Foundation
 
 class PointOfInterestService {
