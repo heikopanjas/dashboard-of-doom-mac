@@ -1,5 +1,99 @@
 # Package extraction validation
 
+## Map collision score precision: 6.3.6 (143)
+
+Validated September 5, 2026 with Apple Swift 6.2.4 and Xcode 26.3.
+
+- Reproduced failures before the fix: unobstructed fractional-coordinate labels
+  moved away from their dots, including an unnecessary connector; obsolete offsets
+  also survived after surrounding labels were removed.
+- Tools Debug and Release: all 22 tests passed after the fix. Genuine clipping,
+  crowded layouts, bounded fallback, and fractional placement stability still pass.
+- Clipping now sums nonnegative outside strips. Contained rectangles score exactly
+  zero; overlap edge noise at or below 0.0000001 point is ignored before scoring.
+  The strict arrangement comparator is unchanged.
+- Signed Debug and Release builds and deep/strict signature verification passed.
+- Formatting and whitespace checks passed. The corrected Debug app was launched.
+  The live map displayed all six enabled labels attached to their dots, including
+  COVID, with no connector lines needed in that layout. The app remains running.
+  No preferences, signing settings, entitlements, or dependency pins changed.
+- Other package suites and app lifecycle tests were not repeated for this pure
+  solver correction. Earlier validation remains recorded below. No commit made.
+
+
+## Direct map label attachment: 6.3.5 (142)
+
+Validated September 5, 2026 with Apple Swift 6.2.4 and Xcode 26.3.
+
+- Tools Debug and Release: 19 tests passed in each configuration.
+- Signed Debug and Release builds and deep/strict signature verification: passed.
+- Regression cases assert exact above-right attachment and removal of obsolete
+  connectors after other labels disappear or projected locations spread apart.
+- The separated-location preview was rendered using the real app views in a
+  temporary harness: all six labels met their dots without connector lines.
+- Existing collision, marker, edge, dense-cluster, bounded-search, and fractional
+  projection tests still pass. Attached labels intentionally meet their source
+  marker; clearance remains enforced around unrelated markers.
+- Geometry caching is unchanged. Placement scoring now prioritizes connector
+  count and normal anchors ahead of retaining previous positions.
+- Formatting and whitespace checks passed. No preferences were changed. Other
+  package suites and the unchanged app lifecycle were not rerun for this solver
+  correction; their preceding validation is recorded below. No commit was made.
+
+
+## Map annotation layout: 6.3.4 (141)
+
+Validated September 5, 2026 using Apple Swift 6.2.4 and Xcode 26.3 (17C529) on
+macOS. The project spec's existing Xcode compatibility setting is unchanged.
+
+| Check | Result |
+| --- | --- |
+| Location Debug | 6 tests passed |
+| Network Debug | 12 tests passed |
+| Process Debug and Release | 16 tests passed in each configuration |
+| Tools Debug and Release | 17 tests passed in each configuration |
+| Services Debug and Release | 2 tests passed in each configuration |
+| Signed Debug and Release app builds | Passed via build.sh, including XcodeGen regeneration |
+| Debug and Release deep/strict codesign verification | Passed |
+| Release bundle version | 6.3.4, build 141 |
+| Swift formatting for new files and whitespace check | Passed |
+| Dependency lockfile, signing configuration, entitlements | Unchanged |
+
+Ordinary-import geometry tests cover separated and coincident points (two through
+six), dense clusters, viewport edges, mixed label sizes, marker-only obstacles,
+marker clearance, exact connector boundaries, grid fallback for offscreen sources,
+invalid projections, undersized viewports, deterministic search bounds, and
+retention after location, visibility, viewport, size, and fractional-coordinate
+changes. The bounded beam is not a proof of globally optimal placement.
+
+A temporary SwiftUI harness compiled the real app views with the deterministic
+preview fixtures and inactive presenters. Six coincident labels and a narrow dense
+cluster rendered with connectors. Resizing recomputed their positions; native dots
+stayed at the projected sources. The undersized fixture retained all six
+measurements in its accessibility tree. The accessibility tree contained each fixture
+measurement once and no connector announcements. This was an accessibility-tree
+inspection, not a full spoken VoiceOver audit. Harness artifacts are temporary and
+are not production startup options.
+
+Live Debug checks verified startup, Weather label off/on with the location dot
+retained, COVID visibility off/on, and restoration of both exercised preferences.
+The checks exposed and corrected transient MapReader registration gaps: geometry
+changes now use a cancellable view task with at most eight 16 ms projection attempts,
+and camera changes still update directly. Geometry and placement publish together;
+text-only refreshes do not start a layout task. Projection is never performed in
+body rendering. The corrected fixture emitted no AttributeGraph cycle warnings.
+
+Popover reopening retained all five enabled labels. A normal five-minute Weather
+refresh advanced the timestamp from 22:08 to 22:13 and the temperature from 14.9 °C
+to 14.8 °C, with all enabled labels still present. Normal app termination completed;
+no Dashboard of Doom process remained. The temporary fixture process was stopped.
+Weather and COVID were restored to their original enabled values; refresh intervals
+and all other preferences were untouched.
+
+The unchanged build script's mock tests were not repeated. Builds retained the
+existing AppIntents metadata extraction warning. iOS presentation is unchanged and
+unvalidated. No commit was created.
+
 ## Units, tools, and services: 6.3.3 (140)
 
 Validated September 5, 2026 using Apple Swift 6.2.4 and Xcode 26.2 on macOS.

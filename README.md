@@ -10,6 +10,23 @@
 
 > **Note**: This repository contains the macOS-only version. A separate iOS repository is available with similar architecture but platform-specific implementations.
 
+## Map annotation layout
+
+Version 6.3.6 (build 143) separates crowded macOS map labels while keeping location
+dots at their geographic coordinates. Labels retain their existing appearance and attach directly above-right of their
+dots when space permits. Crowded labels use category-colored connectors, which
+disappear when space opens up. Direct attachment takes priority over retaining
+a previous offset. It preserves every enabled label, using the least-colliding
+arrangement found when the viewport is too small. Turning off Weather hides its
+label while retaining the location dot.
+
+The map remains noninteractive and retains its existing region-fitting behavior.
+`MapView` creates one category-ordered snapshot; `CollisionMapView` projects it
+through `MapReader` after geometry changes and caches layout independently of label
+text. A cancellable view task handles temporary map-registration gaps. `DoomKitTools.AnnotationLayout` owns the bounded screen-space search.
+Deterministic crowded-layout previews live in `MapAnnotationPreview.swift`.
+The separate iOS annotation presentation is unchanged and unvalidated.
+
 ## Screenshots
 
 <div align="center">

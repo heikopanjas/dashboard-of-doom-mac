@@ -108,6 +108,10 @@ struct MapView: View {
             }
             else {
                 VStack {
+                    #if os(macOS)
+                    CollisionMapView(position: self.viewModel.binding(for: \.region), annotations: self.annotations)
+                        .background(MapAppearanceView(colorScheme: self.colorScheme))
+                    #else
                     Map(position: viewModel.binding(for: \.region), interactionModes: []) {
                         MapAnnotation(
                             presenter: weather, selector: .weather(.temperature), user: true,
@@ -136,8 +140,6 @@ struct MapView: View {
                         }
                     }
                     .allowsHitTesting(false)
-                    #if os(macOS)
-                    .background(MapAppearanceView(colorScheme: colorScheme))
                     #endif
                 }
             }
@@ -157,6 +159,27 @@ struct MapView: View {
         .onChange(of: showElectionPolls) { _, newValue in
             updateMapRegion(for: surveys, visible: newValue)
         }
+    }
+
+    // Category identities survive presenter refreshes and replacement measurement UUIDs.
+    private var annotations: [MapAnnotationSnapshot] {
+        var result = [MapAnnotationSnapshot(id: "weather", presenter: self.weather, selector: .weather(.temperature), user: true, showsLabel: self.showWeather)]
+        if self.showCovid == true {
+            result.append(MapAnnotationSnapshot(id: "covid", presenter: self.incidence, selector: .covid(.incidence)))
+        }
+        if self.showParticles == true, let selector = self.particle.measurements.first?.key {
+            result.append(MapAnnotationSnapshot(id: "particles", presenter: self.particle, selector: selector))
+        }
+        if self.showLevels == true {
+            result.append(MapAnnotationSnapshot(id: "water", presenter: self.water, selector: .water(.level)))
+        }
+        if self.showRadiation == true {
+            result.append(MapAnnotationSnapshot(id: "radiation", presenter: self.radiation, selector: .radiation(.total)))
+        }
+        if self.showElectionPolls == true {
+            result.append(MapAnnotationSnapshot(id: "surveys", presenter: self.surveys, selector: .survey(.fascists)))
+        }
+        return result
     }
 
     private func updateMapRegion(for presenter: ProcessPresenter, visible: Bool) {

@@ -49,19 +49,7 @@ struct MapAnnotation: MapContent {
                 .font(.title)
                 .foregroundStyle(.black)
                 #else
-                HStack {
-                    Image(systemName: self.icon)
-                    Text(self.faceplate)
-                }
-                .frame(width: 111, height: 23)
-                .padding(5)
-                .padding(.horizontal, 5)
-                .background(
-                    RoundedRectangle(cornerRadius: 13)
-                        .fill(Color.faceplate(selector: self.selector))
-                        .opacity(0.5)
-                )
-                .foregroundStyle(.black)
+                MapAnnotationLabel(selector: self.selector, icon: self.icon, faceplate: self.faceplate)
                 #endif
             }
         }

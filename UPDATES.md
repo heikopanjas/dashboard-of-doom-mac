@@ -4,6 +4,35 @@ This file is the append-only log of project decisions and notable changes, maint
 
 <!-- {changelog} -->
 
+### 2026-09-05 (v6.3.6, map collision score precision, 22:37)
+
+- replaced area subtraction with nonnegative outside-strip clipping scores, ensuring contained labels score exactly zero.
+- excluded negligible floating-point edge noise from overlap scoring without weakening comparator ordering.
+- reproduced the unwanted-connector bug with fractional-coordinate tests and verified that genuine clipping still overrides the preferred anchor.
+- rationale: rounding errors must not outweigh direct attachment or preserve unnecessary connector lines.
+- version bump: 6.3.5 to 6.3.6, build 142 to 143 (PATCH - display correction).
+
+### 2026-09-05 (v6.3.5, direct map label attachment, 22:23)
+
+- restored direct above-right label attachment instead of leaving a clearance gap around each source dot.
+- prioritized fewer connectors and natural anchors over retaining old placements, so startup and crowding offsets disappear when space opens up.
+- retained geometry-only caching; text refreshes do not determine placement quality.
+- added regression tests for direct attachment and removing obsolete connectors after visibility and viewport changes, plus a separated-location preview.
+- rationale: labels should visibly belong to their dots and only use lines when displacement is required.
+- version bump: 6.3.4 to 6.3.5, build 141 to 142 (PATCH - display correction).
+
+### 2026-09-05 (v6.3.4, map label collision correction, 22:03)
+
+- separated macos map labels using one ordered snapshot, native location dots, and a projected overlay with category-colored connectors.
+- added a pure tools layout solver with bounded deterministic beam search, marker clearance, outward anchors, and a viewport grid fallback.
+- favored stable placements across refreshes; cached by geometry and kept text updates independent of layout.
+- moved projection outside rendering and deferred geometry changes in a cancellable view task to handle transient map registration; retained weather dots when labels are disabled.
+- preserved label styling, selectors, region fitting, noninteractive maps, signing, entitlements, pins, and the unvalidated ios presentation.
+- added ordinary-import geometry regression tests and deterministic crowded-map previews; validation evidence is recorded in package_validation.md.
+- rationale: make crowded measurements readable without changing their geographic meaning or refresh behavior.
+- version bump: 6.3.3 to 6.3.4, build 140 to 141 (PATCH - display correction).
+
+
 ### 2026-09-05 (v6.3.3, units tools and services extraction, 21:39)
 
 - moved eight unit files into doom-kit-process and extracted eight utility files into doom-kit-tools and seven service files into doom-kit-services.

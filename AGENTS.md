@@ -1,6 +1,6 @@
 # Agent Instructions for Dashboard of Doom (macOS)
 
-*Last updated: September 5, 2026 (Units, Tools, and Services Extraction)*
+*Last updated: September 5, 2026 (Map Collision Score Precision)*
 
 ## Project Overview
 
@@ -238,6 +238,20 @@ Controllers → Services → Transformers → Presenters → Views
 - Preserve locked dependency revisions during unrelated changes
 - Local package tests: run `swift test --package-path doom-kit-location`, then `doom-kit-network`, then `doom-kit-process`, `doom-kit-tools`, and `doom-kit-services`; repeat Process, Tools, and Services with `-c release`; tests use injected dependencies and no live network
 - There is no app test target currently; define future app test targets in `project.yml`
+
+### macOS Map Annotation Layout
+
+- `MapView` creates one snapshot ordered weather, COVID, particles, water, radiation, surveys; category IDs survive measurement refreshes.
+- `CollisionMapView` keeps native dots at geographic coordinates and projects with `MapReader` from camera callbacks and a geometry-keyed cancellable view task, never during body rendering.
+- Labels and category-colored connectors use `MapAnnotationOverlay`; connector drawing clips around every native dot and is hidden from accessibility.
+- `MapAnnotationLabel` shares its 131 × 33-point outer dimensions with `DoomKitTools.AnnotationLayout`; preserve colors, icons, text, and padding.
+- After geometry changes, defer projection until MapReader registers its map; retry at most eight 16 ms passes, publish once, and cancel on replacement/disappearance.
+- Cache by projected geometry, visibility, and size; text-only updates reuse placements. Publish geometry and placement together without animation.
+- The pure Tools solver uses an 8-point inset, 6-point label separation, 4-point clearance for unrelated markers (attached labels meet their source dot), and a deterministic beam capped at 256 retained arrangements.
+- Try previous relative placements and eight anchors, then 40–160-point outward offsets and a bounded viewport grid. After collision/clipping, minimize connector count and prefer direct above-right attachment; retain previous placement only as a final tie-breaker.
+- Score clipping from nonnegative outside strips, never by subtracting nearly equal areas; ignore edge noise at or below 0.0000001 point before scoring, and keep the comparator strictly ordered.
+- Preserve all labels in undersized viewports using the best bounded-search result; skip unprojectable coordinates until valid. Never change region fitting to accommodate labels.
+- Keep the Weather dot when its label is disabled, preserve selectors and settings behavior, and retain the separate unvalidated iOS presentation.
 
 ### Local Package Boundaries
 
