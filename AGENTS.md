@@ -1,6 +1,6 @@
 # Agent Instructions for Dashboard of Doom (macOS)
 
-*Last updated: January 9, 2026 (ProcessManager Timer RunLoop Fix)*
+*Last updated: September 5, 2026 (Instruction Accuracy Update)*
 
 ## Project Overview
 
@@ -12,7 +12,7 @@ Dashboard of Doom is a sophisticated macOS menu bar application providing real-t
 - **Fully Functional**: Complete data pipeline from API integration to UI presentation
 - **macOS Menu Bar App**: Lightweight menu bar extra with settings window
 - **Production Ready**: Comprehensive error handling, retry mechanisms, and quality assessment
-- **Modern Swift**: Utilizes Swift 5.0 concurrency features throughout the codebase
+- **Modern Swift**: Uses async/await with Swift 5 language mode throughout the codebase
 - **State Management**: Full `@Observable` implementation for reactive UI updates
 - **Mathematical Analysis**: Advanced forecasting and trend analysis capabilities
 
@@ -55,10 +55,10 @@ Controllers → Services → Transformers → Presenters → Views
 ## Technology Stack
 
 ### Swift & SwiftUI
-- **Swift 5.0**: Modern language features with structured concurrency
-- **SwiftUI**: Cross-platform UI framework optimized for iOS 26.0+ and macOS 15.0+
+- **Swift Language Mode**: Swift 5 (`SWIFT_VERSION = 5.0`), with async/await and structured concurrency
+- **SwiftUI**: Native UI framework for the macOS 15.0+ app target
 - **WeatherKit**: Apple's native weather data framework for real-time conditions
-- **@Observable**: iOS 17+ state management macro (primary state management pattern)
+- **@Observable**: Primary state management macro for reactive UI updates
 - **async/await**: Modern concurrency patterns throughout all controllers and services
 - **Sendable**: Proper concurrency safety with `@unchecked Sendable` for custom unit types
 
@@ -75,7 +75,7 @@ Controllers → Services → Transformers → Presenters → Views
 ## Code Style Guidelines
 
 ### Swift Conventions
-- Use modern Swift 5.0 syntax with structured concurrency features
+- Use modern Swift syntax compatible with Swift 5 language mode, including structured concurrency
 - Prefer `async/await` over completion handlers throughout the application
 - Use `@Observable` for state management in all presenters
 - Implement `@unchecked Sendable` for custom `Dimension` unit types
@@ -86,7 +86,7 @@ Controllers → Services → Transformers → Presenters → Views
 ### SwiftUI Best Practices
 - Environment-based dependency injection for presenters
 - Prefer `@State` and `@Environment` for data flow
-- Use platform-specific code with `#if os(iOS)` / `#if os(macOS)`
+- Use macOS APIs; retain platform conditionals where needed in shared code
 - Implement proper view hierarchies and modifiers
 
 ### Architecture Patterns
@@ -119,7 +119,7 @@ Controllers → Services → Transformers → Presenters → Views
 
 ### Mathematical Symbols
 - Use Unicode mathematical symbols for data presentation:
-  - Ω (Omicron) for COVID-19 data
+  - Ω (Omega) for COVID-19 data
   - Γ (Gamma) for radiation data
   - ρμ (Rho Mu) for particle data
   - τ (Tau) for temperature
@@ -173,7 +173,7 @@ Controllers → Services → Transformers → Presenters → Views
 
 ### UI Testing
 - Test SwiftUI interface behavior and user interactions
-- Validate cross-platform compatibility
+- Validate macOS menu bar and settings window behavior
 - Test accessibility and localization features
 
 ## Security & Privacy
@@ -286,26 +286,25 @@ Follow these rules strictly to prevent terminal crashes and maintain clean git h
 **Good Examples:**
 
 ```text
-feat(api): add KStringTrim function
+feat(settings): add sensor selection toggle
 
-- add trimming function to remove whitespace from
-  both ends of string
-- supports all encodings
+- allow users to select the nearest sensor
+- refresh measurements when the setting changes
 ```
 
 ```text
-fix(build): correct static library output name
+fix(refresh): schedule timer on main run loop
 ```
 
 **Bad Examples:**
 
 ```text
-feat(api): add a new comprehensive string trimming function that handles all edge cases including UTF-8, UTF-16LE, UTF-16BE, and ANSI encodings with proper boundary checking and memory management
+feat(settings): add comprehensive sensor selection controls with immediate data refresh for all environmental monitoring services
 ```
 *Problem: Subject line exceeds 50 characters*
 
 ```text
-fix: update `KString` with "nested 'quotes'" & $special chars!
+fix: update `ProcessManager` with "nested 'quotes'" & $special chars!
 ```
 *Problem: Contains special shell characters and complex quoting*
 
@@ -350,9 +349,9 @@ Remember: This application focuses specifically on German environmental data and
 
 ## Current Development Notes
 
-### Technology Status (Updated November 2025)
-- **Swift Version**: Currently using Swift 5.0 with modern concurrency features
-- **Deployment Targets**: iOS 26.0+ and macOS 15.0+ (verified in project settings)
+### Technology Status (Updated September 5, 2026)
+- **Swift Language Mode**: Swift 5 (`SWIFT_VERSION = 5.0`); this setting does not identify the compiler version
+- **Deployment Target**: macOS 15.0+ (app target overrides the project-level macOS 15.2 setting); no iOS target in this repository
 - **Architecture Maturity**: Production-ready implementation with full feature set
 - **Code Quality**: Comprehensive error handling, quality assessment, and mathematical analysis
 - **Concurrency**: Full async/await adoption throughout the application stack
@@ -371,86 +370,4 @@ Remember: This application focuses specifically on German environmental data and
 
 ## Recent Updates & Decisions
 
-### January 9, 2026 (ProcessManager Timer RunLoop Fix)
-- **Critical Bug Fix**: Subscription system timer was never firing, causing data to never update after initial load
-- **Root Cause**: `Timer.scheduledTimer` was called from inside a `Task` block in `ProcessManager.init()`. Tasks run on a cooperative thread pool where threads lack an active RunLoop, so the timer was scheduled but never fired
-- **Solution**: Wrapped timer scheduling in `DispatchQueue.main.async` to ensure the timer is added to the main RunLoop
-- **Files Changed**: `ProcessManager.swift`
-- **Added Logging**: Added trace log in `updateSubscriptions()` to help verify timer is firing
-- **Reasoning**: Foundation `Timer` requires an active RunLoop on its thread. The main thread always has an active RunLoop, ensuring reliable timer execution
-
-### January 9, 2026 (Settings Reactivity - Sensor and Scope Options)
-- **Bug Fix**: "Use Nearest Sensor" toggles (Level/Particles) and "Federal vs State" poll scope now trigger immediate data refresh
-- **Root Cause**: Settings were only read during periodic data refresh, not when user changed them in settings window
-- **Solution**: 
-  - Added presenter references to `SettingsView` (`levelPresenter`, `particlePresenter`, `surveyPresenter`)
-  - Added `.onChange` modifiers that call `ProcessManager.shared.refreshSubscription(subscriber:)` when settings change
-  - Modified `AppDelegate` to store presenter references, passed from main App via `.onAppear`
-- **Files Changed**: `SettingsView.swift`, `DashboardOfDoomApp.swift`
-- **Reasoning**: When behavioral settings change (not just visibility), the data needs to be re-fetched with the new parameters. Direct presenter access enables immediate refresh
-
-### January 9, 2026 (MapView Settings Reactivity Fix)
-- **Bug Fix**: Map annotations and map region now update immediately when services are enabled/disabled in settings
-- **Root Cause**: `MapView` was using direct `UserDefaults.standard.bool(forKey:)` calls which SwiftUI does not observe for changes
-- **Solution**: Added `@AppStorage` property wrappers to `MapView` for all service visibility settings (`showWeather`, `showCovid`, `showLevels`, `showRadiation`, `showParticles`, `showElectionPolls`)
-- **Map Region Updates**: Added `.onChange` modifiers that call `MapPresenter.shared.updateRegion()` when settings change, ensuring the map zooms to fit visible annotations
-- **Technical Detail**: `@AppStorage` integrates with SwiftUI's observation system, triggering view re-renders when values change. The `updateMapRegion()` helper registers or removes presenter locations from the `MapPresenter` visible region
-- **Reasoning**: Consistent use of `@AppStorage` across views that depend on the same settings ensures reactive UI updates without manual notification mechanisms
-
-### January 9, 2026 (ContentView Header UI Simplification)
-- **Header Title Display**: Light mode shows "Dashboard of Doom" text, dark mode shows the logo image (`dashboard-of-doom-logo`)
-- **Direct Action Buttons**: Replaced dropdown menu with two direct action buttons in the header bar:
-  - `ellipsis.circle` button → Opens settings window via `appDelegate.showSettings()`
-  - `togglepower` button → Quits application via `NSApplication.shared.terminate(nil)`
-- **Removed AppMenuView**: Deleted `Views/AppMenuView.swift` - buttons now implemented directly in `ContentView.swift`
-- **UX Improvement**: Simplified interaction by eliminating popover menu, saving a click for common actions
-- **Reasoning**: Direct buttons provide faster access to settings and quit functionality without needing a menu. Color scheme-aware header title maintains brand identity while optimizing for dark mode aesthetics
-
-### December 24, 2025 (Settings Window Implementation)
-- **Settings Window Architecture**: Implemented NSPanel-based settings window for menu bar extra application
-- **Window Ordering Solution**: Used NSPanel with .popUpMenu level and NSRunningApplication activation to ensure settings window appears in front
-- **AppDelegate Environment Injection**: Made AppDelegate @Observable and passed through SwiftUI environment to access from menu bar extra views
-- **Technical Details**: SwiftUI's Settings scene incompatible with menu bar extras for proper window ordering. NSPanel with NSHostingController provides reliable control over window levels and activation
-- **Implementation Pattern**: Settings persist via @AppStorage directly in SettingsView, no presenter needed. Panel reused across invocations via persistent AppDelegate property
-- **Reasoning**: Menu bar extras lack parent windows for activation context. Direct NSPanel management with aggressive activation (NSRunningApplication.current.activate) and high window level (.popUpMenu) ensures settings appear reliably in front of other windows
-
-### November 4, 2025 (Evening Update - Build System)
-- **Build Configuration**: Added comprehensive .gitignore file for Xcode project
-- **Source Control**: Implemented proper ignore patterns for macOS development including xcuserdata, DerivedData, build artifacts, Swift Package Manager files, dependency managers, fastlane outputs, macOS system files, IDE configurations, and temporary files
-- **Reasoning**: Essential for maintaining clean repository state, preventing accidental commits of user-specific settings, build artifacts, and system files. Follows Xcode and Swift community best practices for version control
-
-### November 4, 2025 (Evening Update - README)
-- **README.md Modernization**: Updated README.md to reflect macOS-only repository status
-- **Platform Focus**: Removed iOS-specific content, badges, and installation instructions
-- **Repository Structure**: Updated project structure diagram to show actual macOS-only file organization
-- **Installation Updates**: Changed clone URL to heikopanjas/dashboard-of-doom-mac and simplified setup steps for single-platform development
-- **Feature Enhancement**: Expanded macOS menu bar application features section with detailed system integration capabilities
-- **Architecture Simplification**: Removed cross-platform architecture references, focused on MVP pattern for menu bar apps
-- **Reasoning**: After separating repositories, README.md needed comprehensive updates to accurately represent the macOS-only codebase, remove iOS references, and provide clear installation instructions for the new repository location
-
-### November 4, 2025 (Evening Update)
-- **Repository Split**: Updated AGENTS.md to reflect macOS-only repository status after separation from iOS codebase
-- **Platform Focus**: Removed cross-platform references and iOS-specific content, emphasizing macOS menu bar application architecture
-- **Structure Clarification**: Updated Repository Structure, Platform Architecture, Platform-Specific Considerations, Code Organization, and Maintenance Guidelines sections to reflect single-platform focus
-- **Reasoning**: The project has been split into separate iOS and macOS repositories. This macOS repository now contains a dedicated menu bar application with similar business logic patterns but platform-specific implementations. Documentation needed to accurately reflect this architectural change and guide future development with correct platform context
-
-### November 4, 2025
-- **Documentation Consolidation**: Replaced full content in `.github/copilot-instructions.md` and `CLAUDE.md` with simple references to `AGENTS.md`
-- **Implementation Accuracy Update**: Synchronized AGENTS.md with actual codebase implementation details including iOS 26.0+ deployment target, WeatherKit integration, URLSession retry extensions, implemented utilities (ARIMA, MovingAverage, HaversineDistance, PointInPolygon, PolygonProximityCalculator, OSMUtilities, MathematicalSymbols, Trace), and accurate data source listings
-- **Git Workflow Enhancement**: Integrated comprehensive commit message guidelines into Development Workflow section with detailed conventional commits format, character limits, special character safety rules, and practical examples to prevent terminal crashes and ensure clean git history
-- **Reasoning**: Completed the consolidation process started on November 2nd by removing duplicate content from both agent-specific files and establishing AGENTS.md as the single source of truth. Updated technical specifications to match the current production codebase, ensuring documentation accurately reflects implemented architecture patterns and available utilities. Enhanced git workflow documentation to provide clear, actionable guidance for maintaining code quality and preventing common commit message issues
-
-### November 2, 2025
-- **Documentation Restructure**: Moved full instructions from `.github/copilot-instructions.md` to `AGENTS.md` at project root
-- **Reasoning**: Centralized agent instructions in a dedicated file for easier maintenance and access, while keeping a simple reference in the GitHub Copilot-specific location
-
-### October 3, 2025
-- **Documentation Cleanup**: Removed 'Contributing' section from README.md
-- **Reasoning**: Streamlined documentation by removing contribution guidelines, focusing on core project documentation and features
-
-### August 22, 2025
-- **Documentation Enhancement**: Added macOS screenshots section to README.md showcasing application UI with four key views (main dashboard, forecast, environment, particles)
-- **File Organization**: Moved copilot instructions from root directory to `.github/` for better project structure and GitHub integration
-- **README Structure**: Enhanced documentation with professional screenshot layout and maintained existing comprehensive feature descriptions
-- **Political Data Visualization**: Added election poll screenshots (state and federal) to showcase comprehensive political polling capabilities
-- **Reasoning**: Improved project presentation for potential contributors and users while organizing development guidelines in standard GitHub directory structure
+See [UPDATES.md](UPDATES.md) for the project decisions and change history.
