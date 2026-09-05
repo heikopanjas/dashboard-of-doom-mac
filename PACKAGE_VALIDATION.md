@@ -1,5 +1,62 @@
 # Package extraction validation
 
+## Units, tools, and services: 6.3.3 (140)
+
+Validated September 5, 2026 using Apple Swift 6.2.4 and Xcode 26.2 on macOS.
+
+| Check | Result |
+| --- | --- |
+| DoomKitLocation Debug | 6 tests passed |
+| DoomKitNetwork Debug | 12 tests passed |
+| DoomKitProcess Debug and Release | 16 tests passed in each |
+| DoomKitTools Debug and Release | 7 test functions, 14 cases passed in each |
+| DoomKitServices Debug and Release | 2 test functions, 100 cases passed in each |
+| Signed Debug and Release via build.sh | Passed, including XcodeGen regeneration |
+| Strict deep signature verification, both builds | Passed |
+| Release bundle version | 6.3.3, build 140 |
+| Local dependency graph | Acyclic; Tools depends only on Location |
+| Original app Units, Utilities, Services files | All 23 removed from the app source tree |
+| Dependency pin, signing settings, entitlements | Preserved |
+| Whitespace check | Passed |
+
+Ordinary-import unit tests cover all exported symbols, conversion coefficients,
+base units, representative conversions, and ProcessValue use. Tools tests compare
+smoothing and deterministic forecasts with outputs captured by running the original
+functions before extraction. Coverage includes empty input, shortened and oversized
+windows, mixed compatible units, Gaussian edge normalization and clamping,
+invalid Gaussian parameters, ARIMA interval/data validation, geometry, symbol
+mappings, and 100 concurrent log writes to a temporary file. Logging retains the
+original lexical level filtering. No new unchecked Sendable conformance was added.
+
+Service fixtures were captured by executing the original 25 methods against a
+recording fake. All methods preserve exact requests and successful bytes, map
+server errors and transport cancellation to nil, and honor cancellation before
+requests. Transport, monitoring, and sleep are injected; package tests perform no
+live networking or permission requests. Particle fixtures preserve the original
+from-date hour for both time parameters and local calendar/formatter defaults.
+
+The app's two Gaussian callers zip original values with smoothed measurements,
+preserving order, unit, timestamp, quality, and arbitrary metadata. Construction
+continues to create fresh UUIDs. Controllers, parsing, presenters, transformers,
+Date extensions, and WeatherKit remain in the app.
+
+The signed Debug popover displayed current measurements. Opening Settings and
+turning Use Nearest Sensor on changed the displayed water level from 2.73 m to
+4.03 m. The original off setting was restored and the measurement returned to
+2.73 m. Refresh intervals were not changed. With the transient popover hidden,
+the normal periodic timestamp advanced from 21:36 to 21:41; reopening it showed
+the updated measurements. Debug was quit through its own Quit button.
+The signed Release executable also launched, displayed measurements with a
+21:41 timestamp, opened Settings, and quit through its own Quit button. Process
+inspection confirmed shutdown of both builds. These checks cover startup,
+measurements, popover, settings refresh, periodic refresh, and clean shutdown;
+they do not establish visual correctness of every panel or permission path.
+
+iOS remains unvalidated. Both app builds emitted only the existing skipped
+AppIntents metadata extraction warning. build.sh was unchanged, so its Python
+mock suite and shell checks were not repeated for this extraction. No commit
+was created.
+
 ## Process module expansion: 6.3.2 (139)
 
 Validated September 5, 2026 with Apple Swift 6.2.4 and Xcode 26.2.

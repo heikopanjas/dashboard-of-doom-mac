@@ -1,6 +1,6 @@
 # Agent Instructions for Dashboard of Doom (macOS)
 
-*Last updated: September 5, 2026 (Process Module Expansion)*
+*Last updated: September 5, 2026 (Units, Tools, and Services Extraction)*
 
 ## Project Overview
 
@@ -236,14 +236,18 @@ Controllers → Services → Transformers → Presenters → Views
 - Keep the existing signing configuration, app identity, and WeatherKit entitlement unless explicitly changing them; configure signing in the spec, including SDK-specific overrides
 - Generated project files are ignored, except the tracked package lockfile at `DashboardOfDoom.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`
 - Preserve locked dependency revisions during unrelated changes
-- Local package tests: run `swift test --package-path doom-kit-location`, then `doom-kit-network`, then `doom-kit-process`; tests use injected dependencies and no live network
+- Local package tests: run `swift test --package-path doom-kit-location`, then `doom-kit-network`, then `doom-kit-process`, `doom-kit-tools`, and `doom-kit-services`; repeat Process, Tools, and Services with `-c release`; tests use injected dependencies and no live network
 - There is no app test target currently; define future app test targets in `project.yml`
 
 ### Local Package Boundaries
 
 - `doom-kit-location` / `DoomKitLocation`: location values, provider-independent state streams and movement filtering, separate async geocoding
 - `doom-kit-network` / `DoomKitNetwork`: network actor, typed state streams, injectable monitoring/transport/timing, shared request execution
-- `doom-kit-process` / `DoomKitProcess`: process models, geographic helpers, open observable presenter and transformer bases, coordinator, generic main-actor scheduler and injected clock; local dependencies on DoomKitLocation and DoomKitNetwork
+- `doom-kit-process` / `DoomKitProcess`: process models, custom units, geographic helpers, open observable presenter and transformer bases, coordinator, generic main-actor scheduler and injected clock; local dependencies on DoomKitLocation and DoomKitNetwork
+- `doom-kit-tools` / `DoomKitTools`: generic Measurement smoothing, ARIMA, polygon/bounding-box helpers, symbols, and mutex-protected synchronous Sendable Trace; depends only on DoomKitLocation
+- `doom-kit-services` / `DoomKitServices`: seven public static API services with trailing injectable NetworkManager defaults; depends on Location, Network, and Tools
+- Keep smoothing independent of ProcessValue; app callers rebuild values in order with original metadata, timestamps, quality, units, and new UUIDs
+- Preserve original unit coefficients and base units, numeric algorithms, service URL/date behavior, and failure-to-nil cancellation contract during extraction work
 - All packages use Swift tools 6.2 and Swift 6 language mode; keep the app in Swift 5 mode
 - Packages declare macOS 15 and iOS 26; iOS is unvalidated and has no app integration here
 - Each state consumer owns a separate latest-value stream and explicitly cancelled task; stop finishes all streams and restart requires new subscriptions
@@ -347,7 +351,7 @@ fix: update `ProcessManager` with "nested 'quotes'" & $special chars!
 - **Platform-Specific Code**: macOS-specific UI and menu bar functionality
 - **Custom Unit Types**: Implement `@unchecked Sendable` conformance for measurement units
 - **Consistent Naming**: Use clear, descriptive file naming
-- **Folder Hierarchy**: Maintain organized structure with Controllers/, Services/, Presenters/, Views/, etc.
+- **Folder Hierarchy**: Keep Controllers/, Presenters/, Transformers/, and Views/ in the app; place services under DoomKitServices and utilities under DoomKitTools.
 
 ## Common Tasks & Patterns
 

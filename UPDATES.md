@@ -4,6 +4,17 @@ This file is the append-only log of project decisions and notable changes, maint
 
 <!-- {changelog} -->
 
+### 2026-09-05 (v6.3.3, units tools and services extraction, 21:39)
+
+- moved eight unit files into doom-kit-process and extracted eight utility files into doom-kit-tools and seven service files into doom-kit-services.
+- kept tools independent of process models; measurement smoothing callers preserve original metadata and units while creating new value identities.
+- exported synchronous sendable trace with mutex-protected formatting and output; retained original filtering and shared logger configuration.
+- preserved all 25 static service fetch contracts with trailing injectable network managers and shared tools logging and geometry.
+- added ordinary-import regression tests using captured numerical and request fixtures, fake network dependencies, and concurrent file logging.
+- rationale: reuse units, tools, and api services across clients without changing app behavior, signing, preferences, or pinned dependencies.
+- version bump: 6.3.2 to 6.3.3, build 139 to 140 (PATCH - complete internal refactor).
+
+
 ### 2026-09-05 (v6.3.2, process module expansion, 21:05)
 
 - moved all ten remaining process files into doom-kit-process, with local location and network dependencies and public model/helper contracts.

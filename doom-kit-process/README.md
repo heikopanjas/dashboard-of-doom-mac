@@ -91,3 +91,13 @@ The app owns `AppProcess.shared`, which supplies `AppLocation.shared` and
 Berlin coordinates and concrete presenters/settings remain app-owned. Internal
 source protocols adapt the existing managers and permit tests without tracking,
 permission requests, or live networking. Public API tests use ordinary imports.
+
+## Custom measurement units
+
+The eight former app unit files now live here. Public custom Dimension classes
+cover acidity, electrical conductivity, incidence, percentage, population,
+radiation, and turbidity; public Foundation UnitConcentrationMass extensions
+provide cubic-meter concentrations. Constants, symbols, coefficients, base-unit
+overrides, and existing unchecked Sendable conformances are unchanged. This
+extraction makes no scientific or conversion corrections. Ordinary-import tests
+check every exported definition, conversions, and use with ProcessValue.

@@ -134,14 +134,11 @@
 dashboard-of-doom-mac/
 ├── DashboardOfDoom/                  # macOS Application Source
 │   ├── Controllers/                  # Data orchestration layer
-│   ├── Services/                     # API communication services
 │   ├── Presenters/                   # State management (MVP)
 │   ├── Transformers/                 # Data processing pipeline
 │   ├── Views/                        # SwiftUI user interfaces
 │   ├── Models/                       # Core data structures
 │   ├── Extensions/                   # Swift utility extensions
-│   ├── Units/                        # Measurement unit definitions
-│   ├── Utilities/                    # Helper functions and tools
 │   ├── Assets.xcassets/              # App icons and image assets
 │   ├── DashboardOfDoomApp.swift      # App entry point
 │   ├── ContentView.swift             # Main view with header bar and panels
@@ -149,7 +146,9 @@ dashboard-of-doom-mac/
 │   └── AppProcess.swift              # Constructs and starts the package coordinator
 ├── doom-kit-location/               # DoomKitLocation package and tests
 ├── doom-kit-network/                # DoomKitNetwork package and tests
-├── doom-kit-process/                # Process models, coordinator, presenter/transformer bases, scheduler and tests
+├── doom-kit-process/                # Process models, custom units, coordinator and scheduler
+├── doom-kit-tools/                  # Smoothing, forecasting, geometry, symbols and logging
+├── doom-kit-services/               # Seven API services with injected networking
 ├── project.yml                      # Authoritative XcodeGen specification
 ├── DashboardOfDoom.xcodeproj/        # Generated project; package lockfile tracked
 ├── AGENTS.md                         # AI agent instructions
@@ -290,11 +289,13 @@ checkout requires network access.
 See [package validation](PACKAGE_VALIDATION.md) for completed checks and remaining
 interactive smoke tests.
 
-The three local packages declare macOS 15 and iOS 26; only macOS is validated.
+The five local packages declare macOS 15 and iOS 26; only macOS is validated.
 The app remains macOS-only, using Swift 5 language mode. See
 [DoomKitLocation](doom-kit-location/README.md),
-[DoomKitNetwork](doom-kit-network/README.md), and
-[DoomKitProcess](doom-kit-process/README.md) for API and lifecycle contracts.
+[DoomKitNetwork](doom-kit-network/README.md),
+[DoomKitProcess](doom-kit-process/README.md),
+[DoomKitTools](doom-kit-tools/README.md), and
+[DoomKitServices](doom-kit-services/README.md) for API and lifecycle contracts.
 Native location live updates are a planned provider replacement, not implemented
 in this extraction. iOS integration and validation remain deferred.
 
@@ -304,7 +305,11 @@ Run package tests before the signed app build:
 swift test --package-path doom-kit-location
 swift test --package-path doom-kit-network
 swift test --package-path doom-kit-process
+swift test --package-path doom-kit-tools
+swift test --package-path doom-kit-services
 swift test -c release --package-path doom-kit-process
+swift test -c release --package-path doom-kit-tools
+swift test -c release --package-path doom-kit-services
 ./build.sh
 ./build.sh --release
 ```

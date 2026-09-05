@@ -1,3 +1,5 @@
+import DoomKitServices
+import DoomKitTools
 import DoomKitProcess
 import DoomKitLocation
 import Foundation
@@ -424,7 +426,10 @@ class SurveyController: ProcessController {
         if let forecast = self.forecastMeasurements(data: interpolatedMeasurement, duration: 100) {
             interpolatedMeasurement.append(contentsOf: forecast)
         }
-        return gaussianSmoothing(data: interpolatedMeasurement, windowSize: 51, sigma: 13)
+        let smoothed = gaussianSmoothing(data: interpolatedMeasurement.map { $0.value }, windowSize: 51, sigma: 13)
+        return zip(interpolatedMeasurement, smoothed).map { original, measurement in
+            return ProcessValue(value: measurement, customData: original.customData, quality: original.quality, timestamp: original.timestamp)
+        }
     }
 
     private func aggregateMeasurements(

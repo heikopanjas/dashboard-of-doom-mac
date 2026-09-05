@@ -1,3 +1,5 @@
+import DoomKitServices
+import DoomKitTools
 import DoomKitProcess
 import DoomKitLocation
 import Foundation
@@ -83,7 +85,10 @@ class ParticleController: ProcessController {
                 }
             }
         }
-        return gaussianSmoothing(data: interpolatedMeasurement, windowSize: 11, sigma: 2.3)
+        let smoothed = gaussianSmoothing(data: interpolatedMeasurement.map { $0.value }, windowSize: 11, sigma: 2.3)
+        return zip(interpolatedMeasurement, smoothed).map { original, measurement in
+            return ProcessValue(value: measurement, customData: original.customData, quality: original.quality, timestamp: original.timestamp)
+        }
     }
 
     private static func calculateMeasurementTimeInterval(span: TimeInterval) -> (from: Date, to: Date)? {
