@@ -47,6 +47,7 @@ private struct MapAppearanceView: NSViewRepresentable {
 #endif
 
 struct MapView: View {
+    @Environment(PointOfInterestPresenter.self) private var pointOfInterestPresenter
     @Environment(\.colorScheme) private var colorScheme
     @Environment(WeatherPresenter.self) private var weather
     @Environment(CovidPresenter.self) private var incidence
@@ -109,7 +110,7 @@ struct MapView: View {
             else {
                 VStack {
                     #if os(macOS)
-                    CollisionMapView(position: self.viewModel.binding(for: \.region), annotations: self.annotations)
+                    CollisionMapView(position: self.viewModel.binding(for: \.region), annotations: self.annotations, pointsOfInterest: self.pointOfInterestPresenter.points)
                         .background(MapAppearanceView(colorScheme: self.colorScheme))
                     #else
                     Map(position: viewModel.binding(for: \.region), interactionModes: []) {

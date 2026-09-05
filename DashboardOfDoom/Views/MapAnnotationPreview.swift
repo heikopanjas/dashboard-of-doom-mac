@@ -7,16 +7,25 @@ import SwiftUI
 /// No live services, location tracking, timers, or preference writes in these fixtures.
 private struct MapAnnotationPreview: View {
     private let annotations: [MapAnnotationSnapshot]
+    private let places: [PointOfInterest]
     @State private var position: MapCameraPosition = .region(
         MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: 52.52, longitude: 13.405), span: MKCoordinateSpan(latitudeDelta: 0.08, longitudeDelta: 0.12))
     )
 
     var body: some View {
-        CollisionMapView(position: self.$position, annotations: self.annotations)
+        CollisionMapView(position: self.$position, annotations: self.annotations, pointsOfInterest: self.places)
     }
 
-    init(coincident: Bool, separated: Bool = false) {
+    init(coincident: Bool, separated: Bool = false, placeCount: Int = 0) {
+        self.places = (0 ..< placeCount).map { index -> PointOfInterest in
+            let latitude = 52.49 + Double((index * 37) % 1000) * 0.00006
+            let longitude = 13.345 + Double((index * 61) % 1000) * 0.00012
+            let location = Location(latitude: latitude, longitude: longitude)
+            return PointOfInterest(
+                category: PointOfInterestCategory.allCases[index % 5], elementType: "node",
+                elementID: Int64(index), name: nil, location: location)
+        }
         let selectors: [ProcessSelector] = [
             .weather(.temperature), .covid(.incidence), .particle(.pm10), .water(.level), .radiation(.total), .survey(.fascists)
         ]
@@ -35,6 +44,14 @@ private struct MapAnnotationPreview: View {
             return MapAnnotationSnapshot(id: String(index), presenter: presenter, selector: selector, user: index == 0)
         }
     }
+}
+
+#Preview("Two thousand places with environmental labels") {
+    MapAnnotationPreview(coincident: false, separated: true, placeCount: 2000).frame(width: 600, height: 400)
+}
+
+#Preview("Ten thousand places with environmental labels") {
+    MapAnnotationPreview(coincident: false, separated: true, placeCount: 10000).frame(width: 600, height: 400)
 }
 
 #Preview("Separated locations without connectors") {

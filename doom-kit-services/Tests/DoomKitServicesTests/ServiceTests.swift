@@ -30,9 +30,13 @@ struct ServiceTests {
             #expect(result == nil)
         }
         let captured = requests.withLock { $0 }
-        #expect(captured.count == (status == 503 ? 5 : 1))
-        for request in captured {
-            #expect(request.url?.absoluteString == URL(string: service.url)?.absoluteString)
+        let usesOverpass = service.url.hasPrefix("https://overpass-api.de/")
+        #expect(captured.count == (status == 503 ? (usesOverpass == true ? 2 : 5) : 1))
+        for (index, request) in captured.enumerated() {
+            let expectedURL =
+                usesOverpass == true && index == 1
+                ? service.url.replacingOccurrences(of: "overpass-api.de", with: "overpass.private.coffee") : service.url
+            #expect(request.url?.absoluteString == URL(string: expectedURL)?.absoluteString)
             #expect(request.httpMethod == "GET")
             #expect(request.httpBody == nil)
         }

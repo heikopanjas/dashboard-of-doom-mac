@@ -12,6 +12,7 @@ enum SettingsTab: String, CaseIterable {
     case radiation = "Radiation"
     case particles = "Particles"
     case polls = "Polls"
+    case places = "Places"
     case about = "About"
 
     var icon: String {
@@ -23,6 +24,7 @@ enum SettingsTab: String, CaseIterable {
         case .radiation: return "atom"
         case .particles: return "aqi.medium"
         case .polls: return "chart.bar"
+        case .places: return "mappin.and.ellipse"
         case .about: return "info.circle"
         }
     }
@@ -89,6 +91,7 @@ struct SettingsView: View {
     var levelPresenter: LevelPresenter?
     var particlePresenter: ParticlePresenter?
     var surveyPresenter: SurveyPresenter?
+    var pointOfInterestPresenter: PointOfInterestPresenter?
 
     // Enable toggles
     @AppStorage("showWeather") private var showWeather: Bool = true
@@ -151,6 +154,10 @@ struct SettingsView: View {
                     particlesContent
                 case .polls:
                     pollsContent
+                case .places:
+                    if let presenter = self.pointOfInterestPresenter {
+                        PointOfInterestSettingsView(presenter: presenter)
+                    }
                 case .about:
                     aboutContent
                 }

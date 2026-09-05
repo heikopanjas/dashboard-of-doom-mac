@@ -4,6 +4,29 @@ This file is the append-only log of project decisions and notable changes, maint
 
 <!-- {changelog} -->
 
+### 2026-09-06 (v6.4.1, recover shared map data requests)
+
+- coordinate all overpass requests with environmental discovery ahead of background pois
+- fall back to a secondary public endpoint for availability failures and remember unavailable hosts
+- respect shared rate-limit cooldowns without rotating endpoints on quota refusals
+- retain official water-level data by choosing the nearest gauge when waterway discovery fails
+- add injected regressions for scheduling, cancellation, fallback, cooldowns, and gauge recovery
+- rationale: the unavailable primary overpass service blocked covid, water levels, and every poi category
+- version bump: 6.4.0 (144) to 6.4.1 (145), patch for data-loading recovery
+
+### 2026-09-05 (v6.4.0, points of interest restored, 23:30)
+
+- restore all five poi categories with master and individual settings switches, enabled by default
+- render every valid onscreen place with compact category symbols in one canvas, retaining apple places and environmental label priority
+- retain the 6.7 km search radius, cache per category for an hour within 1 km, and bound requests to two across cancelled generations
+- publish successful categories as they arrive so a slow or failing request cannot hold back other places
+- give the app delegate explicit startup and shutdown ownership, reuse the existing location stream, and keep popover reopening independent of fetching
+- use one core graphics image pass inside canvas after repeated swiftui symbol and image draws crashed the gpu encoder at 10,000 points
+- add isolated macos swift testing coverage and deterministic dense map previews
+- rationale: avoid per-place annotation views and identity churn while preserving the user's choice to show all places without clustering or thinning
+- version bump: 6.3.6 (143) to 6.4.0 (144), minor for restored configurable poi functionality
+
+
 ### 2026-09-05 (v6.3.6, map collision score precision, 22:37)
 
 - replaced area subtraction with nonnegative outside-strip clipping scores, ensuring contained labels score exactly zero.

@@ -38,3 +38,8 @@ Tests use ordinary imports and cover all 25 methods against URL fixtures capture
 from the original services: success byte preservation, server failure retries,
 transport cancellation, and cancellation before requests. Transport, monitoring,
 and timing are injected; there is no live networking or permission request.
+
+POI requests use background priority in the shared Overpass scheduler. COVID
+district and waterway discovery retain foreground priority. Endpoint availability
+fallback and rate-limit cooldown are owned by DoomKitNetwork; successful response
+bytes and failure-to-nil service contracts remain unchanged.

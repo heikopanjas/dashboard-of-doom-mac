@@ -1,118 +1,44 @@
-import DoomKitServices
-import DoomKitTools
 import DoomKitLocation
+import DoomKitServices
 import Foundation
 
-class PointOfInterestController {	
-    private let radius = 6666.67
-
-    func fetchPharmacies(location: Location) async -> [PointOfInterest]? {
-        var pharmacies: [PointOfInterest]? = nil
-        do {
-            if let data = try await PointOfInterestService.fetchPharmacies(location: location, radius: self.radius) {
-                pharmacies = try Self.parsePointsOfInterest(from: data)
-            }
+struct PointOfInterestController: Sendable {
+    // This nonisolated async boundary keeps decoding off the main actor in Swift 5 mode.
+    func fetch(category: PointOfInterestCategory, location: Location) async throws -> [PointOfInterest] {
+        let radius = 6666.67
+        let data: Data?
+        switch category {
+            case .pharmacies: data = try await PointOfInterestService.fetchPharmacies(location: location, radius: radius)
+            case .hospitals: data = try await PointOfInterestService.fetchHospitals(location: location, radius: radius)
+            case .stores: data = try await PointOfInterestService.fetchLiquorStores(location: location, radius: radius)
+            case .funeralDirectors: data = try await PointOfInterestService.fetchFuneralDirectors(location: location, radius: radius)
+            case .cemeteries: data = try await PointOfInterestService.fetchCemeteries(location: location, radius: radius)
         }
-        catch {
-            trace.error("Error fetching pharmacies: %@", error.localizedDescription)
-        }
-        return pharmacies
+        try Task.checkCancellation()
+        guard let data else { throw URLError(.badServerResponse) }
+        return try Self.decode(data, category: category)
     }
 
-    func fetchHospitals(location: Location) async -> [PointOfInterest]? {
-        var hospitals: [PointOfInterest]? = nil
-        do {
-            if let data = try await PointOfInterestService.fetchHospitals(location: location, radius: self.radius) {
-                hospitals = try Self.parsePointsOfInterest(from: data)
-            }
+    static func decode(_ data: Data, category: PointOfInterestCategory) throws -> [PointOfInterest] {
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let elements = json["elements"] as? [[String: Any]]
+        else { throw URLError(.cannotParseResponse) }
+        var seen = Set<String>()
+        var points: [PointOfInterest] = []
+        for element in elements {
+            guard let type = element["type"] as? String, type == "node" || type == "way",
+                let id = element["id"] as? Int64
+            else { continue }
+            let coordinates = type == "node" ? element : element["center"] as? [String: Any] ?? [:]
+            guard let latitude = coordinates["lat"] as? Double, let longitude = coordinates["lon"] as? Double,
+                latitude.isFinite, longitude.isFinite, (-90 ... 90).contains(latitude), (-180 ... 180).contains(longitude)
+            else { continue }
+            let tags = element["tags"] as? [String: Any]
+            let point = PointOfInterest(
+                category: category, elementType: type, elementID: id, name: tags?["name"] as? String,
+                location: Location(latitude: latitude, longitude: longitude))
+            if seen.insert(point.id).inserted == true { points.append(point) }
         }
-        catch {
-            trace.error("Error fetching hospitals: %@", error.localizedDescription)
-        }
-        return hospitals
-    }
-
-    func fetchLiquorStores(location: Location) async -> [PointOfInterest]? {
-        var liquorStores: [PointOfInterest]? = nil
-        do {
-            if let data = try await PointOfInterestService.fetchLiquorStores(location: location, radius: self.radius) {
-                liquorStores = try Self.parsePointsOfInterest(from: data)
-            }
-        }
-        catch {
-            trace.error("Error fetching liquor stores: %@", error.localizedDescription)
-        }
-        return liquorStores
-    }
-
-    func fetchFuneralDirectors(location: Location) async -> [PointOfInterest]? {
-        var funeralDirectors: [PointOfInterest]? = nil
-        do {
-            if let data = try await PointOfInterestService.fetchFuneralDirectors(location: location, radius: self.radius) {
-                funeralDirectors = try Self.parsePointsOfInterest(from: data)
-            }
-        }
-        catch {
-            trace.error("Error fetching funeral directors: %@", error.localizedDescription)
-        }
-        return funeralDirectors
-    }
-
-    func fetchCemeteries(location: Location) async -> [PointOfInterest]? {
-        var cemeteries: [PointOfInterest]? = nil
-        do {
-            if let data = try await PointOfInterestService.fetchCemeteries(location: location, radius: self.radius) {
-                cemeteries = try Self.parsePointsOfInterest(from: data)
-            }
-        }
-        catch {
-            trace.error("Error fetching cemeteries: %@", error.localizedDescription)
-        }
-        return cemeteries
-    }
-
-    private static func parsePointsOfInterest(from data: Data) throws -> [PointOfInterest]? {
-        var pointsOfInterest: [PointOfInterest]? = nil
-        if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
-            if let elements = json["elements"] as? [[String: Any]] {
-                for element in elements {
-                    if let type = element["type"] as? String {
-                        if type == "node" {
-                            if let latitude = element["lat"] as? Double, let longitude = element["lon"] as? Double {
-                                if let tags = element["tags"] as? [String: Any] {
-                                    if let name = tags["name"] as? String {
-                                        let pointOfInterest = PointOfInterest(name: name, location: Location(latitude: latitude, longitude: longitude))
-                                        if pointsOfInterest == nil {
-                                            pointsOfInterest = [pointOfInterest]
-                                        }
-                                        else {
-                                            pointsOfInterest?.append(pointOfInterest)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        else if type == "way" {
-                            if let center = element["center"] as? [String: Any] {
-                                if let latitude = center["lat"] as? Double, let longitude = center["lon"] as? Double {
-                                    if let tags = element["tags"] as? [String: Any] {
-                                        if let name = tags["name"] as? String {
-                                            let pointOfInterest = PointOfInterest(name: name, location: Location(latitude: latitude, longitude: longitude))
-                                            if pointsOfInterest == nil {
-                                                pointsOfInterest = [pointOfInterest]
-                                            }
-                                            else {
-                                                pointsOfInterest?.append(pointOfInterest)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return pointsOfInterest
+        return points.sorted { $0.id < $1.id }
     }
 }

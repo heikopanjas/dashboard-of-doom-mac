@@ -1,6 +1,6 @@
 # Agent Instructions for Dashboard of Doom (macOS)
 
-*Last updated: September 5, 2026 (Map Collision Score Precision)*
+*Last updated: September 6, 2026 (Points of Interest Restoration)*
 
 ## Project Overview
 
@@ -237,7 +237,9 @@ Controllers → Services → Transformers → Presenters → Views
 - Generated project files are ignored, except the tracked package lockfile at `DashboardOfDoom.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`
 - Preserve locked dependency revisions during unrelated changes
 - Local package tests: run `swift test --package-path doom-kit-location`, then `doom-kit-network`, then `doom-kit-process`, `doom-kit-tools`, and `doom-kit-services`; repeat Process, Tools, and Services with `-c release`; tests use injected dependencies and no live network
-- There is no app test target currently; define future app test targets in `project.yml`
+- `PointOfInterestTests` is an unhosted macOS Swift Testing target. Run `xcodegen generate`, then `xcodebuild -project DashboardOfDoom.xcodeproj -scheme PointOfInterestTests -destination 'platform=macOS' -derivedDataPath .build/poi-tests test`. Its filtered synchronized source folder excludes the app entry point; tests inject fetching, location, time, and preferences.
+- POIs use a single Canvas with one Core Graphics image pass beneath environmental labels, never the collision solver. Repeated SwiftUI symbol/image draws crashed the GPU encoder in the 10,000-point stress fixture; preserve the batched Core Graphics path. Preserve stable OSM identities, category toggles, all-point rendering, Apple POIs, and region fitting. Project only after geometry/camera changes, using the deferred MapReader registration safeguard.
+- The app delegate owns the POI presenter lifecycle. Keep the 6,666.67-metre radius, one-hour cache within 1 km, minute expiry checks, five-minute failure cooldown, and two-request concurrency limit across cancelled generations. Never start or stop shared location tracking from the POI presenter.
 
 ### macOS Map Annotation Layout
 
@@ -270,6 +272,8 @@ Controllers → Services → Transformers → Presenters → Views
 - Refresh closures must check cancellation after awaits and immediately before synchronous publication; use per-refresh transformer state
 - Keep concrete presenters, Berlin fallback configuration, settings, and the starting `AppProcess.shared` factory in the app; shared process models and coordinator lifecycle policy belong to DoomKitProcess
 - Preserve the unrelated theme notification observer
+
+- Overpass requests share one cancellation-aware transport queue in DoomKitNetwork. Keep COVID and waterway discovery ahead of background POIs; never rotate endpoints on HTTP 429. Availability fallback uses overpass.private.coffee, and missing waterway discovery falls back to the nearest official gauge.
 
 ### Git Conventions
 

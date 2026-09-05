@@ -30,6 +30,7 @@ struct DashboardOfDoomApp: App {
                 .environment(surveyPresenter)
                 .environment(colorPresenter)
                 .environment(appDelegate)
+                .environment(appDelegate.pointOfInterestPresenter)
                 .preferredColorScheme(alwaysUseDarkTheme ? .dark : nil)
                 .onAppear {
                     // Provide presenters to AppDelegate for settings window
@@ -45,8 +46,11 @@ struct DashboardOfDoomApp: App {
     }
 }
 
-@Observable
+@MainActor @Observable
 class AppDelegate: NSObject, NSApplicationDelegate {
+    let pointOfInterestPresenter = PointOfInterestPresenter(fetch: { category, location in
+        return try await PointOfInterestController().fetch(category: category, location: location)
+    })
     var settingsPanel: NSPanel?
     private var themeObserver: NSObjectProtocol?
     private var shutdownTask: Task<Void, Never>?
@@ -58,6 +62,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppProcess.shared.start()
+        self.pointOfInterestPresenter.start(updates: AppLocation.shared.updates())
 
         // Apply initial theme
         updateAppearance()
@@ -68,11 +73,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.updateAppearance()
+            MainActor.assumeIsolated { self?.updateAppearance() }
         }
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        self.pointOfInterestPresenter.stop()
         AppProcess.shared.stop()
         self.shutdownTask?.cancel()
         self.shutdownTask = Task {
@@ -82,7 +88,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return .terminateLater
     }
 
-    deinit {
+    isolated deinit {
         self.shutdownTask?.cancel()
     }
 
@@ -111,7 +117,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let settingsView = SettingsView(
                 levelPresenter: self.levelPresenter,
                 particlePresenter: self.particlePresenter,
-                surveyPresenter: self.surveyPresenter
+                surveyPresenter: self.surveyPresenter,
+                pointOfInterestPresenter: self.pointOfInterestPresenter
             )
             let hostingController = NSHostingController(rootView: settingsView)
             hostingController.view.frame = NSRect(x: 0, y: 0, width: 660, height: 400)

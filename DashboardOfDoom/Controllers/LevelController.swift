@@ -1,3 +1,4 @@
+import DoomKitNetwork
 import DoomKitServices
 import DoomKitTools
 import DoomKitProcess
@@ -5,10 +6,15 @@ import DoomKitLocation
 import Foundation
 
 class LevelController: ProcessController {
+    private let networkManager: NetworkManager
+    private let nearestSensor: @Sendable () -> Bool
     private let measurementDistance: TimeInterval
     private let forecastDuration: TimeInterval
 
-    init() {
+    init(networkManager: NetworkManager = .shared,
+        nearestSensor: @escaping @Sendable () -> Bool = { return UserDefaults.standard.bool(forKey: "nearestLevelSensor") }) {
+        self.networkManager = networkManager
+        self.nearestSensor = nearestSensor
         self.measurementDistance = 900  // 15 minutes
         self.forecastDuration = 12 * 4 * self.measurementDistance  // 12 hours
     }
@@ -42,11 +48,11 @@ class LevelController: ProcessController {
         let location: Location
     }
 
-    private func fetchNearestStation(location: Location) async throws -> Station? {
+    func fetchNearestStation(location: Location) async throws -> Station? {
         var nearestStation: Station? = nil
-        if let data = try await LevelService.fetchStations() {
+        if let data = try await LevelService.fetchStations(networkManager: self.networkManager) {
             if let stations = try Self.parseStations(from: data) {
-                if UserDefaults.standard.bool(forKey: "nearestLevelSensor") == true {
+                if self.nearestSensor() == true {
                     if let station = Self.nearestStation(stations: stations, location: location) {
                         nearestStation = Station(
                             id: station.id, name: self.capitalizeGerman(text: station.name), location: station.location)
@@ -77,6 +83,12 @@ class LevelController: ProcessController {
                             }
                         }
                     }
+                }
+                // Waterway discovery is optional context. The official gauge data
+                // remains usable when Overpass is unavailable or returns no match.
+                if nearestStation == nil, let station = Self.nearestStation(stations: stations, location: location) {
+                    try Task.checkCancellation()
+                    nearestStation = Station(id: station.id, name: self.capitalizeGerman(text: station.name), location: station.location)
                 }
             }
         }
@@ -125,7 +137,7 @@ class LevelController: ProcessController {
 
     private func fetchNearestWaterways(for location: Location) async throws -> [Waterway]? {
         var waterways: [Waterway]? = nil
-        if let data = try await LevelService.fetchWaterways(for: location, radius: 10000) {
+        if let data = try await LevelService.fetchWaterways(for: location, radius: 10000, networkManager: self.networkManager) {
             waterways = try Self.parseWaterways(data: data)
         }
         return waterways
@@ -185,7 +197,7 @@ class LevelController: ProcessController {
 
     private func fetchMeasurements(station: Station) async throws -> [ProcessValue<Dimension>]? {
         var measurements: [ProcessValue<Dimension>]? = nil
-        if let data = try await LevelService.fetchMeasurements(for: station.id) {
+        if let data = try await LevelService.fetchMeasurements(for: station.id, networkManager: self.networkManager) {
             measurements = try Self.parseLevels(data: data)
         }
         return measurements

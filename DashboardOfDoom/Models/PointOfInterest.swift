@@ -1,14 +1,12 @@
 import DoomKitLocation
 import Foundation
 
-class PointOfInterest: Identifiable {
-    let id = UUID()
-    let name: String
+struct PointOfInterest: Identifiable, Equatable, Sendable {
+    let category: PointOfInterestCategory
+    let elementType: String
+    let elementID: Int64
+    let name: String?
     let location: Location
 
-    init(name: String, location: Location) {
-        self.name = name
-        self.location = location
-    }
+    var id: String { return "\(self.category.rawValue):\(self.elementType):\(self.elementID)" }
 }
-

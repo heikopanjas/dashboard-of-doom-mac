@@ -114,7 +114,7 @@ targets:
         CODE_SIGN_IDENTITY[sdk=macosx*]: Developer ID Application
         CODE_SIGN_STYLE: Manual
         COMBINE_HIDPI_IMAGES: 'YES'
-        CURRENT_PROJECT_VERSION: '143'
+        CURRENT_PROJECT_VERSION: '145'
         DEAD_CODE_STRIPPING: 'YES'
         DEVELOPMENT_ASSET_PATHS: ''
         DEVELOPMENT_TEAM: ''
@@ -134,7 +134,7 @@ targets:
         - "$(inherited)"
         - "@executable_path/../Frameworks"
         MACOSX_DEPLOYMENT_TARGET: '15.0'
-        MARKETING_VERSION: 6.3.6
+        MARKETING_VERSION: 6.4.1
         PRODUCT_BUNDLE_IDENTIFIER: com.panjas.dashboard-of-doom
         PRODUCT_NAME: Dashboard of Doom
         PROVISIONING_PROFILE_SPECIFIER: ''
@@ -149,7 +149,41 @@ targets:
     - package: DoomKitLocation
     - package: LaunchAtLogin-Modern
       product: LaunchAtLogin
+  PointOfInterestTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+    - path: DashboardOfDoomTests
+    - path: DashboardOfDoom
+      type: syncedFolder
+      includes:
+      - Models/PointOfInterest.swift
+      - Models/PointOfInterestCategory.swift
+      - Models/PointOfInterestProjection.swift
+      - Controllers/LevelController.swift
+      - Controllers/PointOfInterestController.swift
+      - Presenters/PointOfInterestPresenter.swift
+    settings:
+      base:
+        PRODUCT_NAME: PointOfInterestTests
+        PRODUCT_BUNDLE_IDENTIFIER: com.panjas.dashboard-of-doom.poi-tests
+        GENERATE_INFOPLIST_FILE: 'YES'
+        MACOSX_DEPLOYMENT_TARGET: '15.0'
+        SWIFT_VERSION: '5.0'
+        CODE_SIGNING_ALLOWED: 'NO'
+    dependencies:
+    - package: DoomKitLocation
+    - package: DoomKitServices
+    - package: DoomKitProcess
 schemes:
+  PointOfInterestTests:
+    build:
+      targets:
+        PointOfInterestTests: all
+    test:
+      config: Debug
+      targets:
+      - PointOfInterestTests
   DashboardOfDoom:
     build:
       targets:

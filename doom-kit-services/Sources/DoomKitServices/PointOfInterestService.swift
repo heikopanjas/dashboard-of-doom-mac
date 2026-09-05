@@ -27,7 +27,7 @@ public class PointOfInterestService {
             return nil
         }
         trace.debug("Fetching nearby pharmacies...")
-        let result = await networkManager.performDataRequest(urlString: urlString)
+        let result = await networkManager.performDataRequest(urlString: urlString, priority: .background)
         switch result {
             case .success(let data):
                 trace.debug("Fetched nearby pharmacies.")
@@ -61,7 +61,7 @@ public class PointOfInterestService {
             return nil
         }
         trace.debug("Fetching nearby hospitals...")
-        let result = await networkManager.performDataRequest(urlString: urlString)
+        let result = await networkManager.performDataRequest(urlString: urlString, priority: .background)
         switch result {
             case .success(let data):
                 trace.debug("Fetched nearby hospitals.")
@@ -103,7 +103,7 @@ public class PointOfInterestService {
             return nil
         }
         trace.debug("Fetching nearby liquor stores...")
-        let result = await networkManager.performDataRequest(urlString: urlString)
+        let result = await networkManager.performDataRequest(urlString: urlString, priority: .background)
         switch result {
             case .success(let data):
                 trace.debug("Fetched nearby liquor stores.")
@@ -141,7 +141,7 @@ public class PointOfInterestService {
             return nil
         }
         trace.debug("Fetching nearby funeral directors...")
-        let result = await networkManager.performDataRequest(urlString: urlString)
+        let result = await networkManager.performDataRequest(urlString: urlString, priority: .background)
         switch result {
             case .success(let data):
                 trace.debug("Fetched nearby funeral directors.")
@@ -175,7 +175,7 @@ public class PointOfInterestService {
             return nil
         }
         trace.debug("Fetching nearby cemeteries...")
-        let result = await networkManager.performDataRequest(urlString: urlString)
+        let result = await networkManager.performDataRequest(urlString: urlString, priority: .background)
         switch result {
             case .success(let data):
                 trace.debug("Fetched nearby cemeteries.")

@@ -10,6 +10,41 @@
 
 > **Note**: This repository contains the macOS-only version. A separate iOS repository is available with similar architecture but platform-specific implementations.
 
+## Points of interest
+
+Version 6.4.1 (build 145) includes pharmacies, hospitals, liquor/convenience stores,
+funeral directors, and cemeteries. All categories start enabled. Settings > Places
+provides a master switch and individual switches with a symbol legend.
+
+Every enabled, valid onscreen place is drawn at its coordinate using a shared
+Canvas with one Core Graphics pass, without names, popups, clustering, or thinning. Dense symbols can overlap.
+Apple's built-in places remain visible. Environmental dots and labels retain
+priority; POIs never enter the label collision solver or change the map region.
+
+The app queries the existing OpenStreetMap/Overpass services within 6,666.67 metres,
+including unnamed nodes and ways with valid coordinates. Results have stable OSM
+identities and are deduplicated within each category. At most two requests run at
+once, including across cancelled refresh generations. Shared Overpass transport
+serializes these with COVID district and waterway discovery, giving those
+environmental requests priority. Successful per-category
+results remain cached for one hour within 1 km of their fetch centre. A minute
+check triggers expired refreshes; failures retry after five minutes and retain
+applicable cached data. Successful categories appear as each request finishes,
+so a slow or failing category does not hold back the others. Settings changes
+and movement trigger checks immediately.
+
+Overpass connection/server failures use a secondary public endpoint and temporarily
+skip the unavailable endpoint. Rate-limit responses respect a shared cooldown
+and never trigger endpoint rotation. If waterway discovery fails, water levels
+use the nearest official gauge.
+
+The app delegate starts and stops the POI presenter explicitly. It observes the
+existing location stream, including Berlin fallback, without controlling shared
+location tracking. Closing the popover retains the cache. Projection updates only
+for POI geometry, visibility, viewport, or camera changes, independently of
+measurement text. Canvas exposes a single accessible summary of visible category
+counts. Dense deterministic previews accompany the normal map fixtures.
+
 ## Map annotation layout
 
 Version 6.3.6 (build 143) separates crowded macOS map labels while keeping location
@@ -331,7 +366,18 @@ swift test -c release --package-path doom-kit-services
 ./build.sh --release
 ```
 
-There is currently no app test target. Build script tests use Python 3 and mock
+The unhosted `PointOfInterestTests` target compiles only the POI model, controller,
+presenter, and projection helpers plus Swift Testing tests. It does not launch the
+app or use live network requests. Its source membership is specified using a
+filtered synchronized folder in `project.yml`:
+
+```bash
+xcodegen generate
+xcodebuild -project DashboardOfDoom.xcodeproj -scheme PointOfInterestTests \
+  -destination 'platform=macOS' -derivedDataPath .build/poi-tests test
+```
+
+Build script tests use Python 3 and mock
 external tools, including notarization; they perform no uploads:
 
 ```bash

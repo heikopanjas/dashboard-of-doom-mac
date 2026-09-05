@@ -37,7 +37,7 @@ path monitor. Start monitoring before calling it.
 
 Raw and `Decodable & Sendable` requests share one execution path. Headers, method,
 body, HTTP response validation, and error mapping are retained. HTTP failures
-and URL transport failures receive at most five total attempts with 2, 4, 8, and
+and URL transport failures outside Overpass receive at most five total attempts with 2, 4, 8, and
 16-second backoffs. Invalid responses and decoding failures are not retried.
 Cancellation is never retried. Offline requests use the optional probe, then wait
 up to 15 seconds for connectivity. Public errors include transport unavailability,
@@ -51,3 +51,15 @@ closure as a default argument exposed a runtime failure with the tested Swift
 
 Run `swift test --package-path doom-kit-network` from the repository root.
 All request tests use fake transport and monitoring; they make no live requests.
+
+Overpass interpreter requests share a cancellation-aware serial queue per manager.
+The trailing `priority` argument defaults to `.userInitiated`; POI services use
+`.background` with a two-second startup grace period. Queued environmental work
+goes first. Unrelated HTTP requests bypass this queue.
+
+Connection, server, and JSON runtime failures can use `overpass.private.coffee`
+after `overpass-api.de`. Unavailable endpoints are skipped for five minutes after
+transport failures or one minute after server/runtime failures. Requests retain
+the query and have a 35-second transport timeout. HTTP 429 waits at least 30 seconds
+(or longer Retry-After), retries the same endpoint once, and never rotates hosts.
+Invalid queries are not retried. Tests inject transport and time; no live API is used.

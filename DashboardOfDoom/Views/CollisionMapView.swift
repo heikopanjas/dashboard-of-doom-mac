@@ -6,6 +6,13 @@ import SwiftUI
 struct CollisionMapView: View {
     @Binding var position: MapCameraPosition
     let annotations: [MapAnnotationSnapshot]
+    var pointsOfInterest: [PointOfInterest] = []
+    @State private var poiProjection = PointOfInterestProjection(symbols: [], projectedCount: 0)
+
+    private struct POITrigger: Equatable {
+        let inputs: [PointOfInterestProjection.Input]
+        let size: CGSize
+    }
     @State private var layout = LayoutState()
 
     private struct Request: Equatable {
@@ -34,6 +41,7 @@ struct CollisionMapView: View {
     var body: some View {
         GeometryReader { geometry in
             MapReader { proxy in
+                let poiTrigger = POITrigger(inputs: self.pointsOfInterest.map(PointOfInterestProjection.Input.init), size: geometry.size)
                 let trigger = Trigger(
                     annotations: self.annotations.map {
                         GeometryInput(
@@ -57,18 +65,44 @@ struct CollisionMapView: View {
                     }
                 }
                 .overlay {
+                    PointOfInterestOverlay(symbols: self.poiProjection.symbols, markers: self.layout.request?.items.map(\.marker) ?? [])
+                        .equatable()
                     MapAnnotationOverlay(
                         annotations: self.annotations, items: self.layout.request?.items ?? [], placements: self.layout.placements)
                 }
                 .onMapCameraChange(frequency: .continuous) { _ in
                     self.update(self.request(proxy: proxy, size: geometry.size))
+                    self.projectPOIs(poiTrigger, proxy: proxy)
                 }
                 .task(id: trigger) {
                     await self.refreshProjection(proxy: proxy, size: geometry.size)
                 }
+                .task(id: poiTrigger) {
+                    for attempt in 0 ..< 8 {
+                        do { try await Task.sleep(for: .milliseconds(16)) }
+                        catch { return }
+                        guard Task.isCancelled == false else { return }
+                        let projection = self.makePOIProjection(poiTrigger, proxy: proxy)
+                        if projection.projectedCount == poiTrigger.inputs.count || attempt == 7 {
+                            if projection != self.poiProjection { self.poiProjection = projection }
+                            return
+                        }
+                    }
+                }
                 .allowsHitTesting(false)
             }
         }
+    }
+
+    private func makePOIProjection(_ trigger: POITrigger, proxy: MapProxy) -> PointOfInterestProjection {
+        return PointOfInterestProjection.project(trigger.inputs, viewport: CGRect(origin: .zero, size: trigger.size)) {
+            proxy.convert($0.coordinate, to: .local)
+        }
+    }
+
+    private func projectPOIs(_ trigger: POITrigger, proxy: MapProxy) {
+        let projection = self.makePOIProjection(trigger, proxy: proxy)
+        if projection != self.poiProjection { self.poiProjection = projection }
     }
 
     private func refreshProjection(proxy: MapProxy, size: CGSize) async -> Void {

@@ -9,6 +9,7 @@ public actor NetworkManager {
     public var isConnected: Bool { return self.state.isConnected }
     public var connectionType: ConnectionType { return self.state.connectionType }
 
+    private let overpass: OverpassRequestScheduler
     private let transport: Transport
     private let makeMonitor: @Sendable () -> any NetworkMonitoring
     private let sleep: Sleep
@@ -27,6 +28,7 @@ public actor NetworkManager {
         self.makeMonitor = makeMonitor ?? { return PathMonitoring() }
         self.sleep = sleep ?? { duration in try await Task.sleep(for: duration) }
         self.probeURL = probeURL
+        self.overpass = OverpassRequestScheduler(transport: self.transport, sleep: self.sleep)
     }
 
     public func updates() -> AsyncStream<NetworkState> {
@@ -142,7 +144,7 @@ public actor NetworkManager {
 
     public func performDataRequest(
         urlString: String, method: String = "GET", body: Data? = nil,
-        headers: [String: String]? = nil
+        headers: [String: String]? = nil, priority: TaskPriority = .userInitiated
     ) async -> Result<Data, NetworkError> {
         guard let url = URL(string: urlString), let scheme = url.scheme,
             ["http", "https"].contains(scheme), url.host != nil
@@ -151,6 +153,13 @@ public actor NetworkManager {
         request.httpMethod = method
         request.httpBody = body
         for (key, value) in headers ?? [:] { request.setValue(value, forHTTPHeaderField: key) }
+        if url.host == "overpass-api.de", url.path == "/api/interpreter" {
+            do { try await self.ready() }
+            catch is CancellationError { return .failure(.taskCancelled) }
+            catch let error as NetworkError { return .failure(error) }
+            catch { return .failure(.networkUnavailable) }
+            return await self.overpass.perform(request, priority: priority)
+        }
         var lastError: NetworkError = .invalidResponse
         for attempt in 1 ... 5 {
             if Task.isCancelled == true { return .failure(.taskCancelled) }

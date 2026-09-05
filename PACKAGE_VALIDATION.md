@@ -1,5 +1,78 @@
 # Package extraction validation
 
+## Shared Overpass recovery: 6.4.1 (145)
+
+Validated September 6, 2026 on macOS with signed Debug and Release builds.
+
+- Network passes 18 tests in Debug and Release, including shared queue priority,
+  cancellation while queued and active, outage fallback, endpoint cooldown,
+  HTTP 429 Retry-After handling without host rotation, runtime errors, invalid
+  queries, and unrelated HTTP requests bypassing the queue.
+- Services passes 2 tests with 75 parameterized request cases in both configurations.
+  Location 6, Process 16, and Tools 22 also pass; Process and Tools pass Release.
+- The isolated app target passes 8 tests, including both unavailable and empty
+  waterway responses falling back to the nearest official gauge.
+- Signed Debug and Release builds and deep/strict signature verification pass.
+  Dependency pins and signing configuration remain unchanged.
+- Live Debug startup confirms water-level recovery (4.02 m) despite Overpass
+  failure. COVID district and POI queries still time out against the secondary
+  endpoint during this check; their live recovery is not validated. The primary
+  endpoint is unreachable, while the secondary status page responds but even a
+  fixed public OSM object query times out. Do not equate status-page success or
+  injected test success with successful live data loading.
+- Preferences were not changed during this recovery check. The Debug app remains
+  running. No commit was created.
+
+## Points of interest: 6.4.0 (144)
+
+Validated September 5, 2026 with Apple Swift 6.2.4 and Xcode 26.3 on macOS.
+
+- The unhosted `PointOfInterestTests` target passes all 7 Swift Testing tests.
+  It compiles the isolated app POI sources without launching the app and injects
+  fetching, location, clock/ticks, and a temporary preferences domain. Coverage
+  includes stable OSM IDs, unnamed nodes and ways, duplicates, malformed data,
+  viewport culling and invalid projection, preservation of 10,000 coincident
+  points, geometry invalidation, cache expiry, movement, settings persistence,
+  fallback startup, timer refresh, cooldown, cancellation, stale results, the
+  two-request limit across generations, partial publication while one category
+  remains blocked, and shutdown.
+- Package suites pass: Location 6 and Network 12 in Debug; Process 16, Tools 22,
+  and Services 2 in both Debug and Release. Services includes 75 parameterized
+  request cases. Tests do not contact live APIs.
+- Final signed Debug and Release app builds pass, as do deep/strict signature
+  checks. The only build warning is the existing optional App Intents metadata
+  extraction notice. Dependency pins, signing identity, and entitlements are
+  unchanged.
+- Optimized temporary harnesses use the real map, overlay, and deterministic
+  2,000/10,000-point fixtures. Projection takes about 2.1–2.3 ms and 10.5–11.2 ms
+  respectively on this Mac. Both retain exactly six native annotations, settle
+  to 0% reported process CPU, and stop projecting after initial map setup.
+  These are local measurements, not guaranteed hardware-independent limits.
+- Stress testing reproduced an IOGPU/RenderBox encoder crash with 10,000 repeated
+  SwiftUI symbol draws, and again with resolved SwiftUI images. The final Canvas
+  uses one Core Graphics image pass; both dense fixtures render successfully.
+  POIs stay at their coordinates beneath the environmental labels and native
+  markers. Apple places remain visible. Dense symbols intentionally overlap.
+- Live Debug startup fetched all five categories successfully. The master switch
+  and all five individual switches changed state correctly and were restored.
+  Successful cached results survived those switches without additional POI
+  requests. Clean app shutdown passed; exercised preferences were restored to
+  their exact original values, including absent keys.
+- The final live accessibility tree exposes one POI count summary through an
+  explicit text accessibility representation. A label on Canvas alone did not
+  expose that summary on this macOS version. Environmental labels remain separate
+  accessible text and decorative POI symbols do not create duplicate entries.
+- Later live Overpass requests intermittently failed or returned no data. The
+  final presenter publishes successful categories immediately and retries failed
+  categories after the five-minute cooldown; the blocked-category regression
+  test verifies that other results are not held back. Popover reopening preserves
+  the summary. The final Debug app remains running; live counts can remain zero
+  while the external service is unavailable. Original POI preferences remain
+  restored exactly.
+- Formatting and whitespace checks pass. No iOS integration, notarization, or
+  publication was performed. No commit made.
+
+
 ## Map collision score precision: 6.3.6 (143)
 
 Validated September 5, 2026 with Apple Swift 6.2.4 and Xcode 26.3.
