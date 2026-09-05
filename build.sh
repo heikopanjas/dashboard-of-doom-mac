@@ -1,115 +1,147 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 PROJECT="DashboardOfDoom.xcodeproj"
 SCHEME="DashboardOfDoom"
 APP_NAME="Dashboard of Doom"
-BUILD_DIR="./build"
+BUILD_DIR="${SCRIPT_DIR}/.build"
 ARCHIVE_PATH="${BUILD_DIR}/${APP_NAME}.xcarchive"
 EXPORT_PATH="${BUILD_DIR}/export"
-EXPORT_PLIST="exportOptions.plist"
-NOTARIZE_PROFILE="DashboardOfDoom-Notarize"
-DESTINATION="generic/platform=macOS"
+EXPORT_PLIST="${SCRIPT_DIR}/exportOptions.plist"
+NOTARIZE_PROFILE="${NOTARIZE_PROFILE:-DashboardOfDoom-Notarize}"
+ZIP_PATH="${BUILD_DIR}/${APP_NAME}.zip"
+RESULT_PATH="${BUILD_DIR}/notarization-result.plist"
 
 CLEAN=false
+RELEASE=false
 NOTARIZE=false
 
 usage() {
-    cat <<EOF
-Usage: $(basename "$0") [OPTIONS]
+    cat <<'HELP'
+Usage: ./build.sh [--clean] [--release] [--notarize]
 
-Build, export, and optionally notarize Dashboard of Doom for direct distribution.
+No arguments builds a signed Debug app.
 
 Options:
-    --clean       Clean build artifacts before building
-    --notarize    Submit the exported app for notarization and staple
+    --clean       Delete root .build/, Build/, and legacy build/ outputs
+                  Without another build option, exit after cleaning
+    --release     Build a signed Release app
+    --notarize    Archive Release, export, notarize, staple, and verify
     -h, --help    Show this help message
 
 Examples:
-    $(basename "$0")                  # Archive and export only
-    $(basename "$0") --clean          # Clean first, then archive and export
-    $(basename "$0") --notarize       # Archive, export, notarize, and staple
-    $(basename "$0") --clean --notarize
-EOF
-    exit 0
+    ./build.sh                       # Debug build
+    ./build.sh --clean                # Clean only
+    ./build.sh --release              # Release build
+    ./build.sh --clean --release      # Clean, then build Release
+    ./build.sh --notarize             # Notarized distribution archive
+    ./build.sh --clean --notarize     # Clean, then archive and notarize
+
+Outputs: .build/Products/Debug or Release, .build/export, and .build/*.zip
+Notarization credentials: Keychain profile DashboardOfDoom-Notarize
+Override the profile with the NOTARIZE_PROFILE environment variable.
+HELP
 }
 
 for arg in "$@"; do
     case "$arg" in
-        --clean)    CLEAN=true ;;
+        --clean) CLEAN=true ;;
+        --release) RELEASE=true ;;
         --notarize) NOTARIZE=true ;;
-        -h|--help)  usage ;;
-        *)          echo "Unknown option: $arg"; usage ;;
+        -h|--help) usage; exit 0 ;;
+        *) printf 'Unknown option: %s\n' "$arg" >&2; usage >&2; exit 2 ;;
     esac
 done
 
-VERSION=$(xcodebuild -project "$PROJECT" -scheme "$SCHEME" -showBuildSettings 2>/dev/null \
-    | awk '/MARKETING_VERSION/ { print $3; exit }')
-BUILD_NUMBER=$(xcodebuild -project "$PROJECT" -scheme "$SCHEME" -showBuildSettings 2>/dev/null \
-    | awk '/CURRENT_PROJECT_VERSION/ { print $3; exit }')
+cd -- "$SCRIPT_DIR"
 
-echo "==> Dashboard of Doom ${VERSION} (${BUILD_NUMBER})"
-echo ""
-
-# Clean
-if [ "$CLEAN" = true ]; then
-    echo "==> Cleaning..."
-    xcodebuild -project "$PROJECT" -scheme "$SCHEME" -destination "$DESTINATION" clean -quiet
-    rm -rf "$BUILD_DIR"
-    echo "    Done."
-    echo ""
+if [[ "$CLEAN" == true ]]; then
+    echo "==> Removing build products, intermediates, archives, and exports..."
+    # Fixed, repository-local paths. Do not remove package sources or lockfiles.
+    rm -rf -- "$BUILD_DIR" "${SCRIPT_DIR}/Build" "${SCRIPT_DIR}/build"
+    if [[ "$RELEASE" == false && "$NOTARIZE" == false ]]; then
+        echo "==> Clean complete"
+        exit 0
+    fi
 fi
 
+for tool in xcodegen xcodebuild; do
+    command -v "$tool" >/dev/null || { echo "Required tool missing: $tool" >&2; exit 1; }
+done
+
+if [[ "$NOTARIZE" == true ]]; then
+    for tool in xcrun ditto plutil spctl; do
+        command -v "$tool" >/dev/null || { echo "Required tool missing: $tool" >&2; exit 1; }
+    done
+    [[ -f "$EXPORT_PLIST" ]] || { echo "Missing export options: $EXPORT_PLIST" >&2; exit 1; }
+fi
+
+xcodegen generate
 mkdir -p "$BUILD_DIR"
 
-# Archive
-echo "==> Archiving (Release)..."
-xcodebuild archive \
-    -project "$PROJECT" \
-    -scheme "$SCHEME" \
-    -configuration Release \
-    -destination "$DESTINATION" \
-    -archivePath "$ARCHIVE_PATH" \
-    -quiet
-echo "    Archive: ${ARCHIVE_PATH}"
-echo ""
+# Explicit paths override machine-specific Xcode build-location preferences.
+BUILD_ARGS=(
+    -project "$PROJECT"
+    -scheme "$SCHEME"
+    -destination 'generic/platform=macOS'
+    -derivedDataPath "${BUILD_DIR}/DerivedData"
+    -disableAutomaticPackageResolution
+    "SYMROOT=${BUILD_DIR}/Products"
+    "OBJROOT=${BUILD_DIR}/Intermediates"
+)
 
-# Export
+if [[ "$NOTARIZE" == false ]]; then
+    CONFIGURATION=Debug
+    if [[ "$RELEASE" == true ]]; then
+        CONFIGURATION=Release
+    fi
+    echo "==> Building ${CONFIGURATION}..."
+    xcodebuild "${BUILD_ARGS[@]}" -configuration "$CONFIGURATION" build
+    echo "==> Build complete: ${BUILD_DIR}/Products/${CONFIGURATION}/${APP_NAME}.app"
+    exit 0
+fi
+
+echo "==> Archiving Release..."
+rm -rf -- "$ARCHIVE_PATH"
+xcodebuild "${BUILD_ARGS[@]}" -configuration Release -archivePath "$ARCHIVE_PATH" archive
+
 echo "==> Exporting with Developer ID signing..."
-rm -rf "$EXPORT_PATH"
+rm -rf -- "$EXPORT_PATH"
 xcodebuild -exportArchive \
     -archivePath "$ARCHIVE_PATH" \
     -exportPath "$EXPORT_PATH" \
-    -exportOptionsPlist "$EXPORT_PLIST" \
-    -quiet
-echo "    App: ${EXPORT_PATH}/${APP_NAME}.app"
-echo ""
+    -exportOptionsPlist "$EXPORT_PLIST"
 
-# Notarize
-if [ "$NOTARIZE" = true ]; then
-    ZIP_PATH="${BUILD_DIR}/${APP_NAME}.zip"
+EXPORTED_APP="${EXPORT_PATH}/${APP_NAME}.app"
+echo "==> Creating ZIP for notarization..."
+rm -f -- "$ZIP_PATH" "$RESULT_PATH"
+ditto -c -k --keepParent "$EXPORTED_APP" "$ZIP_PATH"
 
-    echo "==> Creating zip for notarization..."
-    rm -f "$ZIP_PATH"
-    ditto -c -k --keepParent "${EXPORT_PATH}/${APP_NAME}.app" "$ZIP_PATH"
-    echo "    Zip: ${ZIP_PATH}"
-    echo ""
-
-    echo "==> Submitting for notarization (this may take a few minutes)..."
-    xcrun notarytool submit "$ZIP_PATH" \
-        --keychain-profile "$NOTARIZE_PROFILE" \
-        --wait
-    echo ""
-
-    echo "==> Stapling notarization ticket..."
-    xcrun stapler staple "${EXPORT_PATH}/${APP_NAME}.app"
-    echo ""
-
-    echo "==> Verifying..."
-    spctl -a -vvv "${EXPORT_PATH}/${APP_NAME}.app" 2>&1 | head -5
-    echo ""
-
-    rm -f "$ZIP_PATH"
+echo "==> Submitting for notarization..."
+if xcrun notarytool submit "$ZIP_PATH" \
+    --keychain-profile "$NOTARIZE_PROFILE" \
+    --wait --output-format plist > "$RESULT_PATH"; then
+    STATUS=$(plutil -extract status raw -o - "$RESULT_PATH")
+else
+    cat "$RESULT_PATH" >&2
+    echo "Notarization failed. Submission output: $RESULT_PATH" >&2
+    exit 1
 fi
 
-echo "==> Build complete: ${EXPORT_PATH}/${APP_NAME}.app"
+if [[ "$STATUS" != Accepted ]]; then
+    cat "$RESULT_PATH" >&2
+    echo "Notarization was not accepted. Submission output: $RESULT_PATH" >&2
+    exit 1
+fi
+
+echo "==> Stapling and verifying..."
+xcrun stapler staple "$EXPORTED_APP"
+xcrun stapler validate "$EXPORTED_APP"
+spctl --assess --type execute --verbose "$EXPORTED_APP"
+
+# Repackage after stapling so the distributable ZIP contains the ticket.
+rm -f -- "$ZIP_PATH"
+ditto -c -k --keepParent "$EXPORTED_APP" "$ZIP_PATH"
+echo "==> Notarization complete: $EXPORTED_APP"
+echo "==> Distribution ZIP: $ZIP_PATH"

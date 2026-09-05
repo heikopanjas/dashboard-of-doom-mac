@@ -1,6 +1,6 @@
 # Agent Instructions for Dashboard of Doom (macOS)
 
-*Last updated: September 5, 2026 (Instruction Accuracy Update)*
+*Last updated: September 5, 2026 (Build Script Consolidation)*
 
 ## Project Overview
 
@@ -22,7 +22,7 @@ Dashboard of Doom is a sophisticated macOS menu bar application providing real-t
 - **macOS-Only Repository**: This repo contains the macOS menu bar application
 - **Shared Architecture**: Similar architecture patterns exist in the separate iOS repository
 - **Platform-Specific**: Views and some Presenters contain macOS-specific implementations
-- **Xcode Project**: Single .xcodeproj file for macOS target
+- **XcodeGen**: `project.yml` defines the macOS target, settings, dependencies, and shared scheme; `DashboardOfDoom.xcodeproj` is generated
 
 ### Platform Architecture
 - **macOS**: MVP (Model-View-Presenter) pattern optimized for menu bar applications
@@ -220,6 +220,22 @@ Controllers → Services → Transformers → Presenters → Views
 - **Trace**: Structured logging utility for debugging and monitoring
 
 ## Development Workflow
+
+### XcodeGen Project Management
+
+- Treat `project.yml` as the source of truth; edit it instead of generated project files
+- Require XcodeGen 2.46.0+; install with `brew install xcodegen`
+- Run `xcodegen generate` after cloning and before builds, including after spec changes
+- Use `./build.sh` for a signed Debug build and `./build.sh --release` for Release; the script regenerates the project and fixes output paths under `.build/`
+- `./build.sh --clean` only removes root `.build/`, `Build/`, and legacy `build/` outputs, including archives and exports; combine with `--release` or `--notarize` to clean before building
+- `./build.sh --notarize` archives Release, exports with `exportOptions.plist`, submits to Apple, staples an accepted result, validates, and creates a distribution ZIP
+- Notarization uses the `DashboardOfDoom-Notarize` Keychain profile, overridable with `NOTARIZE_PROFILE`
+- For unsigned compilation checks, use the manual `xcodebuild` command in README.md with `CODE_SIGNING_ALLOWED=NO`
+- Validate script changes with `bash -n build.sh`, `shellcheck build.sh`, and `python3 -m unittest discover -s tests -v`; the Python tests mock builds and notarization
+- Keep the existing signing configuration, app identity, and WeatherKit entitlement unless explicitly changing them; configure signing in the spec, including SDK-specific overrides
+- Generated project files are ignored, except the tracked package lockfile at `DashboardOfDoom.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`
+- Preserve locked dependency revisions during unrelated changes
+- There is no test target currently; define future test targets in `project.yml`
 
 ### Git Conventions
 

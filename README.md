@@ -1,6 +1,6 @@
 # Dashboard of Doom (macOS)
 
-![Swift 6.0](https://img.shields.io/badge/Swift-6.0-orange.svg)
+![Swift 5 language mode](https://img.shields.io/badge/Swift-5_language_mode-orange.svg)
 ![macOS 15.0+](https://img.shields.io/badge/macOS-15.0+-blue.svg)
 ![MIT License](https://img.shields.io/badge/License-MIT-green.svg)
 
@@ -108,7 +108,7 @@
 
 ### Modern Swift Features
 
-- **Swift 6.0**: Latest language features and strict concurrency
+- **Swift 5 language mode**: Modern Swift compiler with async/await support
 - **Concurrency**: Comprehensive async/await implementation
 - **Observable Macro**: macOS 15+ state management with `@Observable`
 - **Environment Injection**: SwiftUI environment-based dependency management
@@ -149,7 +149,8 @@ dashboard-of-doom-mac/
 │   ├── NetworkManager.swift          # Network connectivity monitor
 │   ├── ProcessManager.swift          # Subscription coordinator
 │   └── ProcessSubscriber.swift       # Reactive update protocol
-├── DashboardOfDoom.xcodeproj/        # Xcode project file
+├── project.yml                      # Authoritative XcodeGen specification
+├── DashboardOfDoom.xcodeproj/        # Generated project; package lockfile tracked
 ├── AGENTS.md                         # AI agent instructions
 ├── LICENSE                           # MIT License
 └── README.md                         # This documentation
@@ -185,7 +186,8 @@ dashboard-of-doom-mac/
 
 - **macOS 15.0+** (Sequoia or later)
 - **Xcode 16.3+** with macOS 15 SDK
-- **Swift 6.0+** compiler
+- **XcodeGen 2.46.0+** (`brew install xcodegen`)
+- **Swift compiler bundled with Xcode**; the app uses Swift 5 language mode
 - **Apple Developer Account** (for code signing)
 
 ### Installation & Setup
@@ -197,22 +199,104 @@ dashboard-of-doom-mac/
    cd dashboard-of-doom-mac
    ```
 
-2. **Open the Project**
+2. **Generate and Open the Project**
 
    ```bash
+   xcodegen generate
    open DashboardOfDoom.xcodeproj
    ```
 
-3. **Configure Build Settings**
-   - Select your development team in Signing & Capabilities
-   - Configure signing certificates for macOS development
-   - Verify deployment target is set to macOS 15.0+
+   `project.yml` is the source of truth for targets, build settings, package
+   dependencies, and the shared scheme. Run `xcodegen generate` after cloning
+   and before building, especially after pulling changes or editing the spec.
+   Generated project files are ignored; changes made directly in Xcode's
+   project editor are overwritten by regeneration.
+
+3. **Configure Signing**
+
+   The specification preserves the existing manual Developer ID signing:
+   team `8J2G689FCZ`, bundle ID `com.panjas.dashboard-of-doom`, and provisioning
+   profile `Dashboard of Doom macOS`. Running or distributing the app requires
+   the corresponding certificate and profile, including WeatherKit support.
+   For a different team, update the signing settings in `project.yml`, including
+   the `sdk=macosx*` overrides, and regenerate. Keep the WeatherKit entitlement
+   in `DashboardOfDoom/DashboardOfDoom.entitlements`.
 
 4. **Build and Run**
-   - Select "My Mac" as the run destination
+   - Select the `DashboardOfDoom` scheme and "My Mac" destination
    - Build and run (⌘R)
    - Grant location permissions when prompted
    - Menu bar icon will appear in the system tray
+
+### Build Script
+
+Run the executable script from the repository root (or invoke it by its path
+from another directory). It regenerates the Xcode project before each build.
+
+| Command | Action | Output |
+| --- | --- | --- |
+| `./build.sh` | Signed Debug build | `.build/Products/Debug/Dashboard of Doom.app` |
+| `./build.sh --clean` | Delete build outputs and exit | Removes root `.build/`, `Build/`, and legacy `build/` |
+| `./build.sh --release` | Signed Release build | `.build/Products/Release/Dashboard of Doom.app` |
+| `./build.sh --notarize` | Archive Release, export, notarize, staple, verify | `.build/export/Dashboard of Doom.app` and `.build/Dashboard of Doom.zip` |
+
+Combine `--clean` with `--release` or `--notarize` to clean before that operation.
+For a clean Debug build, run `./build.sh --clean` followed by `./build.sh`.
+Cleaning removes compiled products, intermediate files, caches, archives, and
+exports in those root directories. It preserves sources, the package lockfile,
+and build folders inside `Packages/`. The script fixes output paths explicitly
+so machine-specific Xcode preferences do not redirect its artifacts.
+
+Notarization uses `exportOptions.plist` for Developer ID export and the existing
+Keychain credential profile `DashboardOfDoom-Notarize`. Set up credentials once:
+
+```bash
+xcrun notarytool store-credentials DashboardOfDoom-Notarize
+```
+
+To use another stored profile:
+
+```bash
+NOTARIZE_PROFILE=YourProfile ./build.sh --notarize
+```
+
+`--notarize` uploads the exported app to Apple and waits for the result. It staples
+only an accepted submission, validates the ticket, checks Gatekeeper acceptance,
+and recreates the ZIP with the stapled app. Submission output remains at
+`.build/notarization-result.plist` for diagnosis. The archive is retained at
+`.build/Dashboard of Doom.xcarchive`. See Apple's
+[notarization workflow](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow).
+
+For a compile check without signing credentials:
+
+```bash
+xcodegen generate
+xcodebuild -project DashboardOfDoom.xcodeproj \
+  -scheme DashboardOfDoom -configuration Debug \
+  -destination 'platform=macOS' -derivedDataPath Build/DerivedData \
+  -disableAutomaticPackageResolution CODE_SIGNING_ALLOWED=NO build
+```
+
+Use a signed build to verify WeatherKit, location permissions, and menu bar
+behavior at runtime.
+
+The LaunchAtLogin dependency retains its `main` branch requirement and the revision
+recorded in `DashboardOfDoom.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`.
+This lockfile remains tracked even though the rest of the project is generated.
+Keep lockfile changes intentional when updating dependencies. Initial package
+checkout requires network access.
+
+There is currently no app test target. Build script tests use Python 3 and mock
+external tools, including notarization; they perform no uploads:
+
+```bash
+python3 -m unittest discover -s tests -v
+bash -n build.sh
+shellcheck build.sh
+```
+
+Install ShellCheck with `brew install shellcheck` if needed. Define future app
+test targets in `project.yml`.
 
 ### Permissions & Configuration
 

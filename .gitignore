@@ -29,3 +29,16 @@ fastlane/test_output
 
 # Crashlytics
 crashlytics-build.properties
+
+# XcodeGen output; retain the Swift package lockfile for reproducible builds
+/DashboardOfDoom.xcodeproj/**
+!/DashboardOfDoom.xcodeproj/project.xcworkspace/
+!/DashboardOfDoom.xcodeproj/project.xcworkspace/xcshareddata/
+!/DashboardOfDoom.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+!/DashboardOfDoom.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+
+# Build script test bytecode
+/tests/__pycache__/
+
+# Legacy distribution script outputs on case-sensitive filesystems
+/build/

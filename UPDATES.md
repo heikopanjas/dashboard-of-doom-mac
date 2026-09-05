@@ -4,6 +4,25 @@ This file is the append-only log of project decisions and notable changes, maint
 
 <!-- {changelog} -->
 
+### 2026-09-05 (v6.3.0, 19:54 CEST consolidate build script)
+
+- made build.sh default to a signed debug build, with separate release and notarization modes
+- made clean remove root build outputs and exit unless combined with a build mode
+- regenerated the xcodegen project before builds and fixed output paths under .build
+- required accepted notarization before stapling and repackaged the stapled app for distribution
+- added mock-based script tests for routing, cleanup, and failure handling
+- rationale: provide one predictable command for development and distribution workflows
+- version bump: none; build tooling changes without application behavior changes
+
+### 2026-09-05 (v6.3.0, 19:43 CEST migrate to xcodegen)
+
+- made project.yml authoritative for the app target, build settings, dependency, and shared scheme
+- preserved debug and release settings, signing, entitlements, app version 6.3.0, and build 137
+- ignored generated project files while retaining the tracked package lockfile
+- documented generation, signing configuration, and command-line builds
+- rationale: maintain reproducible project configuration through xcodegen going forward
+- version bump: none; build-system migration without application behavior changes
+
 ### 2026-09-05 (v6.3.0, 19:38 CEST instruction accuracy update)
 
 - clarified swift language mode and the macos deployment target
