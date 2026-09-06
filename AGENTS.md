@@ -1,6 +1,6 @@
 # Agent Instructions for Dashboard of Doom (macOS and iOS)
 
-*Last updated: September 7, 2026, 00:54 CEST (platform directory organization)*
+*Last updated: September 7, 2026, 01:12 CEST (iOS display name)*
 
 ## Project Overview
 

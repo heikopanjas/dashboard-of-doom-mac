@@ -74,6 +74,6 @@ if [[ "$RUN" == true ]]; then
     # bootstatus -b boots a shutdown device and waits for launch services.
     xcrun simctl bootstatus "$SIMULATOR_ID" -b
     xcrun simctl location "$SIMULATOR_ID" set 52.51889,13.36528
-    xcrun simctl install "$SIMULATOR_ID" "${BUILD_DIR}/Products/${CONFIGURATION}-iphonesimulator/DashboardOfDoom.app"
+    xcrun simctl install "$SIMULATOR_ID" "${BUILD_DIR}/Products/${CONFIGURATION}-iphonesimulator/Dashboard of Doom.app"
     xcrun simctl launch --terminate-running-process "$SIMULATOR_ID" com.panjas.dashboard-of-doom
 fi

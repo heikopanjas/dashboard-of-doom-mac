@@ -233,7 +233,8 @@ targets:
         SUPPORTED_PLATFORMS: iphoneos iphonesimulator
         TARGETED_DEVICE_FAMILY: '1,2'
         SWIFT_VERSION: '5.0'
-        PRODUCT_NAME: DashboardOfDoom
+        PRODUCT_NAME: Dashboard of Doom
+        PRODUCT_MODULE_NAME: DashboardOfDoom
         PRODUCT_BUNDLE_IDENTIFIER: com.panjas.dashboard-of-doom
         MARKETING_VERSION: 6.3.0
         CURRENT_PROJECT_VERSION: '178'

@@ -4,6 +4,13 @@ This file is the append-only log of project decisions and notable changes, maint
 
 <!-- {changelog} -->
 
+### 2026-09-07 (ios v6.3.0, ios display name, 01:12)
+
+- explicitly set the ios display name in the source plist and product name in project.yml to Dashboard of Doom for iphone and ipad
+- align the ios product name with the display name and update the simulator installation path; retain the module name, app identifier, signing, and background location configuration
+- no version bump for this display metadata correction
+
+
 ### 2026-09-07 (macos v6.4.3, ios v6.3.0, platform directories, 00:54)
 
 - group macos app sources, rendering tests, build-script tests, signing export configuration, and screenshots under macos
