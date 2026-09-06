@@ -81,15 +81,13 @@ fi
 xcodegen generate
 mkdir -p "$BUILD_DIR"
 
-# Explicit paths override machine-specific Xcode build-location preferences.
+# Keep common arguments separate from action-specific build locations.
 BUILD_ARGS=(
     -project "$PROJECT"
     -scheme "$SCHEME"
     -destination 'generic/platform=macOS'
     -derivedDataPath "${BUILD_DIR}/DerivedData"
     -disableAutomaticPackageResolution
-    "SYMROOT=${BUILD_DIR}/Products"
-    "OBJROOT=${BUILD_DIR}/Intermediates"
 )
 
 if [[ "$NOTARIZE" == false ]]; then
@@ -98,14 +96,23 @@ if [[ "$NOTARIZE" == false ]]; then
         CONFIGURATION=Release
     fi
     echo "==> Building ${CONFIGURATION}..."
-    xcodebuild "${BUILD_ARGS[@]}" -configuration "$CONFIGURATION" build
+    xcodebuild "${BUILD_ARGS[@]}" \
+        "SYMROOT=${BUILD_DIR}/Products" \
+        "OBJROOT=${BUILD_DIR}/Intermediates" \
+        -configuration "$CONFIGURATION" build
     echo "==> Build complete: ${BUILD_DIR}/Products/${CONFIGURATION}/${APP_NAME}.app"
     exit 0
 fi
 
 echo "==> Archiving Release..."
 rm -rf -- "$ARCHIVE_PATH"
-xcodebuild "${BUILD_ARGS[@]}" -configuration Release -archivePath "$ARCHIVE_PATH" archive
+# Override location preferences, not SYMROOT/OBJROOT: archive must derive its
+# own BuildProductsPath and IntermediateBuildFilesPath beneath these roots.
+xcodebuild "${BUILD_ARGS[@]}" \
+    -IDECustomBuildLocationType=Absolute \
+    "-IDECustomBuildProductsPath=${BUILD_DIR}/Products" \
+    "-IDECustomBuildIntermediatesPath=${BUILD_DIR}/Intermediates" \
+    -configuration Release -archivePath "$ARCHIVE_PATH" archive
 
 echo "==> Exporting with Developer ID signing..."
 rm -rf -- "$EXPORT_PATH"

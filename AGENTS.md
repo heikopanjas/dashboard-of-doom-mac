@@ -1,6 +1,6 @@
 # Agent Instructions for Dashboard of Doom (macOS and iOS)
 
-*Last updated: September 7, 2026, 01:12 CEST (iOS display name)*
+*Last updated: September 7, 2026, 01:37 CEST (macOS archive paths)*
 
 ## Project Overview
 
@@ -229,6 +229,7 @@ Controllers → Services → Transformers → Presenters → Views
 - Require XcodeGen 2.46.0+; install with `brew install xcodegen`
 - Run `xcodegen generate` after cloning and before builds, including after spec changes
 - Use `./macos/build.sh` for a signed Debug build and `./macos/build.sh --release` for Release; the script regenerates the project and fixes output paths under `.build/`
+- For archives, override Xcode build-location preferences instead of passing `SYMROOT` or `OBJROOT`; Xcode must derive its own archive subdirectories or finalization fails with a missing `BuildProductsPath`.
 - `./macos/build.sh --clean` only removes root `.build/`, `Build/`, and legacy `build/` outputs, including archives and exports; combine with `--release` or `--notarize` to clean before building
 - `./macos/build.sh --notarize` archives Release, exports with `macos/exportOptions.plist`, submits to Apple, staples an accepted result, validates, and creates a distribution ZIP
 - Notarization uses the `DashboardOfDoom-Notarize` Keychain profile, overridable with `NOTARIZE_PROFILE`

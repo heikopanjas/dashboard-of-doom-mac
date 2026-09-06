@@ -4,6 +4,14 @@ This file is the append-only log of project decisions and notable changes, maint
 
 <!-- {changelog} -->
 
+### 2026-09-07 (macos v6.4.3, archive paths, 01:37)
+
+- fix macos archive finalization by applying output roots through xcode build-location preferences; keep direct build-setting overrides for ordinary debug and release builds
+- rationale: command-line SYMROOT and OBJROOT flatten the archive layout and cause the missing BuildProductsPath error after successful compilation
+- add regression assertions for archive routing; shell syntax, shellcheck, and all nine macos and ios build-script tests pass
+- validation: reproduced the original archive error; repaired release archive, developer id export, and strict code signature verification pass; apple notarization upload awaits explicit approval
+- no version bump: build tooling correction with unchanged app behavior and signing configuration
+
 ### 2026-09-07 (ios v6.3.0, ios display name, 01:12)
 
 - explicitly set the ios display name in the source plist and product name in project.yml to Dashboard of Doom for iphone and ipad

@@ -90,6 +90,13 @@ class BuildScriptTests(unittest.TestCase):
                           "xcrun", "plutil", "xcrun", "xcrun", "spctl", "ditto"])
         self.assertEqual(calls[1][-1], "archive")
         self.assertIn("Release", calls[1])
+        # Direct build-setting overrides flatten Xcode's archive layout and
+        # cause archive finalization to fail with a missing BuildProductsPath.
+        self.assertFalse(any(arg.startswith(("SYMROOT=", "OBJROOT="))
+                             for arg in calls[1]))
+        self.assertIn("-IDECustomBuildLocationType=Absolute", calls[1])
+        self.assertIn(f"-IDECustomBuildProductsPath={self.root}/.build/Products", calls[1])
+        self.assertIn(f"-IDECustomBuildIntermediatesPath={self.root}/.build/Intermediates", calls[1])
         self.assertEqual(calls[2][1], "-exportArchive")
         self.assertIn("custom profile", calls[4])
         self.assertIn("--wait", calls[4])
