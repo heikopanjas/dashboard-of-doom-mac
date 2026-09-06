@@ -4,6 +4,17 @@ This file is the append-only log of project decisions and notable changes, maint
 
 <!-- {changelog} -->
 
+### 2026-09-07 (macos v6.4.3, ios v6.3.0, platform directories, 00:54)
+
+- group macos app sources, rendering tests, build-script tests, signing export configuration, and screenshots under macos
+- group ios app sources, unit and ui tests, build-script tests, build entry point, and migration record under ios
+- group common app sources and tests, five doomkit packages and their tests, and shared test tooling under shared
+- retain repository entry points and the combined xcodegen specification at root; retain existing build output locations and dependency pins
+- validation: all 187 tracked swift files preserved byte-for-byte, both signed debug app builds and signature checks pass, 14 macos tests, 17 ios tests, and nine build-script tests pass
+- package validation: all five packages pass debug tests from their new paths; process, tools, and services also pass release tests
+- no version bump: directory organization only, with unchanged app behavior
+
+
 ### 2026-09-07 (ios v6.3.0, narrower map labels, 00:39)
 
 - enlarge ios label symbols from subheadline to title3 and reduce horizontal padding from ten to five points per side

@@ -2,10 +2,11 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+REPO_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd -P)"
 PROJECT="DashboardOfDoom.xcodeproj"
 SCHEME="DashboardOfDoom"
 APP_NAME="Dashboard of Doom"
-BUILD_DIR="${SCRIPT_DIR}/.build"
+BUILD_DIR="${REPO_DIR}/.build"
 ARCHIVE_PATH="${BUILD_DIR}/${APP_NAME}.xcarchive"
 EXPORT_PATH="${BUILD_DIR}/export"
 EXPORT_PLIST="${SCRIPT_DIR}/exportOptions.plist"
@@ -19,7 +20,7 @@ NOTARIZE=false
 
 usage() {
     cat <<'HELP'
-Usage: ./build.sh [--clean] [--release] [--notarize]
+Usage: ./macos/build.sh [--clean] [--release] [--notarize]
 
 No arguments builds a signed Debug app.
 
@@ -31,12 +32,12 @@ Options:
     -h, --help    Show this help message
 
 Examples:
-    ./build.sh                       # Debug build
-    ./build.sh --clean                # Clean only
-    ./build.sh --release              # Release build
-    ./build.sh --clean --release      # Clean, then build Release
-    ./build.sh --notarize             # Notarized distribution archive
-    ./build.sh --clean --notarize     # Clean, then archive and notarize
+    ./macos/build.sh                       # Debug build
+    ./macos/build.sh --clean                # Clean only
+    ./macos/build.sh --release              # Release build
+    ./macos/build.sh --clean --release      # Clean, then build Release
+    ./macos/build.sh --notarize             # Notarized distribution archive
+    ./macos/build.sh --clean --notarize     # Clean, then archive and notarize
 
 Outputs: .build/Products/Debug or Release, .build/export, and .build/*.zip
 Notarization credentials: Keychain profile DashboardOfDoom-Notarize
@@ -54,12 +55,12 @@ for arg in "$@"; do
     esac
 done
 
-cd -- "$SCRIPT_DIR"
+cd -- "$REPO_DIR"
 
 if [[ "$CLEAN" == true ]]; then
     echo "==> Removing build products, intermediates, archives, and exports..."
     # Fixed, repository-local paths. Do not remove package sources or lockfiles.
-    rm -rf -- "$BUILD_DIR" "${SCRIPT_DIR}/Build" "${SCRIPT_DIR}/build"
+    rm -rf -- "$BUILD_DIR" "${REPO_DIR}/Build" "${REPO_DIR}/build"
     if [[ "$RELEASE" == false && "$NOTARIZE" == false ]]; then
         echo "==> Clean complete"
         exit 0

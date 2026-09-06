@@ -2,6 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+REPO_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd -P)"
 CONFIGURATION=Debug
 PLATFORM=simulator
 SIMULATOR_ID=""
@@ -9,7 +10,7 @@ RUN=false
 
 usage() {
     cat <<'HELP'
-Usage: ./build-ios.sh [--release] [--device | --simulator UUID] [--run]
+Usage: ./ios/build.sh [--release] [--device | --simulator UUID] [--run]
 
 Build iOS with the root XcodeGen specification. No files are cleaned.
   --release         Use Release instead of Debug
@@ -51,9 +52,9 @@ for tool in xcodegen xcodebuild xcrun; do
     command -v "$tool" >/dev/null || { echo "Required tool missing: $tool" >&2; exit 1; }
 done
 
-cd -- "$SCRIPT_DIR"
+cd -- "$REPO_DIR"
 xcodegen generate
-BUILD_DIR="${SCRIPT_DIR}/.build/ios/${PLATFORM}/${CONFIGURATION}"
+BUILD_DIR="${REPO_DIR}/.build/ios/${PLATFORM}/${CONFIGURATION}"
 ARGS=(
     -project DashboardOfDoom.xcodeproj -scheme DashboardOfDoom-iOS
     -configuration "$CONFIGURATION" -derivedDataPath "${BUILD_DIR}/DerivedData"

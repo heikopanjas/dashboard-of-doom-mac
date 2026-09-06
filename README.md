@@ -8,7 +8,7 @@
 
 > **Regional Focus**: This application is specifically designed for use in Germany and integrates with German federal data sources.
 
-> **Platforms**: macOS 15+ and iOS 26+. Both apps use the five local DoomKit packages and the app code in `Shared/`. The original iOS history is retained under `ios/`; see [migration and validation](IOS_MIGRATION.md).
+> **Platforms**: macOS 15+ and iOS 26+. Both apps use the five local DoomKit packages and the app code in `shared/Sources/`. The original iOS history is retained under `ios/`; see [migration and validation](ios/MIGRATION.md).
 
 Current versions: **macOS 6.4.3 (147)** and **iOS 6.3.0 (178)**.
 
@@ -18,12 +18,12 @@ Use Xcode 26.2+, an iOS 26 simulator, and XcodeGen 2.46.0+. The root
 `project.yml` generates both targets; the old iOS Xcode project has been retired.
 
 ```bash
-./build-ios.sh                         # unsigned Debug simulator build
-./build-ios.sh --release               # unsigned Release simulator build
-./build-ios.sh --device                # signed Debug device build
-./build-ios.sh --device --release      # signed Release device build
+./ios/build.sh                         # unsigned Debug simulator build
+./ios/build.sh --release               # unsigned Release simulator build
+./ios/build.sh --device                # signed Debug device build
+./ios/build.sh --device --release      # signed Release device build
 xcrun simctl list devices available
-./build-ios.sh --simulator SIMULATOR_UUID --run
+./ios/build.sh --simulator SIMULATOR_UUID --run
 ```
 
 `--run` boots the selected simulator, sets **HKW (52.51889, 13.36528)**, installs,
@@ -31,7 +31,7 @@ and launches. It does not grant location permission. Use the iOS permission
 prompt or `xcrun simctl privacy SIMULATOR_UUID grant location-always com.panjas.dashboard-of-doom`.
 Keep simulator movement tests centred on HKW. Build outputs are isolated under
 `.build/ios/{simulator,device}/{Debug,Release}/`; this script never cleans.
-The existing `./build.sh --clean` removes the entire root `.build/`, including
+The existing `./macos/build.sh --clean` removes the entire root `.build/`, including
 these iOS outputs. Device builds need the existing team's development identity
 and a profile for `com.panjas.dashboard-of-doom`; there is no upload or archive step.
 
@@ -46,8 +46,8 @@ xcodebuild -project DashboardOfDoom.xcodeproj -scheme iOSTests \
 # Use scheme iOSUITests for offline navigation, chart gestures, and POI stress screenshots.
 ```
 
-`Shared/` contains controllers, presenters, models, transformers, extensions,
-and map/POI views. `DashboardOfDoom/` owns macOS app/menu/settings/chart views;
+`shared/Sources/` contains controllers, presenters, models, transformers, extensions,
+and map/POI views. `macos/DashboardOfDoom/` owns macOS app/menu/settings/chart views;
 `ios/DashboardOfDoom/` owns iOS app/navigation/settings/chart views and assets.
 There is one location manager and coordinator per app. iOS requests best-accuracy
 continuous location and Always permission, with background updates, no automatic
@@ -125,22 +125,22 @@ iOS uses the same collision solver and POI rendering, with its existing 101 × 6
 <div align="center">
 
 **Main Dashboard**
-![macOS Main Dashboard](images/macos-main.png)
+![macOS Main Dashboard](macos/images/macos-main.png)
 
 **Weather Forecast**
-![macOS Weather Forecast](images/macos-forecast.png)
+![macOS Weather Forecast](macos/images/macos-forecast.png)
 
 **Environmental Monitoring**
-![macOS Environmental Data](images/macos-environment.png)
+![macOS Environmental Data](macos/images/macos-environment.png)
 
 **Particle Analysis**
-![macOS Particle Data](images/macos-particles.png)
+![macOS Particle Data](macos/images/macos-particles.png)
 
 **State Election Polls**
-![macOS State Election Polls](images/macos-state.png)
+![macOS State Election Polls](macos/images/macos-state.png)
 
 **Federal Election Polls**
-![macOS Federal Election Polls](images/macos-federal.png)
+![macOS Federal Election Polls](macos/images/macos-federal.png)
 
 </div>
 
@@ -242,28 +242,36 @@ iOS uses the same collision solver and POI rendering, with its existing 101 × 6
 
 ```text
 dashboard-of-doom-mac/
-├── DashboardOfDoom/                  # macOS Application Source
-│   ├── Controllers/                  # Data orchestration layer
-│   ├── Presenters/                   # State management (MVP)
-│   ├── Transformers/                 # Data processing pipeline
-│   ├── Views/                        # SwiftUI user interfaces
-│   ├── Models/                       # Core data structures
-│   ├── Extensions/                   # Swift utility extensions
-│   ├── Assets.xcassets/              # App icons and image assets
-│   ├── DashboardOfDoomApp.swift      # App entry point
-│   ├── ContentView.swift             # Main view with header bar and panels
-│   ├── AppLocation.swift             # App-owned fallback and location lifecycle
-│   └── AppProcess.swift              # Constructs and starts the package coordinator
-├── doom-kit-location/               # DoomKitLocation package and tests
-├── doom-kit-network/                # DoomKitNetwork package and tests
-├── doom-kit-process/                # Process models, custom units, coordinator and scheduler
-├── doom-kit-tools/                  # Smoothing, forecasting, geometry, symbols and logging
-├── doom-kit-services/               # Seven API services with injected networking
-├── project.yml                      # Authoritative XcodeGen specification
-├── DashboardOfDoom.xcodeproj/        # Generated project; package lockfile tracked
-├── AGENTS.md                         # AI agent instructions
-├── LICENSE                           # MIT License
-└── README.md                         # This documentation
+├── macos/
+│   ├── DashboardOfDoom/     # macOS app, views, assets and entitlements
+│   ├── Tests/               # macOS rendering tests
+│   ├── BuildTests/          # macOS build and notarization script tests
+│   ├── images/              # macOS documentation screenshots
+│   ├── build.sh             # Signed builds and distribution
+│   └── exportOptions.plist
+├── ios/
+│   ├── DashboardOfDoom/     # iOS app, views, assets and entitlements
+│   ├── Tests/               # iOS policies and rendering tests
+│   ├── UITests/             # iPhone and iPad UI tests
+│   ├── BuildTests/          # iOS build script tests
+│   ├── build.sh             # Device and simulator builds
+│   └── MIGRATION.md
+├── shared/
+│   ├── Sources/             # Shared controllers, presenters and map views
+│   ├── Tests/               # Common app tests, compiled on both platforms
+│   ├── build_support/       # Shared Python test helper
+│   ├── doom-kit-location/   # Local packages include their own tests
+│   ├── doom-kit-network/
+│   ├── doom-kit-process/
+│   ├── doom-kit-tools/
+│   ├── doom-kit-services/
+│   └── PACKAGE_VALIDATION.md
+├── project.yml              # Authoritative combined XcodeGen specification
+├── DashboardOfDoom.xcodeproj/ # Generated project; package lockfile tracked
+├── AGENTS.md
+├── UPDATES.md
+├── LICENSE
+└── README.md
 ```
 
 ### Specialized Components
@@ -345,19 +353,19 @@ from another directory). It regenerates the Xcode project before each build.
 
 | Command | Action | Output |
 | --- | --- | --- |
-| `./build.sh` | Signed Debug build | `.build/Products/Debug/Dashboard of Doom.app` |
-| `./build.sh --clean` | Delete build outputs and exit | Removes root `.build/`, `Build/`, and legacy `build/` |
-| `./build.sh --release` | Signed Release build | `.build/Products/Release/Dashboard of Doom.app` |
-| `./build.sh --notarize` | Archive Release, export, notarize, staple, verify | `.build/export/Dashboard of Doom.app` and `.build/Dashboard of Doom.zip` |
+| `./macos/build.sh` | Signed Debug build | `.build/Products/Debug/Dashboard of Doom.app` |
+| `./macos/build.sh --clean` | Delete build outputs and exit | Removes root `.build/`, `Build/`, and legacy `build/` |
+| `./macos/build.sh --release` | Signed Release build | `.build/Products/Release/Dashboard of Doom.app` |
+| `./macos/build.sh --notarize` | Archive Release, export, notarize, staple, verify | `.build/export/Dashboard of Doom.app` and `.build/Dashboard of Doom.zip` |
 
 Combine `--clean` with `--release` or `--notarize` to clean before that operation.
-For a clean Debug build, run `./build.sh --clean` followed by `./build.sh`.
+For a clean Debug build, run `./macos/build.sh --clean` followed by `./macos/build.sh`.
 Cleaning removes compiled products, intermediate files, caches, archives, and
 exports in those root directories. It preserves sources, the package lockfile,
 and build folders inside `Packages/`. The script fixes output paths explicitly
 so machine-specific Xcode preferences do not redirect its artifacts.
 
-Notarization uses `exportOptions.plist` for Developer ID export and the existing
+Notarization uses `macos/exportOptions.plist` for Developer ID export and the existing
 Keychain credential profile `DashboardOfDoom-Notarize`. Set up credentials once:
 
 ```bash
@@ -367,7 +375,7 @@ xcrun notarytool store-credentials DashboardOfDoom-Notarize
 To use another stored profile:
 
 ```bash
-NOTARIZE_PROFILE=YourProfile ./build.sh --notarize
+NOTARIZE_PROFILE=YourProfile ./macos/build.sh --notarize
 ```
 
 `--notarize` uploads the exported app to Apple and waits for the result. It staples
@@ -396,31 +404,31 @@ This lockfile remains tracked even though the rest of the project is generated.
 Keep lockfile changes intentional when updating dependencies. Initial package
 checkout requires network access.
 
-See [package validation](PACKAGE_VALIDATION.md) for completed checks and remaining
+See [package validation](shared/PACKAGE_VALIDATION.md) for completed checks and remaining
 interactive smoke tests.
 
 The five local packages support macOS 15 and iOS 26. Both app targets use Swift 5 language mode; packages use Swift 6 with tools 6.2. See
-[DoomKitLocation](doom-kit-location/README.md),
-[DoomKitNetwork](doom-kit-network/README.md),
-[DoomKitProcess](doom-kit-process/README.md),
-[DoomKitTools](doom-kit-tools/README.md), and
-[DoomKitServices](doom-kit-services/README.md) for API and lifecycle contracts.
+[DoomKitLocation](shared/doom-kit-location/README.md),
+[DoomKitNetwork](shared/doom-kit-network/README.md),
+[DoomKitProcess](shared/doom-kit-process/README.md),
+[DoomKitTools](shared/doom-kit-tools/README.md), and
+[DoomKitServices](shared/doom-kit-services/README.md) for API and lifecycle contracts.
 Native location live updates are a planned provider replacement, not implemented
 by this migration. The integration retains CLLocationManager and tests its platform policies independently.
 
 Run package tests before the signed app build:
 
 ```bash
-swift test --package-path doom-kit-location
-swift test --package-path doom-kit-network
-swift test --package-path doom-kit-process
-swift test --package-path doom-kit-tools
-swift test --package-path doom-kit-services
-swift test -c release --package-path doom-kit-process
-swift test -c release --package-path doom-kit-tools
-swift test -c release --package-path doom-kit-services
-./build.sh
-./build.sh --release
+swift test --package-path shared/doom-kit-location
+swift test --package-path shared/doom-kit-network
+swift test --package-path shared/doom-kit-process
+swift test --package-path shared/doom-kit-tools
+swift test --package-path shared/doom-kit-services
+swift test -c release --package-path shared/doom-kit-process
+swift test -c release --package-path shared/doom-kit-tools
+swift test -c release --package-path shared/doom-kit-services
+./macos/build.sh
+./macos/build.sh --release
 ```
 
 The unhosted `PointOfInterestTests` target covers source subscription lifecycles,
@@ -438,9 +446,10 @@ Build script tests use Python 3 and mock
 external tools, including notarization; they perform no uploads:
 
 ```bash
-python3 -m unittest discover -s tests -v
-bash -n build.sh
-shellcheck build.sh
+python3 -m unittest discover -s macos/BuildTests -v
+python3 -m unittest discover -s ios/BuildTests -v
+bash -n macos/build.sh
+shellcheck macos/build.sh
 ```
 
 Install ShellCheck with `brew install shellcheck` if needed. Define future app

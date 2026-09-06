@@ -1,7 +1,7 @@
 # DoomKitLocation
 
 Local Swift 6 package (Swift tools 6.2). Declares macOS 15 and iOS 26.
-macOS and iOS simulator tests are validated. Real-device permissions and background delivery still require an Apple Development identity; see [IOS_MIGRATION.md](../IOS_MIGRATION.md).
+macOS and iOS simulator tests are validated. Real-device permissions and background delivery still require an Apple Development identity; see [iOS migration](../../ios/MIGRATION.md).
 
 ```swift
 import DoomKitLocation
@@ -57,6 +57,6 @@ requests own separate geocoders and cancel underlying geocoding when cancelled.
 Throwing instance methods expose errors; convenience address methods return nil
 on failure for existing app consumers.
 
-Run `swift test --package-path doom-kit-location` from the repository root.
+Run `swift test --package-path shared/doom-kit-location` from the repository root.
 Tests use substituted providers and geocoding; no location permission or network
 is required.

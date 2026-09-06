@@ -9,20 +9,10 @@ import unittest
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "build.sh"
-MOCK = '''#!/usr/bin/env python3
-import json, os, pathlib, sys
-name = pathlib.Path(sys.argv[0]).name
-args = sys.argv[1:]
-with open(os.environ["CALL_LOG"], "a") as log:
-    log.write(json.dumps([name, *args]) + "\\n")
-command = " ".join([name, *args])
-if os.environ.get("FAIL_COMMAND") and command.startswith(os.environ["FAIL_COMMAND"]):
-    sys.exit(1)
-if name == "xcrun" and args[:2] == ["notarytool", "submit"]:
-    print("mock submission result")
-if name == "plutil":
-    print(os.environ.get("NOTARY_STATUS", "Accepted"))
-'''
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "shared/build_support"))
+from build_mock import MOCK
+
 
 
 class BuildScriptTests(unittest.TestCase):
@@ -30,8 +20,9 @@ class BuildScriptTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix="doom build test ")
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name).resolve()
-        shutil.copy2(SCRIPT, self.root / "build.sh")
-        (self.root / "exportOptions.plist").touch()
+        (self.root / "macos").mkdir()
+        shutil.copy2(SCRIPT, self.root / "macos/build.sh")
+        (self.root / "macos/exportOptions.plist").touch()
         self.bin = self.root / "bin"
         self.bin.mkdir()
         for name in ("xcodegen", "xcodebuild", "xcrun", "ditto", "plutil", "spctl"):
@@ -46,7 +37,7 @@ class BuildScriptTests(unittest.TestCase):
 
     def run_script(self, *args, **env):
         self.log.unlink(missing_ok=True)
-        result = subprocess.run(["bash", str(self.root / "build.sh"), *args],
+        result = subprocess.run(["bash", str(self.root / "macos/build.sh"), *args],
                                 cwd="/", env=dict(self.env, **env),
                                 capture_output=True, text=True)
         calls = [json.loads(line) for line in self.log.read_text().splitlines()] if self.log.exists() else []

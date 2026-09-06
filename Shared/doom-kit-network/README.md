@@ -1,7 +1,7 @@
 # DoomKitNetwork
 
 Local Swift 6 package (Swift tools 6.2). Declares macOS 15 and iOS 26.
-macOS is validated; iOS simulator tests are validated; physical background delivery and WeatherKit checks are recorded separately in [IOS_MIGRATION.md](../IOS_MIGRATION.md).
+macOS is validated; iOS simulator tests are validated; physical background delivery and WeatherKit checks are recorded separately in [iOS migration](../../ios/MIGRATION.md).
 
 `NetworkManager.shared` is retained. Construct a separate actor to inject a
 transport, monitor factory, cancellation-cooperative sleep closure, or probe URL.
@@ -49,7 +49,7 @@ async closures are constructed inside the initializer: constructing the timing
 closure as a default argument exposed a runtime failure with the tested Swift
 6.2.4/macOS 15.8 combination.
 
-Run `swift test --package-path doom-kit-network` from the repository root.
+Run `swift test --package-path shared/doom-kit-network` from the repository root.
 All request tests use fake transport and monitoring; they make no live requests.
 
 Overpass interpreter requests share a cancellation-aware serial queue per manager.

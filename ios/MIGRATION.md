@@ -58,7 +58,7 @@ Evidence: `/tmp/doom-ipad-correct-id-build.log` and
 | Phase | Action | Outcome |
 | --- | --- | --- |
 | 1. Preserve the baseline | Import the original iOS develop history without squashing; build and launch it before editing | Complete. Source `a534d8c6a3a80e75774ffa4688fd8380089836ed`, subtree import `56d6bd2` |
-| 2. Consolidate source | Move app data code to `Shared/`, reuse all five packages, remove iOS duplicate data layers and standalone project | Complete; both targets use root `project.yml` |
+| 2. Consolidate source | Move app data code to `shared/Sources/`, reuse all five packages, remove iOS duplicate data layers and standalone project | Complete; both targets use root `project.yml` |
 | 3. Preserve iOS policies | Integrate one app-owned runtime, background location, movement refreshes, legacy preferences, and foreground resume | Complete; injected lifecycle, location, scheduler, and preference tests pass |
 | 4. Modernize presentation | Retain iOS navigation/charts; share collision layout and batched POIs; add POI/location settings | Complete; iPhone/iPad UI tests and visual checks pass |
 | 5. Build and validate | Add iOS build script, app/package tests, simulator and macOS builds, device compilation | Complete for simulator and macOS; unsigned device Debug/Release compile |
@@ -178,7 +178,7 @@ record a UIKitToolbar hosting diagnostic; navigation and screenshots passed.
 
 ## Repeat the checks
 
-Use [root iOS build instructions](README.md#ios-development). For package tests,
+Use [root iOS build instructions](../README.md#ios-development). For package tests,
 run from the repository root, with a booted simulator UUID:
 
 ```bash
@@ -203,7 +203,7 @@ cannot sign an iOS development app. No replacement identity/profile was created.
 
 Once signing is available:
 
-1. Run `./build-ios.sh --device`, install on the paired iPhone/iPad using Xcode,
+1. Run `./ios/build.sh --device`, install on the paired iPhone/iPad using Xcode,
    and verify WeatherKit returns conditions and forecasts.
 2. Test fresh, denied, While Using, and Always permissions. Confirm Settings
    reports the actual scope and fallback honestly; grant Precise Location.

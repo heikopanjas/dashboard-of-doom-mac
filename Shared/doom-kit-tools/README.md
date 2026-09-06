@@ -1,7 +1,7 @@
 # DoomKitTools
 
 Local Swift 6 package, Swift tools 6.2, macOS 15 and iOS 26. macOS is validated;
-iOS simulator tests are validated; physical background delivery and WeatherKit checks are recorded separately in [IOS_MIGRATION.md](../IOS_MIGRATION.md). Its only local dependency is DoomKitLocation. It has
+iOS simulator tests are validated; physical background delivery and WeatherKit checks are recorded separately in [iOS migration](../../ios/MIGRATION.md). Its only local dependency is DoomKitLocation. It has
 no dependency on process models, services, or SwiftUI.
 
 Public APIs include `ARIMAPredictor`, its parameter/result/interval/error types,
@@ -54,8 +54,8 @@ projections, deterministic bounded fallback, and placement retention after
 location, size, visibility, and viewport changes. Run Debug and Release:
 
 ```sh
-swift test --package-path doom-kit-tools
-swift test --package-path doom-kit-tools -c release
+swift test --package-path shared/doom-kit-tools
+swift test --package-path shared/doom-kit-tools -c release
 ```
 
 ## Smoothing
@@ -94,7 +94,7 @@ values (so ERROR sorts before INFO). No logging actor or unchecked Sendable was
 introduced. The public global `trace` retains debug minimum, no colors, and
 `yyyy-MM-dd HH:mm:ss` timestamps.
 
-Run `swift test --package-path doom-kit-tools` and repeat with `-c release`.
+Run `swift test --package-path shared/doom-kit-tools` and repeat with `-c release`.
 Ordinary-import tests cover captured pre-extraction smoothing and forecast
 results, invalid smoothing parameters, mixed units, geometry, symbol mappings,
 and concurrent file logging. Tests do not access the network or location provider.

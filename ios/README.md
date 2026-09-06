@@ -1,11 +1,11 @@
 # Dashboard of Doom for iOS
 
 The iOS app is now built from the parent repository's `project.yml`, using
-`Shared/` and the five local DoomKit packages. Its original develop history
+`shared/Sources/` and the five local DoomKit packages. Its original develop history
 through `a534d8c` is retained by the subtree import commit `56d6bd2`.
 
 See the [root README](../README.md#ios-development) for build and simulator
-commands, [migration record](../IOS_MIGRATION.md) for behavior and validation,
+commands, [migration record](MIGRATION.md) for behavior and validation,
 and [root agent instructions](../AGENTS.md) for development conventions.
 
 Current version: **6.3.0 (178)**. Requires **iOS 26+**.

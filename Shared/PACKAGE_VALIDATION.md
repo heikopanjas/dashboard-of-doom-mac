@@ -284,7 +284,7 @@ App version 6.3.1, build 138. Packages declare macOS 15 and iOS 26; iOS is unval
 | Final signed Release build | Passed, arm64 and x86_64 |
 | Signature verification, Debug and Release | Passed with system trust-store access |
 | Build-script Python tests | 6 passed |
-| `bash -n build.sh`, `shellcheck build.sh` | Passed |
+| `bash -n macos/build.sh`, `shellcheck macos/build.sh` | Passed |
 | `git diff --check` | Passed |
 
 Package tests substitute location/geocoding providers, network transport and
@@ -327,5 +327,5 @@ was performed.
 Both apps now use the local packages and Shared app source. All five package
 Debug test suites pass on macOS and iOS simulator; Process, Tools, and Services
 also pass in Release on both. The older iOS-unvalidated statements above describe
-the historical extraction checkpoints. See [IOS_MIGRATION.md](IOS_MIGRATION.md)
+the historical extraction checkpoints. See [iOS migration](../ios/MIGRATION.md)
 for the current matrix, artifacts, app tests, and pending physical-device checks.

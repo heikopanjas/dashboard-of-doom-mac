@@ -1,7 +1,7 @@
 # DoomKitProcess
 
 Local Swift 6 package (Swift tools 6.2), declaring macOS 15 and iOS 26.
-macOS is validated; iOS simulator tests are validated; physical background delivery and WeatherKit checks are recorded separately in [IOS_MIGRATION.md](../IOS_MIGRATION.md). Local dependencies: DoomKitLocation and DoomKitNetwork. Observation supplies the
+macOS is validated; iOS simulator tests are validated; physical background delivery and WeatherKit checks are recorded separately in [iOS migration](../../ios/MIGRATION.md). Local dependencies: DoomKitLocation and DoomKitNetwork. Observation supplies the
 observable presenter base; no SwiftUI dependency.
 
 ```swift
@@ -59,7 +59,7 @@ and startup waits at most 30 seconds before beginning the timer. After that
 bound, offline retries remain the network package's responsibility, as before.
 Settings keep their individual refresh behavior; bulk refresh resets intervals.
 
-Run `swift test --package-path doom-kit-process`. Tests use a manual clock and
+Run `swift test --package-path shared/doom-kit-process`. Tests use a manual clock and
 controlled suspended work to cover scheduling, replacement, cancellation,
 context, removal, restart, shutdown, and late completion.
 

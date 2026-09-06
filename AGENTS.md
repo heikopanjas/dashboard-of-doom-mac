@@ -1,12 +1,12 @@
 # Agent Instructions for Dashboard of Doom (macOS and iOS)
 
-*Last updated: September 7, 2026, 00:39 CEST (narrower iOS map labels)*
+*Last updated: September 7, 2026, 00:54 CEST (platform directory organization)*
 
 ## Project Overview
 
 Dashboard of Doom is a sophisticated macOS menu bar application providing real-time environmental and public health data visualization for Germany. The application integrates with multiple German federal APIs to create an interactive, location-aware environmental monitoring system.
 
-**Platforms**: This repository builds macOS 15+ and iOS 26+ apps. The original iOS develop history is imported under `ios/`. Root `project.yml` is the only Xcode project source of truth; see `IOS_MIGRATION.md`.
+**Platforms**: This repository builds macOS 15+ and iOS 26+ apps. The original iOS develop history is imported under `ios/`. Root `project.yml` is the only Xcode project source of truth; see `ios/MIGRATION.md`.
 
 ### Current Implementation Status
 - **Fully Functional**: Complete data pipeline from API integration to UI presentation
@@ -19,8 +19,9 @@ Dashboard of Doom is a sophisticated macOS menu bar application providing real-t
 ## Architecture & Code Patterns
 
 ### Repository Structure
-- **App Roots**: `DashboardOfDoom/` owns macOS entry point, menu, settings, and detail views; `ios/DashboardOfDoom/` owns iOS entry point, navigation, settings, detail views, and assets
-- **Shared App Code**: `Shared/` owns controllers, models, presenters, transformers, extensions, and map/POI views
+- **App Roots**: `macos/DashboardOfDoom/` owns macOS entry point, menu, settings, and detail views; `ios/DashboardOfDoom/` owns iOS entry point, navigation, settings, detail views, and assets
+- **Test Layout**: `macos/Tests` and `ios/Tests` hold platform tests; `ios/UITests` holds UI tests; `shared/Tests` is compiled by both app test targets. Each platform owns `BuildTests`; packages and their tests live under `shared/doom-kit-*`.
+- **Shared App Code**: `shared/Sources/` owns controllers, models, presenters, transformers, extensions, and map/POI views
 - **Platform-Specific**: Views and some Presenters contain macOS-specific implementations
 - **XcodeGen**: `project.yml` defines both app targets, tests, settings, dependencies, and schemes; `DashboardOfDoom.xcodeproj` is generated
 
@@ -28,7 +29,7 @@ Dashboard of Doom is a sophisticated macOS menu bar application providing real-t
 - **macOS**: MVP (Model-View-Presenter) pattern optimized for menu bar applications
 - **Menu Bar Interface**: Lightweight status bar extra with popover/window presentation
 - **Settings Window**: Dedicated configuration interface for user preferences
-- **Shared Business Logic**: Both apps compile `Shared/` and use the same five local DoomKit packages
+- **Shared Business Logic**: Both apps compile `shared/Sources/` and use the same five local DoomKit packages
 
 ### Core Components
 
@@ -227,16 +228,16 @@ Controllers → Services → Transformers → Presenters → Views
 - Treat `project.yml` as the source of truth; edit it instead of generated project files
 - Require XcodeGen 2.46.0+; install with `brew install xcodegen`
 - Run `xcodegen generate` after cloning and before builds, including after spec changes
-- Use `./build.sh` for a signed Debug build and `./build.sh --release` for Release; the script regenerates the project and fixes output paths under `.build/`
-- `./build.sh --clean` only removes root `.build/`, `Build/`, and legacy `build/` outputs, including archives and exports; combine with `--release` or `--notarize` to clean before building
-- `./build.sh --notarize` archives Release, exports with `exportOptions.plist`, submits to Apple, staples an accepted result, validates, and creates a distribution ZIP
+- Use `./macos/build.sh` for a signed Debug build and `./macos/build.sh --release` for Release; the script regenerates the project and fixes output paths under `.build/`
+- `./macos/build.sh --clean` only removes root `.build/`, `Build/`, and legacy `build/` outputs, including archives and exports; combine with `--release` or `--notarize` to clean before building
+- `./macos/build.sh --notarize` archives Release, exports with `macos/exportOptions.plist`, submits to Apple, staples an accepted result, validates, and creates a distribution ZIP
 - Notarization uses the `DashboardOfDoom-Notarize` Keychain profile, overridable with `NOTARIZE_PROFILE`
 - For unsigned compilation checks, use the manual `xcodebuild` command in README.md with `CODE_SIGNING_ALLOWED=NO`
-- Validate script changes with `bash -n build.sh`, `shellcheck build.sh`, and `python3 -m unittest discover -s tests -v`; the Python tests mock builds and notarization
+- Validate script changes with `bash -n macos/build.sh`, `shellcheck macos/build.sh`, and `python3 -m unittest discover -s macos/BuildTests -v` and `python3 -m unittest discover -s ios/BuildTests -v`; the Python tests mock builds and notarization
 - Keep the existing signing configuration, app identity, and WeatherKit entitlement unless explicitly changing them; configure signing in the spec, including SDK-specific overrides
 - Generated project files are ignored, except the tracked package lockfile at `DashboardOfDoom.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`
 - Preserve locked dependency revisions during unrelated changes
-- Local package tests: run `swift test --package-path doom-kit-location`, then `doom-kit-network`, then `doom-kit-process`, `doom-kit-tools`, and `doom-kit-services`; repeat Process, Tools, and Services with `-c release`; tests use injected dependencies and no live network
+- Local package tests: run `swift test --package-path shared/doom-kit-location`, then `doom-kit-network`, then `doom-kit-process`, `doom-kit-tools`, and `doom-kit-services`; repeat Process, Tools, and Services with `-c release`; tests use injected dependencies and no live network
 - `PointOfInterestTests` is an unhosted macOS Swift Testing target. Run `xcodegen generate`, then `xcodebuild -project DashboardOfDoom.xcodeproj -scheme PointOfInterestTests -destination 'platform=macOS' -derivedDataPath .build/poi-tests test`. Its filtered synchronized source folder excludes the app entry point; tests inject fetching, location, time, and preferences.
 - POIs use a single Canvas with one Core Graphics image pass beneath environmental labels, never the collision solver. Repeated SwiftUI symbol/image draws crashed the GPU encoder in the 10,000-point stress fixture; preserve the batched Core Graphics path. Preserve stable OSM identities, category toggles, all-point rendering, Apple POIs, and region fitting. Project only after geometry/camera changes, using the deferred MapReader registration safeguard.
 - The app delegate owns the POI presenter lifecycle. Keep the 6,666.67-metre radius, one-hour cache within 1 km, minute expiry checks, five-minute failure cooldown, and two-request concurrency limit across cancelled generations. Never start or stop shared location tracking from the POI presenter.
@@ -251,11 +252,11 @@ Controllers → Services → Transformers → Presenters → Views
 - `LocationConfiguration.continuousBackground` is iOS-only: best accuracy, Always request, background updates enabled, automatic pauses disabled, background indicator enabled. Default macOS behavior remains kilometer accuracy and When In Use.
 - Preserve the strictly-greater-than-100-metre movement filter. The iOS coordinator uses everyMovement; default macOS uses firstMeasurement. Keep immediate fallback startup and cancellation checks.
 - iOS keeps showWater, enableElectionPolls default false, and showElectionPolls default true. Only enableElectionPolls controls poll fetching. Other conditional sources use their switches; weather and forecasts always fetch. Preserve successful values while disabled.
-- Use `./build-ios.sh` for unsigned simulator Debug, `--release` for Release, `--device` for signed device compilation, and `--simulator UUID --run` to launch at HKW. The script never cleans or uploads.
+- Use `./ios/build.sh` for unsigned simulator Debug, `--release` for Release, `--device` for signed device compilation, and `--simulator UUID --run` to launch at HKW. The script never cleans or uploads.
 - All simulator testing uses HKW, 52.51889, 13.36528. Start simulated movement there. Disable parallel test clones when testing location using `-parallel-testing-enabled NO`.
 - `iOSTests` is an unhosted Swift Testing target; `iOSUITests` uses XCTest for navigation, gestures, orientations, appearances, Dynamic Type, and 2,000/10,000-POI screenshots. Debug-only `--ui-fixture` data never starts network/location work. Release omits this fixture.
 - Package simulator tests run from each package directory using its package-name scheme. Release tests need `ENABLE_TESTABILITY=YES` for @testable imports; keep optimization enabled. Isolate derived data, SYMROOT, and OBJROOT for concurrent builds.
-- Simulator tests do not establish real background delivery or WeatherKit authorization. Record physical-device results separately in IOS_MIGRATION.md.
+- Simulator tests do not establish real background delivery or WeatherKit authorization. Record physical-device results separately in ios/MIGRATION.md.
 
 ### Map Annotation Layout
 
@@ -282,7 +283,7 @@ Controllers → Services → Transformers → Presenters → Views
 - Keep smoothing independent of ProcessValue; app callers rebuild values in order with original metadata, timestamps, quality, units, and new UUIDs
 - Preserve original unit coefficients and base units, numeric algorithms, service URL/date behavior, and failure-to-nil cancellation contract during extraction work
 - All packages use Swift tools 6.2 and Swift 6 language mode; keep the app in Swift 5 mode
-- Packages declare macOS 15 and iOS 26; both app targets integrate them. See IOS_MIGRATION.md for simulator and device validation limits.
+- Packages declare macOS 15 and iOS 26; both app targets integrate them. See ios/MIGRATION.md for simulator and device validation limits.
 - Each state consumer owns a separate latest-value stream and explicitly cancelled task; stop finishes all streams and restart requires new subscriptions
 - Location initialization does not request permission or track; the private Core Location provider starts explicitly with kilometer accuracy
 - Native `CLLocationUpdate.liveUpdates()` is a planned provider replacement; validate accuracy, authorization, delivery, cancellation, and background behavior separately
@@ -386,7 +387,7 @@ fix: update `ProcessManager` with "nested 'quotes'" & $special chars!
 - **Platform-Specific Code**: macOS-specific UI and menu bar functionality
 - **Custom Unit Types**: Implement `@unchecked Sendable` conformance for measurement units
 - **Consistent Naming**: Use clear, descriptive file naming
-- **Folder Hierarchy**: Keep Controllers/, Presenters/, and Transformers/ in Shared/; place services under DoomKitServices and utilities under DoomKitTools.
+- **Folder Hierarchy**: Keep Controllers/, Presenters/, and Transformers/ in shared/Sources/; place services under DoomKitServices and utilities under DoomKitTools.
 
 ## Common Tasks & Patterns
 

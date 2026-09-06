@@ -6,7 +6,9 @@ import shutil
 import subprocess
 import tempfile
 import unittest
-from test_build_script import MOCK
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "shared/build_support"))
+from build_mock import MOCK
 
 
 class IOSBuildScriptTests(unittest.TestCase):
@@ -14,7 +16,8 @@ class IOSBuildScriptTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix="doom ios build ")
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name).resolve()
-        shutil.copy2(Path(__file__).resolve().parents[1] / "build-ios.sh", self.root)
+        (self.root / "ios").mkdir()
+        shutil.copy2(Path(__file__).resolve().parents[1] / "build.sh", self.root / "ios/build.sh")
         binary = self.root / "bin"
         binary.mkdir()
         for name in ("xcodegen", "xcodebuild", "xcrun"):
@@ -27,7 +30,7 @@ class IOSBuildScriptTests(unittest.TestCase):
 
     def run_script(self, *args, **env):
         self.log.unlink(missing_ok=True)
-        result = subprocess.run(["bash", str(self.root / "build-ios.sh"), *args], cwd="/",
+        result = subprocess.run(["bash", str(self.root / "ios/build.sh"), *args], cwd="/",
                                 env=dict(self.env, **env), capture_output=True, text=True)
         calls = [json.loads(line) for line in self.log.read_text().splitlines()] if self.log.exists() else []
         return result, calls

@@ -38,7 +38,7 @@ crashlytics-build.properties
 !/DashboardOfDoom.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 
 # Build script test bytecode
-/tests/__pycache__/
+__pycache__/
 
 # Legacy distribution script outputs on case-sensitive filesystems
 /build/

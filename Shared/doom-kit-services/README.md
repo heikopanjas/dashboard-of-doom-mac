@@ -1,7 +1,7 @@
 # DoomKitServices
 
 Local Swift 6 package, Swift tools 6.2, macOS 15 and iOS 26. macOS is validated;
-iOS simulator tests are validated; physical background delivery and WeatherKit checks are recorded separately in [IOS_MIGRATION.md](../IOS_MIGRATION.md). Direct local dependencies are DoomKitLocation,
+iOS simulator tests are validated; physical background delivery and WeatherKit checks are recorded separately in [iOS migration](../../ios/MIGRATION.md). Direct local dependencies are DoomKitLocation,
 DoomKitNetwork, and DoomKitTools. There is no Process dependency.
 
 The seven public service classes are `CovidService`, `HazardService`,
@@ -33,7 +33,7 @@ both time parameters. A small internal formatter preserves the app's
 extensions, parsing, controllers, presenters, transformers, and WeatherKit
 integration remain in the app.
 
-Run `swift test --package-path doom-kit-services` and repeat with `-c release`.
+Run `swift test --package-path shared/doom-kit-services` and repeat with `-c release`.
 Tests use ordinary imports and cover all 25 methods against URL fixtures captured
 from the original services: success byte preservation, server failure retries,
 transport cancellation, and cancellation before requests. Transport, monitoring,
