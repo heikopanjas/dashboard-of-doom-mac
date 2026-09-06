@@ -1,7 +1,7 @@
 # DoomKitTools
 
 Local Swift 6 package, Swift tools 6.2, macOS 15 and iOS 26. macOS is validated;
-iOS remains unvalidated. Its only local dependency is DoomKitLocation. It has
+iOS simulator tests are validated; physical background delivery and WeatherKit checks are recorded separately in [IOS_MIGRATION.md](../IOS_MIGRATION.md). Its only local dependency is DoomKitLocation. It has
 no dependency on process models, services, or SwiftUI.
 
 Public APIs include `ARIMAPredictor`, its parameter/result/interval/error types,

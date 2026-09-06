@@ -1,7 +1,7 @@
 # DoomKitNetwork
 
 Local Swift 6 package (Swift tools 6.2). Declares macOS 15 and iOS 26.
-macOS is validated; iOS remains unvalidated.
+macOS is validated; iOS simulator tests are validated; physical background delivery and WeatherKit checks are recorded separately in [IOS_MIGRATION.md](../IOS_MIGRATION.md).
 
 `NetworkManager.shared` is retained. Construct a separate actor to inject a
 transport, monitor factory, cancellation-cooperative sleep closure, or probe URL.

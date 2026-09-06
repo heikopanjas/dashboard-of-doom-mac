@@ -7,8 +7,8 @@ public final class LocationManager {
     private var observers: [UUID: AsyncStream<LocationState>.Continuation] = [:]
     private var generation = UUID()
 
-    public convenience init(fallback: Location) {
-        self.init(fallback: fallback, provider: CoreLocationProvider())
+    public convenience init(fallback: Location, configuration: LocationConfiguration = .foreground) {
+        self.init(fallback: fallback, provider: CoreLocationProvider(configuration: configuration))
     }
 
     init(fallback: Location, provider: any LocationProvider) {
@@ -54,6 +54,7 @@ public final class LocationManager {
 
     private func receive(_ update: LocationProviderUpdate) {
         self.state.authorization = update.authorization
+        self.state.authorizationScope = update.authorizationScope
         self.state.failure = update.failure
         if update.authorization == .denied || update.authorization == .restricted {
             self.state.failure = .denied

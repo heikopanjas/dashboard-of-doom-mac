@@ -1,7 +1,7 @@
 # DoomKitLocation
 
 Local Swift 6 package (Swift tools 6.2). Declares macOS 15 and iOS 26.
-macOS is validated; iOS integration, permissions, and background behavior are unvalidated.
+macOS and iOS simulator tests are validated. Real-device permissions and background delivery still require an Apple Development identity; see [IOS_MIGRATION.md](../IOS_MIGRATION.md).
 
 ```swift
 import DoomKitLocation
@@ -36,15 +36,19 @@ location, using the exported Haversine calculation. Location preserves exact
 coordinate equality/hashing and exposes a Core Location coordinate conversion.
 
 The internal injectable `LocationProvider` supplies package-owned updates.
-The initial private delegate adapter uses kilometer accuracy and when-in-use
-authorization. It creates a new Core Location manager/delegate per lifecycle.
+The private delegate adapter defaults to kilometer accuracy and When In Use
+authorization. iOS callers may explicitly select `configuration: .continuousBackground`
+for best accuracy, Always authorization, background updates, no automatic pauses,
+and a visible background indicator. The app must declare the location background
+mode and permission descriptions. `authorizationScope` distinguishes When In Use
+from Always without changing the existing broad `authorization` values. It creates a new Core Location manager/delegate per lifecycle.
 Broadcasting, movement filtering, fallback selection, and consumers live outside
 the adapter.
 
 A future provider using `CLLocationUpdate.liveUpdates()` is planned. It will retain
 the public stream contract, but must separately validate accuracy, authorization,
 delivery, cancellation, and background behavior. It is not expected to reproduce
-every legacy tracking setting. No background capability is enabled by this package.
+every legacy tracking setting. Background capability belongs to the app; selecting a policy does not grant permission.
 
 `GeocodingService` performs separate async requests with injectable lookup for
 tests. `GeocodedPlace` preserves long/short address formatting and constituency

@@ -6,7 +6,7 @@ import Testing
 @MainActor
 @Suite(.timeLimit(.minutes(1)))
 struct ConditionalSubscriptionTests {
-    nonisolated private static let sources = ["showCovid", "showLevels", "showRadiation", "showParticles", "showElectionPolls"]
+    nonisolated private static let sources = ["showCovid", SourcePreferences.waterKey, "showRadiation", "showParticles", SourcePreferences.pollsEnableKey]
 
     @MainActor private final class Fixture {
         let suite = "ConditionalSubscriptionTests.\(UUID())"
@@ -27,7 +27,7 @@ struct ConditionalSubscriptionTests {
             self.key = key
             self.defaults.set(false, forKey: "showWeather")
             self.clock = ManualClock()
-            self.scheduler = ProcessManager(context: Location(latitude: 52.52, longitude: 13.405), clock: self.clock.clock)
+            self.scheduler = ProcessManager(context: Location(latitude: 52.51889, longitude: 13.36528), clock: self.clock.clock)
             if let enabled { self.defaults.set(enabled, forKey: key) }
             if let interval { self.defaults.set(interval, forKey: Self.intervalKey(key)) }
             let register: @MainActor (any ProcessRefreshable, TimeInterval) -> Void = { [weak self] subscriber, interval in
@@ -52,11 +52,11 @@ struct ConditionalSubscriptionTests {
             }
             switch key {
                 case "showCovid": self.presenter = CovidPresenter(defaults: self.defaults, register: register, remove: remove, fetch: fetch)
-                case "showLevels": self.presenter = LevelPresenter(defaults: self.defaults, register: register, remove: remove, fetch: fetch)
+                case SourcePreferences.waterKey: self.presenter = LevelPresenter(defaults: self.defaults, register: register, remove: remove, fetch: fetch)
                 case "showRadiation":
                     self.presenter = RadiationPresenter(defaults: self.defaults, register: register, remove: remove, fetch: fetch)
                 case "showParticles": self.presenter = ParticlePresenter(defaults: self.defaults, register: register, remove: remove, fetch: fetch)
-                case "showElectionPolls":
+                case SourcePreferences.pollsEnableKey:
                     self.presenter = SurveyPresenter(defaults: self.defaults, register: register, remove: remove, fetch: fetch)
                 case "weather": self.presenter = WeatherPresenter(defaults: self.defaults, register: register, fetch: fetch)
                 default: self.presenter = ForecastPresenter(defaults: self.defaults, register: register, fetch: fetch)
@@ -66,10 +66,10 @@ struct ConditionalSubscriptionTests {
         static func intervalKey(_ key: String) -> String {
             switch key {
                 case "showCovid": return "covidRefreshInterval"
-                case "showLevels": return "levelRefreshInterval"
+                case SourcePreferences.waterKey: return "levelRefreshInterval"
                 case "showRadiation": return "radiationRefreshInterval"
                 case "showParticles": return "particleRefreshInterval"
-                case "showElectionPolls": return "surveyRefreshInterval"
+                case SourcePreferences.pollsEnableKey: return "surveyRefreshInterval"
                 default: return "weatherRefreshInterval"
             }
         }
@@ -86,7 +86,7 @@ struct ConditionalSubscriptionTests {
         func complete(name: String) -> Void {
             self.pending.removeFirst().resume(returning: [
                 ProcessSensor(
-                    name: name, location: Location(latitude: 52.52, longitude: 13.405), placemark: "Berlin",
+                    name: name, location: Location(latitude: 52.51889, longitude: 13.36528), placemark: "Berlin",
                     customData: nil, measurements: [:], timestamp: Date())
             ])
         }
@@ -176,13 +176,13 @@ struct ConditionalSubscriptionTests {
 
     @Test(arguments: Self.sources)
     func defaultsTransitionsCancellationAndRetention(key: String) async throws {
-        let fixture = try Fixture(key: key)
+        let fixture = try Fixture(key: key, enabled: key == SourcePreferences.pollsEnableKey && SourcePreferences.pollsEnabledByDefault == false ? true : nil)
         defer { fixture.close() }
         let presenter = try #require(fixture.presenter)
         var starts = fixture.starts.stream.makeAsyncIterator()
         var finishes = fixture.finishes.stream.makeAsyncIterator()
         await starts.next()
-        let fallback: TimeInterval = key == "showParticles" ? 30 : (["showCovid", "showElectionPolls"].contains(key) == true ? 360 : 15)
+        let fallback: TimeInterval = key == "showParticles" ? 30 : (["showCovid", SourcePreferences.pollsEnableKey].contains(key) == true ? 360 : 15)
         #expect(fixture.registrations == [fallback])
         fixture.complete(name: "retained")
         await finishes.next()

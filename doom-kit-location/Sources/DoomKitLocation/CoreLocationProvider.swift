@@ -2,6 +2,12 @@ import CoreLocation
 
 @MainActor
 final class CoreLocationProvider: LocationProvider {
+    private let configuration: LocationConfiguration
+
+    init(configuration: LocationConfiguration = .foreground) {
+        self.configuration = configuration
+    }
+
     private var manager: CLLocationManager?
     private var delegate: Delegate?
     var onUpdate: (@MainActor (LocationProviderUpdate) -> Void)?
@@ -15,8 +21,17 @@ final class CoreLocationProvider: LocationProvider {
         manager.delegate = delegate
         self.manager = manager
         self.delegate = delegate
-        manager.desiredAccuracy = kCLLocationAccuracyKilometer
+        self.configuration.apply(to: manager)
+        #if os(iOS)
+        if self.configuration == .continuousBackground {
+            manager.requestAlwaysAuthorization()
+        }
+        else {
+            manager.requestWhenInUseAuthorization()
+        }
+        #else
         manager.requestWhenInUseAuthorization()
+        #endif
         manager.startUpdatingLocation()
     }
 
@@ -40,8 +55,16 @@ final class CoreLocationProvider: LocationProvider {
             }
         }
 
+        private func scope(_ manager: CLLocationManager) -> LocationState.AuthorizationScope {
+            switch manager.authorizationStatus {
+                case .authorizedAlways: return .always
+                case .authorizedWhenInUse: return .whenInUse
+                default: return .unknown
+            }
+        }
+
         func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-            self.receive?(.init(authorization: self.authorization(manager)))
+            self.receive?(.init(authorization: self.authorization(manager), authorizationScope: self.scope(manager)))
         }
 
         func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
@@ -51,14 +74,14 @@ final class CoreLocationProvider: LocationProvider {
                     location: Location(
                         latitude: location.coordinate.latitude,
                         longitude: location.coordinate.longitude),
-                    authorization: self.authorization(manager)))
+                    authorization: self.authorization(manager), authorizationScope: self.scope(manager)))
         }
 
         func locationManager(_ manager: CLLocationManager, didFailWithError error: any Error) {
             let code = (error as NSError).code
             let failure: LocationState.Failure =
                 code == CLError.denied.rawValue ? .denied : (code == CLError.locationUnknown.rawValue ? .unavailable : .other(code))
-            self.receive?(.init(authorization: self.authorization(manager), failure: failure))
+            self.receive?(.init(authorization: self.authorization(manager), failure: failure, authorizationScope: self.scope(manager)))
         }
     }
 }

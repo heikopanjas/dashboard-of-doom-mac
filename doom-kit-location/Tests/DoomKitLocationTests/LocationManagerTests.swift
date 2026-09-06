@@ -43,6 +43,27 @@ struct LocationManagerTests {
         manager.stop()
     }
 
+    @Test func hkwMovementFilterAndAuthorizationScope() {
+        let hkw = Location(latitude: 52.51889, longitude: 13.36528)
+        let provider = Provider()
+        let manager = LocationManager(fallback: hkw, provider: provider)
+        manager.start()
+        defer { manager.stop() }
+        provider.send(hkw)
+        provider.send(Location(latitude: 52.519, longitude: 13.36528))
+        #expect(manager.state.location == hkw)
+        let moved = Location(latitude: 52.52, longitude: 13.36528)
+        provider.send(moved)
+        #expect(manager.state.location == moved)
+        provider.onUpdate?(.init(authorization: .authorized, authorizationScope: .whenInUse))
+        #expect(manager.state.authorizationScope == .whenInUse)
+        provider.onUpdate?(.init(authorization: .authorized, authorizationScope: .always))
+        #expect(manager.state.authorizationScope == .always)
+        provider.send(authorization: .denied)
+        #expect(manager.state.authorizationScope == .unknown)
+        #expect(manager.state.location == moved)
+    }
+
     @Test func authorizationFailureShutdownAndRestart() async {
         let provider = Provider()
         let manager = LocationManager(fallback: self.fallback, provider: provider)

@@ -90,6 +90,35 @@ struct ProcessCoordinatorTests {
         coordinator.stop()
     }
 
+    @Test func everyMovementRefreshesAndDuplicateCoordinatesDoNot() async {
+        let source = LocationSource()
+        source.state.location = Location(latitude: 52.51889, longitude: 13.36528)
+        let network = NetworkSource()
+        let clock = CoordinatorTestClock()
+        let coordinator = ProcessCoordinator(locationSource: source, networkSource: network, clock: clock.clock, locationRefreshPolicy: .everyMovement)
+        defer { coordinator.stop() }
+        let subscriber = Subscriber(coordinator: coordinator)
+        coordinator.add(subscriber: subscriber, timeout: 30)
+        var events = subscriber.events.stream.makeAsyncIterator()
+        coordinator.start()
+        #expect(await events.next() == source.state.location)
+        source.measure(52.52)
+        #expect(await events.next()?.latitude == 52.52)
+        source.measure(52.53)
+        #expect(await events.next()?.latitude == 52.53)
+        network.gate.continuation.yield(())
+        await clock.waitForSleep()
+        source.measure(52.53)
+        clock.advance(.seconds(1))
+        await clock.waitForSleep()
+        #expect(subscriber.values.count == 3)
+        coordinator.remove(subscriber: subscriber)
+        source.measure(52.54)
+        clock.advance(.seconds(60))
+        await clock.waitForSleep()
+        #expect(subscriber.values.count == 3)
+    }
+
     @Test func offlineTimeoutStartsScheduling() async {
         let source = LocationSource()
         let network = NetworkSource()

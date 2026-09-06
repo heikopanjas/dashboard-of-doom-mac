@@ -9,4 +9,5 @@ struct LocationProviderUpdate: Sendable {
     var location: Location?
     var authorization: LocationState.Authorization
     var failure: LocationState.Failure?
+    var authorizationScope: LocationState.AuthorizationScope = .unknown
 }

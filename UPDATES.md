@@ -4,6 +4,45 @@ This file is the append-only log of project decisions and notable changes, maint
 
 <!-- {changelog} -->
 
+### 2026-09-07 (ios v6.3.0, narrower map labels, 00:39)
+
+- enlarge ios label symbols from subheadline to title3 and reduce horizontal padding from ten to five points per side
+- reduce label width from 142 to 132 points while retaining the 36-point height and callout measurement text
+- validation: all 17 ios tests pass; longer particle and radiation readings visually checked over dense pois in light and dark appearances; signed build installed and launched on iphone
+- included in the pending ios 6.3.0 (178) migration; no additional version bump
+
+
+### 2026-09-07 (ios v6.3.0, compact map labels, 00:32)
+
+- replace tall stacked ios map labels with 142 × 36-point horizontal labels, smaller symbols, and larger callout text
+- rationale: physical iphone screenshots showed symbols dominating the labels and measurement text too small to read comfortably
+- keep collision placement dimensions synchronized, preserve full voiceover values, and retain macos styling
+- validation: all 17 ios tests pass, including dense poi rendering in light and dark appearances; signed iphone build succeeds
+- included in the pending ios 6.3.0 (178) migration; no additional version bump
+
+
+### 2026-09-07 (ios v6.3.0, correct ios app identity, 00:16)
+
+- use the user-confirmed `com.panjas.dashboard-of-doom` app id for ios signing, simulator launching, tests, and current documentation
+- rationale: the imported source's different identifier did not match the intended developer-account configuration and weatherkit authentication failed on the ipad
+- validation: corrected signed debug build installed and launched on the physical ipad; jwt authentication errors no longer appear in its startup log; nine script tests, shell syntax, and shellcheck pass
+- preserve the previous differently identified installation and its data; this correction remains part of the pending ios 6.3.0 (178) migration
+
+
+### 2026-09-06 (macos v6.4.3, ios v6.3.0, ios modernization, 23:53)
+
+- preserve the original ios develop history through a non-squashed subtree import under ios; generate both apps and test targets from root project.yml
+- share controllers, presenters, models, transformers, extensions, and map/poi views with the five local doomkit packages; retain platform entry points, navigation, charts, settings, and assets
+- retain ios always/best-accuracy background location, no automatic pauses, visible indicator, and the 100-metre movement filter; refresh each accepted ios movement and once after foreground return
+- preserve legacy ios water and independent poll enable/visibility preferences, cancellation, disabled-source retention, and unconditional weather/forecast fetching
+- port collision layout and batched poi rendering with ios label dimensions; keep the fallback map available without weatherkit and correct large-text label overflow
+- add isolated ios tests, offline iphone/ipad ui fixtures, and build-ios.sh with explicit output paths and hkw simulator launching
+- validation: all package debug tests and process/tools/services release tests pass on macos and ios simulator; 14 macos app tests, 17 ios app tests, and iphone/ipad ui checks pass; signed macos builds/signatures and unsigned ios simulator/device builds pass
+- physical ios validation remains pending because this mac has no apple development certificate/private key; preserve existing app identities and weatherkit entitlements
+- rationale: modernize the older ios app on the maintained data pipeline while retaining its platform behavior; see ios_migration.md for evidence and remaining device checks
+- version bumps: macos 6.4.2 (146) to 6.4.3 (147), patch for internal consolidation; ios 6.2.0 (177) to 6.3.0 (178), minor for shared infrastructure, source controls, and restored configurable pois
+
+
 ### 2026-09-06 (v6.4.2, source refresh controls and readable labels, 22:38)
 
 - remove and cancel disabled covid, water-level, radiation, particle, and poll subscriptions independently of popover visibility; retain successful values and refresh immediately on re-enable

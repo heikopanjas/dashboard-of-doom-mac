@@ -6,6 +6,7 @@ import Foundation
 @MainActor
 public final class ProcessCoordinator {
 
+    private let locationRefreshPolicy: LocationRefreshPolicy
     private let locationManager: any ProcessLocationSource
     private let networkManager: any ProcessNetworkSource
     let scheduler: ProcessManager<Location>
@@ -16,11 +17,12 @@ public final class ProcessCoordinator {
     private var hasPerformedInitialRefresh = false
     private var startupExpired = false
 
-    public convenience init(locationManager: LocationManager, networkManager: NetworkManager, clock: ProcessClock = .continuous) {
-        self.init(locationSource: locationManager, networkSource: networkManager, clock: clock)
+    public convenience init(locationManager: LocationManager, networkManager: NetworkManager, clock: ProcessClock = .continuous, locationRefreshPolicy: LocationRefreshPolicy = .firstMeasurement) {
+        self.init(locationSource: locationManager, networkSource: networkManager, clock: clock, locationRefreshPolicy: locationRefreshPolicy)
     }
 
-    init(locationSource: any ProcessLocationSource, networkSource: any ProcessNetworkSource, clock: ProcessClock = .continuous) {
+    init(locationSource: any ProcessLocationSource, networkSource: any ProcessNetworkSource, clock: ProcessClock = .continuous, locationRefreshPolicy: LocationRefreshPolicy = .firstMeasurement) {
+        self.locationRefreshPolicy = locationRefreshPolicy
         self.locationManager = locationSource
         self.networkManager = networkSource
         self.scheduler = ProcessManager(clock: clock)
@@ -73,7 +75,7 @@ public final class ProcessCoordinator {
 
     private func receive(location: Location) {
         self.scheduler.updateContext(location)
-        if self.hasPerformedInitialRefresh == false {
+        if self.hasPerformedInitialRefresh == false || self.locationRefreshPolicy == .everyMovement {
             self.hasPerformedInitialRefresh = true
             self.scheduler.refreshAll()
         }

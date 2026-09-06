@@ -1,28 +1,14 @@
+import DoomKitProcess
+import DoomKitLocation
+import DoomKitTools
 import SwiftUI
 
 struct SettingsView: View {
+    @Environment(PointOfInterestPresenter.self) private var pointsOfInterest
     @Environment(ColorPresenter.self) private var colorScheme
     @AppStorage("enableDarkTheme") private var enableDarkTheme: Bool = false
-    @AppStorage("selectedColor") private var selectedColorString: String = ""
+    @AppStorage("selectedColor") private var selectedColorString: String = "cyan"
 
-    @State private var selectedColor: Color? = .cyan
-    let colors: [Color] = [
-        .red,
-        .orange,
-        .yellow,
-        .green,
-        .mint,
-        .teal,
-        .cyan,
-        .blue,
-        .indigo,
-        .purple,
-        .pink,
-        .brown,
-        .white,
-        .gray,
-        .black
-    ]
     let columns: [GridItem] = Array(repeating: .init(.flexible()), count: 5)
 
     @AppStorage("showWeather") private var showWeather: Bool = true
@@ -55,8 +41,6 @@ struct SettingsView: View {
 
             VStack(spacing: 12) {
                 Toggle("Always Use Dark Theme", isOn: $enableDarkTheme)
-                    .onChange(of: enableDarkTheme) { _, _ in
-                    }
                 HStack {
                     Text("Override system theme settings.")
                         .font(.footnote)
@@ -74,7 +58,8 @@ struct SettingsView: View {
                     Spacer()
                 }
                 LazyVGrid(columns: columns, spacing: 8) {
-                    ForEach(colors, id: \.self) { color in
+                    ForEach(ColorPresenter.accentNames, id: \.self) { name in
+                        let color = ColorPresenter.accentColors[ColorPresenter.accentNames.firstIndex(of: name) ?? 6]
                         Rectangle()
                             .fill(color)
                             .frame(width: 33, height: 33)
@@ -82,11 +67,11 @@ struct SettingsView: View {
                             .cornerRadius(5)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 5)
-                                    .stroke(selectedColor == color ? Color.primary : Color.clear, lineWidth: 2)
+                                    .stroke(self.selectedColorString == name ? Color.primary : Color.clear, lineWidth: 2)
                             )
                             .onTapGesture {
-                                selectedColor = color
-                                colorScheme.tintColor = color
+                                self.selectedColorString = name
+                                self.colorScheme.selectAccent(name)
                             }
                     }
                 }
@@ -110,9 +95,6 @@ struct SettingsView: View {
                 .padding(.bottom, 4)
             VStack(spacing: 12) {
                 Toggle("Weather", isOn: $showWeather)
-                    .onChange(of: showWeather) { _, _ in
-                        ProcessManager.shared.refreshSubscription(subscriber: weather)
-                    }
                 HStack {
                     Text("Show weather conditions on the map.")
                         .font(.footnote)
@@ -120,9 +102,6 @@ struct SettingsView: View {
                     Spacer()
                 }
                 Toggle("COVID-19", isOn: $showCovid)
-                    .onChange(of: showCovid) { _, _ in
-                        ProcessManager.shared.refreshSubscription(subscriber: covid)
-                    }
                 HStack {
                     Text("Show COVID-19 incidence on the map.")
                         .font(.footnote)
@@ -130,9 +109,6 @@ struct SettingsView: View {
                     Spacer()
                 }
                 Toggle("Water", isOn: $showWater)
-                    .onChange(of: showWater) { _, _ in
-                        ProcessManager.shared.refreshSubscription(subscriber: level)
-                    }
                 HStack {
                     Text("Show water level on the map.")
                         .font(.footnote)
@@ -140,9 +116,6 @@ struct SettingsView: View {
                     Spacer()
                 }
                 Toggle("Radiation", isOn: $showRadiation)
-                    .onChange(of: showRadiation) { _, _ in
-                        ProcessManager.shared.refreshSubscription(subscriber: radiation)
-                    }
                 HStack {
                     Text("Show radiation on the map.")
                         .font(.footnote)
@@ -150,9 +123,6 @@ struct SettingsView: View {
                     Spacer()
                 }
                 Toggle("Particulate Matter", isOn: $showParticles)
-                    .onChange(of: showParticles) { _, _ in
-                        ProcessManager.shared.refreshSubscription(subscriber: particles)
-                    }
                 HStack {
                     Text("Show particulate matter on the map.")
                         .font(.footnote)
@@ -162,10 +132,6 @@ struct SettingsView: View {
                 if enableElectionPolls == true {
                     VStack {
                         Toggle("Election Polls", isOn: $showElectionPolls)
-                            .onChange(of: showElectionPolls) { _, _ in
-                                ProcessManager.shared.resetSubscription(subscriber: electionPolls)
-                                ProcessManager.shared.refreshSubscription(subscriber: electionPolls)
-                            }
                         HStack {
                             Text("Show election polls on the map.")
                                 .font(.footnote)
@@ -179,6 +145,10 @@ struct SettingsView: View {
             .background(Color(.systemGray6))
             .cornerRadius(10)
         }
+        LocationSettingsView()
+
+        PointOfInterestSettingsView(presenter: self.pointsOfInterest)
+
         VStack(alignment: .leading, spacing: 8) {
             Text("Water")
                 .font(.headline)
@@ -187,7 +157,7 @@ struct SettingsView: View {
             VStack(spacing: 12) {
                 Toggle("Nearest Sensor", isOn: $nearestLevelSensor)
                     .onChange(of: nearestLevelSensor) { _, _ in
-                        ProcessManager.shared.refreshSubscription(subscriber: level)
+                        AppProcess.shared.refreshSubscription(subscriber: level)
                     }
                 HStack {
                     Text(
@@ -210,7 +180,7 @@ struct SettingsView: View {
             VStack(spacing: 12) {
                 Toggle("Nearest Sensor", isOn: $nearestParticleSensor)
                     .onChange(of: nearestParticleSensor) { _, _ in
-                        ProcessManager.shared.refreshSubscription(subscriber: particles)
+                        AppProcess.shared.refreshSubscription(subscriber: particles)
                     }
                 HStack {
                     Text(
@@ -233,12 +203,6 @@ struct SettingsView: View {
                 .padding(.bottom, 4)
             VStack(spacing: 12) {
                 Toggle("Enable", isOn: $enableElectionPolls)
-                    .onChange(of: enableElectionPolls) { oldValue, newValue in
-                        ProcessManager.shared.resetSubscription(subscriber: electionPolls)
-                        if (oldValue == false) && (newValue == true) {
-                            ProcessManager.shared.refreshSubscription(subscriber: electionPolls)
-                        }
-                    }
                 if enableElectionPolls == true {
                     Picker("Scope", selection: $electionPollScope) {
                         Text("Federal").tag(0)
@@ -246,8 +210,7 @@ struct SettingsView: View {
                     }
                     .pickerStyle(.segmented)
                     .onChange(of: electionPollScope) { _, _ in
-                        ProcessManager.shared.resetSubscription(subscriber: electionPolls)
-                        ProcessManager.shared.refreshSubscription(subscriber: electionPolls)
+                                                AppProcess.shared.refreshSubscription(subscriber: electionPolls)
                     }
                     HStack {
                         Text("Show federal or state parliament election polls.")

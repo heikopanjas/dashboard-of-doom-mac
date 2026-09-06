@@ -320,3 +320,12 @@ The app identity, signing settings, entitlements, and LaunchAtLogin dependency
 pin were preserved. Existing untracked agent/configuration files were preserved.
 No commit, remote publication, iOS integration, or native live-update provider
 was performed.
+
+
+## September 6, 2026: combined iOS integration
+
+Both apps now use the local packages and Shared app source. All five package
+Debug test suites pass on macOS and iOS simulator; Process, Tools, and Services
+also pass in Release on both. The older iOS-unvalidated statements above describe
+the historical extraction checkpoints. See [IOS_MIGRATION.md](IOS_MIGRATION.md)
+for the current matrix, artifacts, app tests, and pending physical-device checks.

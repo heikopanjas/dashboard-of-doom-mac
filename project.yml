@@ -17,6 +17,8 @@ fileGroups:
 - README.md
 - AGENTS.md
 - UPDATES.md
+- IOS_MIGRATION.md
+- build-ios.sh
 settings:
   base:
     ALWAYS_SEARCH_USER_PATHS: 'NO'
@@ -105,6 +107,8 @@ targets:
     sources:
     - path: DashboardOfDoom
       type: syncedFolder
+    - path: Shared
+      type: syncedFolder
     settings:
       base:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -114,7 +118,7 @@ targets:
         CODE_SIGN_IDENTITY[sdk=macosx*]: Developer ID Application
         CODE_SIGN_STYLE: Manual
         COMBINE_HIDPI_IMAGES: 'YES'
-        CURRENT_PROJECT_VERSION: '146'
+        CURRENT_PROJECT_VERSION: '147'
         DEAD_CODE_STRIPPING: 'YES'
         DEVELOPMENT_ASSET_PATHS: ''
         DEVELOPMENT_TEAM: ''
@@ -134,7 +138,7 @@ targets:
         - "$(inherited)"
         - "@executable_path/../Frameworks"
         MACOSX_DEPLOYMENT_TARGET: '15.0'
-        MARKETING_VERSION: 6.4.2
+        MARKETING_VERSION: 6.4.3
         PRODUCT_BUNDLE_IDENTIFIER: com.panjas.dashboard-of-doom
         PRODUCT_NAME: Dashboard of Doom
         PROVISIONING_PROFILE_SPECIFIER: ''
@@ -154,7 +158,7 @@ targets:
     platform: macOS
     sources:
     - path: DashboardOfDoomTests
-    - path: DashboardOfDoom
+    - path: Shared
       type: syncedFolder
       includes:
       - Models/PointOfInterest.swift
@@ -165,6 +169,7 @@ targets:
       - Presenters/PointOfInterestPresenter.swift
       - AppProcess.swift
       - AppLocation.swift
+      - SourcePreferences.swift
       - Presenters/ConditionalSubscription.swift
       - Views/MapAnnotationLabel.swift
       - Views/MapAnnotationOverlay.swift
@@ -209,7 +214,128 @@ targets:
     - package: DoomKitProcess
     - package: DoomKitNetwork
     - package: DoomKitTools
+  DashboardOfDoom-iOS:
+    type: application
+    platform: iOS
+    deploymentTarget: '26.0'
+    sources:
+    - path: ios/DashboardOfDoom
+      type: syncedFolder
+      excludes:
+      - Info.plist
+    - path: Shared
+      type: syncedFolder
+    settings:
+      base:
+        SDKROOT: iphoneos
+        SUPPORTED_PLATFORMS: iphoneos iphonesimulator
+        TARGETED_DEVICE_FAMILY: '1,2'
+        SWIFT_VERSION: '5.0'
+        PRODUCT_NAME: DashboardOfDoom
+        PRODUCT_BUNDLE_IDENTIFIER: com.panjas.dashboard-of-doom
+        MARKETING_VERSION: 6.3.0
+        CURRENT_PROJECT_VERSION: '178'
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: Apple Development
+        DEVELOPMENT_TEAM: 8J2G689FCZ
+        CODE_SIGN_ENTITLEMENTS: ios/DashboardOfDoom/DashboardOfDoom.entitlements
+        GENERATE_INFOPLIST_FILE: 'YES'
+        INFOPLIST_FILE: ios/DashboardOfDoom/Info.plist
+        INFOPLIST_KEY_CFBundleDisplayName: Dashboard of Doom
+        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: Show environmental conditions near your location.
+        INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription: Keep nearby environmental conditions current as you move, including in the background.
+        INFOPLIST_KEY_UILaunchScreen_Generation: 'YES'
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: 'YES'
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        LD_RUNPATH_SEARCH_PATHS:
+        - $(inherited)
+        - '@executable_path/Frameworks'
+    dependencies:
+    - package: DoomKitLocation
+    - package: DoomKitNetwork
+    - package: DoomKitProcess
+    - package: DoomKitTools
+    - package: DoomKitServices
+  iOSTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: '26.0'
+    sources:
+    - path: iOSTests
+    - path: DashboardOfDoomTests
+      excludes:
+      - MapLabelRenderingTests.swift
+    - path: Shared
+      type: syncedFolder
+    - path: ios/DashboardOfDoom
+      type: syncedFolder
+      includes:
+      - AppActivityLifecycle.swift
+      - Views/ActivityIndicator.swift
+    settings:
+      base:
+        SDKROOT: iphoneos
+        SWIFT_VERSION: '5.0'
+        PRODUCT_NAME: iOSTests
+        PRODUCT_BUNDLE_IDENTIFIER: com.panjas.dashboard-of-doom.ios-tests
+        GENERATE_INFOPLIST_FILE: 'YES'
+        CODE_SIGNING_ALLOWED: 'NO'
+    dependencies:
+    - package: DoomKitLocation
+    - package: DoomKitNetwork
+    - package: DoomKitProcess
+    - package: DoomKitTools
+    - package: DoomKitServices
+  iOSUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: '26.0'
+    sources:
+    - path: iOSUITests
+    settings:
+      base:
+        SDKROOT: iphoneos
+        SWIFT_VERSION: '5.0'
+        PRODUCT_NAME: iOSUITests
+        PRODUCT_BUNDLE_IDENTIFIER: com.panjas.dashboard-of-doom.ios-ui-tests
+        GENERATE_INFOPLIST_FILE: 'YES'
+        CODE_SIGNING_ALLOWED: 'NO'
+        TEST_TARGET_NAME: DashboardOfDoom-iOS
+    dependencies:
+    - target: DashboardOfDoom-iOS
 schemes:
+  iOSUITests:
+    build:
+      targets:
+        DashboardOfDoom-iOS: all
+        iOSUITests: all
+    test:
+      config: Debug
+      targets:
+      - iOSUITests
+  DashboardOfDoom-iOS:
+    build:
+      targets:
+        DashboardOfDoom-iOS: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+      - iOSTests
+    archive:
+      config: Release
+  iOSTests:
+    build:
+      targets:
+        iOSTests: all
+    test:
+      config: Debug
+      targets:
+      - iOSTests
   PointOfInterestTests:
     build:
       targets:

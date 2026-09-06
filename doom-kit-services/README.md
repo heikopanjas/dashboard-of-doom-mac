@@ -1,7 +1,7 @@
 # DoomKitServices
 
 Local Swift 6 package, Swift tools 6.2, macOS 15 and iOS 26. macOS is validated;
-iOS remains unvalidated. Direct local dependencies are DoomKitLocation,
+iOS simulator tests are validated; physical background delivery and WeatherKit checks are recorded separately in [IOS_MIGRATION.md](../IOS_MIGRATION.md). Direct local dependencies are DoomKitLocation,
 DoomKitNetwork, and DoomKitTools. There is no Process dependency.
 
 The seven public service classes are `CovidService`, `HazardService`,

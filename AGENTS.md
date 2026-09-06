@@ -1,12 +1,12 @@
-# Agent Instructions for Dashboard of Doom (macOS)
+# Agent Instructions for Dashboard of Doom (macOS and iOS)
 
-*Last updated: September 6, 2026, 22:38 CEST (Source Refresh Controls)*
+*Last updated: September 7, 2026, 00:39 CEST (narrower iOS map labels)*
 
 ## Project Overview
 
 Dashboard of Doom is a sophisticated macOS menu bar application providing real-time environmental and public health data visualization for Germany. The application integrates with multiple German federal APIs to create an interactive, location-aware environmental monitoring system.
 
-**Note**: This repository contains the **macOS-only** version. A separate iOS repository exists with similar architecture but platform-specific implementations.
+**Platforms**: This repository builds macOS 15+ and iOS 26+ apps. The original iOS develop history is imported under `ios/`. Root `project.yml` is the only Xcode project source of truth; see `IOS_MIGRATION.md`.
 
 ### Current Implementation Status
 - **Fully Functional**: Complete data pipeline from API integration to UI presentation
@@ -19,16 +19,16 @@ Dashboard of Doom is a sophisticated macOS menu bar application providing real-t
 ## Architecture & Code Patterns
 
 ### Repository Structure
-- **macOS-Only Repository**: This repo contains the macOS menu bar application
-- **Shared Architecture**: Similar architecture patterns exist in the separate iOS repository
+- **App Roots**: `DashboardOfDoom/` owns macOS entry point, menu, settings, and detail views; `ios/DashboardOfDoom/` owns iOS entry point, navigation, settings, detail views, and assets
+- **Shared App Code**: `Shared/` owns controllers, models, presenters, transformers, extensions, and map/POI views
 - **Platform-Specific**: Views and some Presenters contain macOS-specific implementations
-- **XcodeGen**: `project.yml` defines the macOS target, settings, dependencies, and shared scheme; `DashboardOfDoom.xcodeproj` is generated
+- **XcodeGen**: `project.yml` defines both app targets, tests, settings, dependencies, and schemes; `DashboardOfDoom.xcodeproj` is generated
 
 ### Platform Architecture
 - **macOS**: MVP (Model-View-Presenter) pattern optimized for menu bar applications
 - **Menu Bar Interface**: Lightweight status bar extra with popover/window presentation
 - **Settings Window**: Dedicated configuration interface for user preferences
-- **Shared Business Logic**: Controllers, Services, Models, and Utilities identical to iOS version
+- **Shared Business Logic**: Both apps compile `Shared/` and use the same five local DoomKit packages
 
 ### Core Components
 
@@ -243,7 +243,21 @@ Controllers → Services → Transformers → Presenters → Views
 
 - COVID, water levels, radiation, particles, and polls own preference-observed conditional subscriptions; disabled sources retain values but cancel and remove refresh work. Weather and forecasts always refresh regardless of display visibility.
 
-### macOS Map Annotation Layout
+### iOS Lifecycle and Validation
+
+- Use `feature/ios-modernization` for this migration. Preserve the imported iOS history; do not restore its obsolete standalone Xcode project or duplicate services.
+- iOS 6.3.0 (178) uses the user-confirmed bundle `com.panjas.dashboard-of-doom`, automatic signing team `8J2G689FCZ`, WeatherKit entitlement, and background location plist mode. macOS is 6.4.3 (147) with unchanged identity/signing.
+- `IOSAppDelegate` owns one runtime and all presenters. Its lifecycle starts once and refreshes once after background return, without stopping background location. Do not instantiate dormant hazards or start location from a presenter/view.
+- `LocationConfiguration.continuousBackground` is iOS-only: best accuracy, Always request, background updates enabled, automatic pauses disabled, background indicator enabled. Default macOS behavior remains kilometer accuracy and When In Use.
+- Preserve the strictly-greater-than-100-metre movement filter. The iOS coordinator uses everyMovement; default macOS uses firstMeasurement. Keep immediate fallback startup and cancellation checks.
+- iOS keeps showWater, enableElectionPolls default false, and showElectionPolls default true. Only enableElectionPolls controls poll fetching. Other conditional sources use their switches; weather and forecasts always fetch. Preserve successful values while disabled.
+- Use `./build-ios.sh` for unsigned simulator Debug, `--release` for Release, `--device` for signed device compilation, and `--simulator UUID --run` to launch at HKW. The script never cleans or uploads.
+- All simulator testing uses HKW, 52.51889, 13.36528. Start simulated movement there. Disable parallel test clones when testing location using `-parallel-testing-enabled NO`.
+- `iOSTests` is an unhosted Swift Testing target; `iOSUITests` uses XCTest for navigation, gestures, orientations, appearances, Dynamic Type, and 2,000/10,000-POI screenshots. Debug-only `--ui-fixture` data never starts network/location work. Release omits this fixture.
+- Package simulator tests run from each package directory using its package-name scheme. Release tests need `ENABLE_TESTABILITY=YES` for @testable imports; keep optimization enabled. Isolate derived data, SYMROOT, and OBJROOT for concurrent builds.
+- Simulator tests do not establish real background delivery or WeatherKit authorization. Record physical-device results separately in IOS_MIGRATION.md.
+
+### Map Annotation Layout
 
 - `MapView` creates one snapshot ordered weather, COVID, particles, water, radiation, surveys; category IDs survive measurement refreshes.
 - `CollisionMapView` keeps native dots at geographic coordinates and projects with `MapReader` from camera callbacks and a geometry-keyed cancellable view task, never during body rendering.
@@ -256,7 +270,7 @@ Controllers → Services → Transformers → Presenters → Views
 - Try previous relative placements and eight anchors, then 40–160-point outward offsets and a bounded viewport grid. After collision/clipping, minimize connector count and prefer direct above-right attachment; retain previous placement only as a final tie-breaker.
 - Score clipping from nonnegative outside strips, never by subtracting nearly equal areas; ignore edge noise at or below 0.0000001 point before scoring, and keep the comparator strictly ordered.
 - Preserve all labels in undersized viewports using the best bounded-search result; skip unprojectable coordinates until valid. Never change region fitting to accommodate labels.
-- Keep the Weather dot when its label is disabled, preserve selectors and settings behavior, and retain the separate unvalidated iOS presentation.
+- Keep the Weather dot when its label is disabled, preserve selectors and settings behavior, and retain platform label dimensions: macOS 131 × 33 points, iOS 132 × 36 points. iOS caps visual map-label Dynamic Type to fit fixed bounds; full values remain accessible.
 
 ### Local Package Boundaries
 
@@ -268,7 +282,7 @@ Controllers → Services → Transformers → Presenters → Views
 - Keep smoothing independent of ProcessValue; app callers rebuild values in order with original metadata, timestamps, quality, units, and new UUIDs
 - Preserve original unit coefficients and base units, numeric algorithms, service URL/date behavior, and failure-to-nil cancellation contract during extraction work
 - All packages use Swift tools 6.2 and Swift 6 language mode; keep the app in Swift 5 mode
-- Packages declare macOS 15 and iOS 26; iOS is unvalidated and has no app integration here
+- Packages declare macOS 15 and iOS 26; both app targets integrate them. See IOS_MIGRATION.md for simulator and device validation limits.
 - Each state consumer owns a separate latest-value stream and explicitly cancelled task; stop finishes all streams and restart requires new subscriptions
 - Location initialization does not request permission or track; the private Core Location provider starts explicitly with kilometer accuracy
 - Native `CLLocationUpdate.liveUpdates()` is a planned provider replacement; validate accuracy, authorization, delivery, cancellation, and background behavior separately
@@ -367,12 +381,12 @@ fix: update `ProcessManager` with "nested 'quotes'" & $special chars!
 
 
 ### Code Organization
-- **macOS-Only Repository**: Single platform focus with dedicated macOS implementations
+- **Platform Roots**: Keep platform navigation, settings, app lifecycle, charts, and assets separate; share data orchestration and map/POI code
 - **Shared Architecture Patterns**: Business logic patterns similar to the iOS repository
 - **Platform-Specific Code**: macOS-specific UI and menu bar functionality
 - **Custom Unit Types**: Implement `@unchecked Sendable` conformance for measurement units
 - **Consistent Naming**: Use clear, descriptive file naming
-- **Folder Hierarchy**: Keep Controllers/, Presenters/, Transformers/, and Views/ in the app; place services under DoomKitServices and utilities under DoomKitTools.
+- **Folder Hierarchy**: Keep Controllers/, Presenters/, and Transformers/ in Shared/; place services under DoomKitServices and utilities under DoomKitTools.
 
 ## Common Tasks & Patterns
 
@@ -408,7 +422,7 @@ Remember: This application focuses specifically on German environmental data and
 
 ### Technology Status (Updated September 5, 2026)
 - **Swift Language Mode**: Swift 5 (`SWIFT_VERSION = 5.0`); this setting does not identify the compiler version
-- **Deployment Target**: macOS 15.0+ (app target overrides the project-level macOS 15.2 setting); no iOS target in this repository
+- **Deployment Target**: macOS 15.0+ (app target overrides the project-level macOS 15.2 setting); iOS app target requires iOS 26.0+
 - **Architecture Maturity**: Production-ready implementation with full feature set
 - **Code Quality**: Comprehensive error handling, quality assessment, and mathematical analysis
 - **Concurrency**: Full async/await adoption throughout the application stack

@@ -1,7 +1,7 @@
 # DoomKitProcess
 
 Local Swift 6 package (Swift tools 6.2), declaring macOS 15 and iOS 26.
-macOS is validated; iOS remains unvalidated. Local dependencies: DoomKitLocation and DoomKitNetwork. Observation supplies the
+macOS is validated; iOS simulator tests are validated; physical background delivery and WeatherKit checks are recorded separately in [IOS_MIGRATION.md](../IOS_MIGRATION.md). Local dependencies: DoomKitLocation and DoomKitNetwork. Observation supplies the
 observable presenter base; no SwiftUI dependency.
 
 ```swift
@@ -52,7 +52,9 @@ the manager weakly across sleeps.
 
 The package's `ProcessCoordinator` owns location/network observation and policy:
 registration refreshes use the injected location manager's fallback, first measured location causes
-one bulk refresh, later location changes update context without bulk refresh,
+one bulk refresh. The default `locationRefreshPolicy: .firstMeasurement` makes
+later location changes update context without bulk refresh; the iOS app explicitly
+selects `.everyMovement` to refresh after each accepted location change,
 and startup waits at most 30 seconds before beginning the timer. After that
 bound, offline retries remain the network package's responsibility, as before.
 Settings keep their individual refresh behavior; bulk refresh resets intervals.

@@ -1,7 +1,11 @@
+import DoomKitProcess
+import DoomKitLocation
+import DoomKitTools
 import Charts
 import SwiftUI
 
 struct ForecastView: View {
+    @ScaledMetric(relativeTo: .body) private var chartHeight = 167.0
     @Environment(ForecastPresenter.self) private var presenter
 
     var body: some View {
@@ -44,7 +48,7 @@ struct ForecastView: View {
                             ForecastChartView(selector: .forecast(selector))
                         }
                         .padding(.vertical, 5)
-                        .frame(height: 167)
+                        .frame(height: self.chartHeight)
                     }
                 }
             }

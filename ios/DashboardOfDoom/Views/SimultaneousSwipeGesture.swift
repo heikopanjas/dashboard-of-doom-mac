@@ -1,3 +1,6 @@
+import DoomKitProcess
+import DoomKitLocation
+import DoomKitTools
 import SwiftUI
 
 struct SimultaneousSwipeGesture: UIGestureRecognizerRepresentable {

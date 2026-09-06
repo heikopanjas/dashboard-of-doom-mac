@@ -1,18 +1,74 @@
-# Dashboard of Doom (macOS)
+# Dashboard of Doom (macOS and iOS)
 
 ![Swift 5 language mode](https://img.shields.io/badge/Swift-5_language_mode-orange.svg)
 ![macOS 15.0+](https://img.shields.io/badge/macOS-15.0+-blue.svg)
 ![MIT License](https://img.shields.io/badge/License-MIT-green.svg)
 
-**Dashboard of Doom** is a sophisticated macOS menu bar application that provides real-time environmental and public health data visualization for Germany. This comprehensive monitoring dashboard aggregates data from multiple German government and public APIs to create an interactive, location-aware environmental monitoring system.
+**Dashboard of Doom** is a macOS menu bar and iOS application that provides real-time environmental and public health data visualization for Germany. This comprehensive monitoring dashboard aggregates data from multiple German government and public APIs to create an interactive, location-aware environmental monitoring system.
 
 > **Regional Focus**: This application is specifically designed for use in Germany and integrates with German federal data sources.
 
-> **Note**: This repository contains the macOS-only version. A separate iOS repository is available with similar architecture but platform-specific implementations.
+> **Platforms**: macOS 15+ and iOS 26+. Both apps use the five local DoomKit packages and the app code in `Shared/`. The original iOS history is retained under `ios/`; see [migration and validation](IOS_MIGRATION.md).
+
+Current versions: **macOS 6.4.3 (147)** and **iOS 6.3.0 (178)**.
+
+## iOS development
+
+Use Xcode 26.2+, an iOS 26 simulator, and XcodeGen 2.46.0+. The root
+`project.yml` generates both targets; the old iOS Xcode project has been retired.
+
+```bash
+./build-ios.sh                         # unsigned Debug simulator build
+./build-ios.sh --release               # unsigned Release simulator build
+./build-ios.sh --device                # signed Debug device build
+./build-ios.sh --device --release      # signed Release device build
+xcrun simctl list devices available
+./build-ios.sh --simulator SIMULATOR_UUID --run
+```
+
+`--run` boots the selected simulator, sets **HKW (52.51889, 13.36528)**, installs,
+and launches. It does not grant location permission. Use the iOS permission
+prompt or `xcrun simctl privacy SIMULATOR_UUID grant location-always com.panjas.dashboard-of-doom`.
+Keep simulator movement tests centred on HKW. Build outputs are isolated under
+`.build/ios/{simulator,device}/{Debug,Release}/`; this script never cleans.
+The existing `./build.sh --clean` removes the entire root `.build/`, including
+these iOS outputs. Device builds need the existing team's development identity
+and a profile for `com.panjas.dashboard-of-doom`; there is no upload or archive step.
+
+```bash
+xcodegen generate
+xcrun simctl location SIMULATOR_UUID set 52.51889,13.36528
+xcodebuild -project DashboardOfDoom.xcodeproj -scheme iOSTests \
+  -destination 'platform=iOS Simulator,id=SIMULATOR_UUID' \
+  -parallel-testing-enabled NO -derivedDataPath .build/ios-tests \
+  SYMROOT="$PWD/.build/ios-tests/Products" OBJROOT="$PWD/.build/ios-tests/Intermediates" \
+  CODE_SIGNING_ALLOWED=NO test
+# Use scheme iOSUITests for offline navigation, chart gestures, and POI stress screenshots.
+```
+
+`Shared/` contains controllers, presenters, models, transformers, extensions,
+and map/POI views. `DashboardOfDoom/` owns macOS app/menu/settings/chart views;
+`ios/DashboardOfDoom/` owns iOS app/navigation/settings/chart views and assets.
+There is one location manager and coordinator per app. iOS requests best-accuracy
+continuous location and Always permission, with background updates, no automatic
+pauses, and the background indicator. A movement must exceed 100 metres to be
+accepted. Each accepted iOS movement refreshes enabled sources. Backgrounding
+keeps location active; becoming active again refreshes once. The OS still controls
+background execution, so scheduled intervals are not background delivery guarantees.
+macOS retains its kilometer-accuracy foreground policy and first-measurement refresh.
+
+Weather and forecasts continue fetching with their display switch off. Other
+sources stop fetching when disabled and retain their last successful data. iOS
+keeps `showWater`, `enableElectionPolls` (default off), and `showElectionPolls`
+(default on) as separate persisted preferences. Hiding poll labels does not stop
+poll fetching. POIs retain their independent master/category controls. The map
+can show the fallback location while WeatherKit is unavailable. Hazard UI and
+fetching remain dormant. Accent selection persists, and the theme follows the
+system unless Always Use Dark Theme is enabled.
 
 ## Points of interest
 
-Version 6.4.2 (build 146) respects disabled data sources while keeping weather
+The current version respects disabled data sources while keeping weather
 and forecasts current, and uses opaque environmental labels when POIs are enabled.
 Points of interest include pharmacies, hospitals, liquor/convenience stores,
 funeral directors, and cemeteries. All categories start enabled. Settings > Places
@@ -62,7 +118,7 @@ The map remains noninteractive and retains its existing region-fitting behavior.
 through `MapReader` after geometry changes and caches layout independently of label
 text. A cancellable view task handles temporary map-registration gaps. `DoomKitTools.AnnotationLayout` owns the bounded screen-space search.
 Deterministic crowded-layout previews live in `MapAnnotationPreview.swift`.
-The separate iOS annotation presentation is unchanged and unvalidated.
+iOS uses the same collision solver and POI rendering, with its existing 101 × 67-point labels. macOS retains 131 × 33-point labels. iOS map labels cap their visual text size to fit those bounds; VoiceOver reads the full value.
 
 ## Screenshots
 
@@ -343,15 +399,14 @@ checkout requires network access.
 See [package validation](PACKAGE_VALIDATION.md) for completed checks and remaining
 interactive smoke tests.
 
-The five local packages declare macOS 15 and iOS 26; only macOS is validated.
-The app remains macOS-only, using Swift 5 language mode. See
+The five local packages support macOS 15 and iOS 26. Both app targets use Swift 5 language mode; packages use Swift 6 with tools 6.2. See
 [DoomKitLocation](doom-kit-location/README.md),
 [DoomKitNetwork](doom-kit-network/README.md),
 [DoomKitProcess](doom-kit-process/README.md),
 [DoomKitTools](doom-kit-tools/README.md), and
 [DoomKitServices](doom-kit-services/README.md) for API and lifecycle contracts.
 Native location live updates are a planned provider replacement, not implemented
-in this extraction. iOS integration and validation remain deferred.
+by this migration. The integration retains CLLocationManager and tests its platform policies independently.
 
 Run package tests before the signed app build:
 
