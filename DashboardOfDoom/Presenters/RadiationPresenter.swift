@@ -4,22 +4,38 @@ import DoomKitLocation
 import SwiftUI
 
 @Observable class RadiationPresenter: ProcessPresenter, ProcessRefreshable {
-    private let processController = RadiationController()
+    @ObservationIgnored private var subscription: ConditionalSubscription?
+    @ObservationIgnored private let fetch: @MainActor (Location) async throws -> [ProcessSensor]
 
-    init() {
-        super.init(coordinator: AppProcess.shared)
-        let processManager = AppProcess.shared
-        let interval = UserDefaults.standard.integer(forKey: "radiationRefreshInterval")
-        processManager.add(subscriber: self, timeout: TimeInterval(interval > 0 ? interval : 15))
+    init(defaults: UserDefaults = .standard,
+         register: (@MainActor (any ProcessRefreshable, TimeInterval) -> Void)? = nil,
+         remove: (@MainActor (UUID) -> Void)? = nil,
+         fetch: (@MainActor (Location) async throws -> [ProcessSensor])? = nil) {
+        self.fetch = fetch ?? { location in return try await RadiationController().refreshData(for: location) }
+        super.init()
+        let id = self.id
+        self.subscription = ConditionalSubscription(
+            defaults: defaults, enableKey: "showRadiation", intervalKey: "radiationRefreshInterval", fallback: 15,
+            register: { [weak self] interval in
+                guard let self else { return }
+                if let register { register(self, interval) }
+                else { AppProcess.shared.add(subscriber: self, timeout: interval) }
+            },
+            remove: {
+                if let remove { remove(id) }
+                else { AppProcess.shared.remove(id: id) }
+            })
     }
 
     func refreshData(location: Location) async -> Void {
+        guard self.subscription?.isEnabled == true, Task.isCancelled == false else { return }
         do {
-            if let sensor = try await processController.refreshData(for: location).first {
+            if let sensor = try await self.fetch(location).first {
                 try Task.checkCancellation()
                 let transformer = RadiationTransformer()
                 try transformer.renderData(sensor: sensor)
                 try Task.checkCancellation()
+                guard self.subscription?.isEnabled == true else { return }
                 self.publishData(sensor: sensor, transformer: transformer)
             }
         }

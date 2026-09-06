@@ -114,7 +114,7 @@ targets:
         CODE_SIGN_IDENTITY[sdk=macosx*]: Developer ID Application
         CODE_SIGN_STYLE: Manual
         COMBINE_HIDPI_IMAGES: 'YES'
-        CURRENT_PROJECT_VERSION: '145'
+        CURRENT_PROJECT_VERSION: '146'
         DEAD_CODE_STRIPPING: 'YES'
         DEVELOPMENT_ASSET_PATHS: ''
         DEVELOPMENT_TEAM: ''
@@ -134,7 +134,7 @@ targets:
         - "$(inherited)"
         - "@executable_path/../Frameworks"
         MACOSX_DEPLOYMENT_TARGET: '15.0'
-        MARKETING_VERSION: 6.4.1
+        MARKETING_VERSION: 6.4.2
         PRODUCT_BUNDLE_IDENTIFIER: com.panjas.dashboard-of-doom
         PRODUCT_NAME: Dashboard of Doom
         PROVISIONING_PROFILE_SPECIFIER: ''
@@ -163,6 +163,38 @@ targets:
       - Controllers/LevelController.swift
       - Controllers/PointOfInterestController.swift
       - Presenters/PointOfInterestPresenter.swift
+      - AppProcess.swift
+      - AppLocation.swift
+      - Presenters/ConditionalSubscription.swift
+      - Views/MapAnnotationLabel.swift
+      - Views/MapAnnotationOverlay.swift
+      - Views/MapAnnotationSnapshot.swift
+      - Views/PointOfInterestOverlay.swift
+      - Views/PointOfInterestCategory+Appearance.swift
+      - Presenters/MapPresenter.swift
+      - Extensions/Color.swift
+      - Extensions/Gradient.swift
+      - Extensions/Date.swift
+      - Presenters/CovidPresenter.swift
+      - Transformers/CovidTransformer.swift
+      - Controllers/CovidController.swift
+      - Presenters/LevelPresenter.swift
+      - Transformers/LevelTransformer.swift
+      - Presenters/RadiationPresenter.swift
+      - Transformers/RadiationTransformer.swift
+      - Controllers/RadiationController.swift
+      - Presenters/ParticlePresenter.swift
+      - Transformers/ParticleTransformer.swift
+      - Controllers/ParticleController.swift
+      - Presenters/SurveyPresenter.swift
+      - Transformers/SurveyTransformer.swift
+      - Controllers/SurveyController.swift
+      - Presenters/WeatherPresenter.swift
+      - Transformers/WeatherTransformer.swift
+      - Controllers/WeatherController.swift
+      - Presenters/ForecastPresenter.swift
+      - Transformers/ForecastTransformer.swift
+      - Controllers/ForecastController.swift
     settings:
       base:
         PRODUCT_NAME: PointOfInterestTests
@@ -175,6 +207,8 @@ targets:
     - package: DoomKitLocation
     - package: DoomKitServices
     - package: DoomKitProcess
+    - package: DoomKitNetwork
+    - package: DoomKitTools
 schemes:
   PointOfInterestTests:
     build:

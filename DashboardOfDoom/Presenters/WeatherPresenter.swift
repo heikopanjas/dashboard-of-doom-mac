@@ -6,18 +6,22 @@ import MapKit
 import SwiftUI
 
 @Observable class WeatherPresenter: ProcessPresenter, ProcessRefreshable {
-    private let processController = WeatherController()
+    @ObservationIgnored private let fetch: @MainActor (Location) async throws -> [ProcessSensor]
 
-    init() {
-        super.init(coordinator: AppProcess.shared)
-        let processManager = AppProcess.shared
-        let interval = UserDefaults.standard.integer(forKey: "weatherRefreshInterval")
-        processManager.add(subscriber: self, timeout: TimeInterval(interval > 0 ? interval : 5))
+    init(defaults: UserDefaults = .standard,
+         register: (@MainActor (any ProcessRefreshable, TimeInterval) -> Void)? = nil,
+         fetch: (@MainActor (Location) async throws -> [ProcessSensor])? = nil) {
+        self.fetch = fetch ?? { location in return try await WeatherController().refreshData(for: location) }
+        super.init(coordinator: register == nil ? AppProcess.shared : nil)
+        let interval = defaults.integer(forKey: "weatherRefreshInterval")
+        let timeout = TimeInterval(interval > 0 ? interval : 5)
+        if let register { register(self, timeout) }
+        else { AppProcess.shared.add(subscriber: self, timeout: timeout) }
     }
 
     func refreshData(location: Location) async -> Void {
         do {
-            if let sensor = try await processController.refreshData(for: location).first {
+            if let sensor = try await self.fetch(location).first {
                 try Task.checkCancellation()
                 let transformer = WeatherTransformer()
                 try transformer.renderData(sensor: sensor)

@@ -12,7 +12,9 @@
 
 ## Points of interest
 
-Version 6.4.1 (build 145) includes pharmacies, hospitals, liquor/convenience stores,
+Version 6.4.2 (build 146) respects disabled data sources while keeping weather
+and forecasts current, and uses opaque environmental labels when POIs are enabled.
+Points of interest include pharmacies, hospitals, liquor/convenience stores,
 funeral directors, and cemeteries. All categories start enabled. Settings > Places
 provides a master switch and individual switches with a symbol legend.
 
@@ -366,8 +368,8 @@ swift test -c release --package-path doom-kit-services
 ./build.sh --release
 ```
 
-The unhosted `PointOfInterestTests` target compiles only the POI model, controller,
-presenter, and projection helpers plus Swift Testing tests. It does not launch the
+The unhosted `PointOfInterestTests` target covers source subscription lifecycles,
+weather scheduling, POI models and fetching, projection, and label rendering. It does not launch the
 app or use live network requests. Its source membership is specified using a
 filtered synchronized folder in `project.yml`:
 

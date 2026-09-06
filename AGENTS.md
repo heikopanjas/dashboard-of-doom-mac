@@ -1,6 +1,6 @@
 # Agent Instructions for Dashboard of Doom (macOS)
 
-*Last updated: September 6, 2026 (Points of Interest Restoration)*
+*Last updated: September 6, 2026, 22:38 CEST (Source Refresh Controls)*
 
 ## Project Overview
 
@@ -241,11 +241,14 @@ Controllers → Services → Transformers → Presenters → Views
 - POIs use a single Canvas with one Core Graphics image pass beneath environmental labels, never the collision solver. Repeated SwiftUI symbol/image draws crashed the GPU encoder in the 10,000-point stress fixture; preserve the batched Core Graphics path. Preserve stable OSM identities, category toggles, all-point rendering, Apple POIs, and region fitting. Project only after geometry/camera changes, using the deferred MapReader registration safeguard.
 - The app delegate owns the POI presenter lifecycle. Keep the 6,666.67-metre radius, one-hour cache within 1 km, minute expiry checks, five-minute failure cooldown, and two-request concurrency limit across cancelled generations. Never start or stop shared location tracking from the POI presenter.
 
+- COVID, water levels, radiation, particles, and polls own preference-observed conditional subscriptions; disabled sources retain values but cancel and remove refresh work. Weather and forecasts always refresh regardless of display visibility.
+
 ### macOS Map Annotation Layout
 
 - `MapView` creates one snapshot ordered weather, COVID, particles, water, radiation, surveys; category IDs survive measurement refreshes.
 - `CollisionMapView` keeps native dots at geographic coordinates and projects with `MapReader` from camera callbacks and a geometry-keyed cancellable view task, never during body rendering.
 - Labels and category-colored connectors use `MapAnnotationOverlay`; connector drawing clips around every native dot and is hidden from accessibility.
+- Environmental label backgrounds use full opacity while the POI master switch is enabled, including loading or empty results; otherwise they use 0.5 opacity.
 - `MapAnnotationLabel` shares its 131 × 33-point outer dimensions with `DoomKitTools.AnnotationLayout`; preserve colors, icons, text, and padding.
 - After geometry changes, defer projection until MapReader registers its map; retry at most eight 16 ms passes, publish once, and cancel on replacement/disappearance.
 - Cache by projected geometry, visibility, and size; text-only updates reuse placements. Publish geometry and placement together without animation.

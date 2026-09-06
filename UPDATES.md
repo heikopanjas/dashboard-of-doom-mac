@@ -4,6 +4,16 @@ This file is the append-only log of project decisions and notable changes, maint
 
 <!-- {changelog} -->
 
+### 2026-09-06 (v6.4.2, source refresh controls and readable labels, 22:38)
+
+- remove and cancel disabled covid, water-level, radiation, particle, and poll subscriptions independently of popover visibility; retain successful values and refresh immediately on re-enable
+- preserve unconditional weather and forecast refreshes and existing poi fetch controls
+- stop cancelled controller work before dependent requests, station fallbacks, and geocoding
+- use opaque environmental label backgrounds while the poi master switch is enabled, including loading and empty results; retain half opacity otherwise
+- rationale: respect source switches and keep dense places from obscuring environmental labels without changing placement or rendering
+- validation: 14 app tests passed, including parameterized coverage of all five sources; 16 process tests passed in both debug and release; unsigned app build passed; inspected rendered dense-poi overlays in light and dark appearances
+- version bump: 6.4.1 (145) to 6.4.2 (146), patch for refresh and label readability fixes
+
 ### 2026-09-06 (v6.4.1, recover shared map data requests)
 
 - coordinate all overpass requests with environmental discovery ahead of background pois

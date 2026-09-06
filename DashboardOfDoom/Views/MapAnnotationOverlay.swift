@@ -5,6 +5,7 @@ struct MapAnnotationOverlay: View {
     let annotations: [MapAnnotationSnapshot]
     let items: [AnnotationLayout.Item]
     let placements: [AnnotationLayout.Placement]
+    var showsPointsOfInterest = false
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -29,7 +30,8 @@ struct MapAnnotationOverlay: View {
             .accessibilityHidden(true)
             ForEach(self.annotations) { annotation in
                 if let placement = self.placements.first(where: { $0.id == annotation.id }) {
-                    MapAnnotationLabel(selector: annotation.selector, icon: annotation.icon, faceplate: annotation.faceplate)
+                    MapAnnotationLabel(selector: annotation.selector, icon: annotation.icon, faceplate: annotation.faceplate,
+                                       backgroundOpacity: self.showsPointsOfInterest == true ? 1.0 : 0.5)
                         .position(x: placement.rect.midX, y: placement.rect.midY)
                 }
             }

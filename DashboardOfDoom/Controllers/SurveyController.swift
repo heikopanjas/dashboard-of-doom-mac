@@ -51,12 +51,16 @@ class SurveyController: ProcessController {
 
         let scope = UserDefaults.standard.integer(forKey: "electionPollScope")
         if scope == 0 {
+            try Task.checkCancellation()
             if let sensor = try await self.refreshFederalSurveys(for: location) {
+                try Task.checkCancellation()
                 data.append(sensor)
             }
         }
         else {
+            try Task.checkCancellation()
             if let sensor = try await self.refreshLocalSurveys(for: location) {
+                try Task.checkCancellation()
                 data.append(sensor)
             }
         }
@@ -70,8 +74,11 @@ class SurveyController: ProcessController {
         let sensorLocation = germany.location
         let parliamentId = 0  // Bundestag
 
+        try Task.checkCancellation()
         if let data = try await SurveyService.fetchPolls() {
+            try Task.checkCancellation()
             if let polls = try await parsePolls(from: data, for: parliamentId) {
+                try Task.checkCancellation()
                 let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
                 if sortedPolls.count > 0 {
                     let significantPolls = Array(sortedPolls.prefix(367).reversed())
@@ -98,6 +105,7 @@ class SurveyController: ProcessController {
                     if values.count > 0 {
                         measurements[.survey(.clowns)] = values
                     }
+                    try Task.checkCancellation()
                     let descriptors = try await parseParties(from: data, constraints: [])
                     for (selector, _) in descriptors {
                         values.removeAll(keepingCapacity: true)
@@ -112,8 +120,11 @@ class SurveyController: ProcessController {
                         }
                     }
 
+                    try Task.checkCancellation()
                     measurements = await self.interpolateMeasurements(measurements: await self.aggregateMeasurements(measurements: measurements))
+                    try Task.checkCancellation()
                     if let placemark = await GeocodingService.reverseGeocodeLocation(location: sensorLocation) {
+                        try Task.checkCancellation()
                         sensor = ProcessSensor(
                             name: sensorName, location: sensorLocation, placemark: placemark, customData: ["icon": "popcorn"],
                             measurements: measurements, timestamp: Date.now)
@@ -150,12 +161,17 @@ class SurveyController: ProcessController {
         var parliamentId = 0  // Bundestag
 
         // Fetch polls data once and reuse it
+        try Task.checkCancellation()
         guard let data = try await SurveyService.fetchPolls() else {
+            try Task.checkCancellation()
             return nil
         }
 
+        try Task.checkCancellation()
         if let constituency = try await GeocodingService.fetchConstituency(location: location) {
+            try Task.checkCancellation()
             if let parliaments = try await parseParliaments(from: data) {
+                try Task.checkCancellation()
                 for parliament in parliaments where parliament.name.contains(constituency) {
                     sensorName = constituency
                     sensorLocation = Self.parliamentCoordinates[constituency] ?? location
@@ -167,7 +183,9 @@ class SurveyController: ProcessController {
 
         // Reuse the data we already fetched
         do {
+            try Task.checkCancellation()
             if let polls = try await parsePolls(from: data, for: parliamentId) {
+                try Task.checkCancellation()
                 let sortedPolls = polls.sorted { $0.timestamp > $1.timestamp }
                 if sortedPolls.count > 0 {
                     let significantPolls = Array(sortedPolls.prefix(33).reversed())
@@ -195,6 +213,7 @@ class SurveyController: ProcessController {
                         measurements[.survey(.clowns)] = values
                     }
 
+                    try Task.checkCancellation()
                     let descriptors = try await parseParties(from: data, constraints: [])
                     for (selector, _) in descriptors {
                         values.removeAll(keepingCapacity: true)
@@ -209,8 +228,11 @@ class SurveyController: ProcessController {
                         }
                     }
 
+                    try Task.checkCancellation()
                     measurements = await self.interpolateMeasurements(measurements: await self.aggregateMeasurements(measurements: measurements))
+                    try Task.checkCancellation()
                     if let placemark = await GeocodingService.reverseGeocodeLocation(location: sensorLocation) {
+                        try Task.checkCancellation()
                         sensor = ProcessSensor(
                             name: sensorName, location: sensorLocation, placemark: placemark, customData: ["icon": "popcorn"],
                             measurements: measurements, timestamp: Date.now)
@@ -248,8 +270,11 @@ class SurveyController: ProcessController {
 
     private static func fetchConstituency(location: Location) async throws -> Constituency? {
         var nearestConstituency: Constituency? = nil
+        try Task.checkCancellation()
         if let data = try await SurveyService.fetchStates(for: location) {
+            try Task.checkCancellation()
             if let candidateConstituencies = try await Self.parseConstituencies(data: data) {
+                try Task.checkCancellation()
                 var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
                 for candidateConstituency in candidateConstituencies {
                     let candidateLocation = candidateConstituency.location

@@ -17,7 +17,9 @@ class CovidController: ProcessController {
 
     func refreshData(for location: Location) async throws -> [ProcessSensor] {
         var data: [ProcessSensor] = []
+        try Task.checkCancellation()
         if let district = try await self.fetchDistrict(for: location) {
+            try Task.checkCancellation()
             var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
 
             // Launch all fetches in parallel
@@ -27,7 +29,9 @@ class CovidController: ProcessController {
             async let recoveredData = self.fetchRecovered(for: district)
 
             // Await all results together
+            try Task.checkCancellation()
             let (incidence, cases, deaths, recovered) = try await (incidenceData, casesData, deathsData, recoveredData)
+            try Task.checkCancellation()
 
             if let incidence = incidence {
                 var measurement: [ProcessValue<Dimension>] = []
@@ -53,7 +57,9 @@ class CovidController: ProcessController {
                 measurement.append(contentsOf: self.forecastMeasurements(data: recovered, duration: self.forecastDuration))
                 measurements[.covid(.recovered)] = measurement.sorted(by: { $0.timestamp < $1.timestamp })
             }
+            try Task.checkCancellation()
             if let placemark = await GeocodingService.reverseGeocodeLocation(location: district.location) {
+                try Task.checkCancellation()
                 let sensor = ProcessSensor(
                     name: district.name, location: district.location, placemark: placemark, customData: ["name": "COVID-19", "icon": "facemask"], measurements: measurements, timestamp: Date.now)
                 data.append(sensor)
@@ -70,8 +76,11 @@ class CovidController: ProcessController {
 
     private func fetchDistrict(for location: Location) async throws -> District? {
         var nearestDistrict: District? = nil
+        try Task.checkCancellation()
         if let data = try await CovidService.fetchDistricts(for: location, radius: 30000) {
+            try Task.checkCancellation()
             if let candidateDistricts: [District] = try await Self.parseDistricts(data: data) {
+                try Task.checkCancellation()
                 var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
                 for candidateDistrict in candidateDistricts {
                     let candidateLocation = candidateDistrict.location
@@ -116,7 +125,9 @@ class CovidController: ProcessController {
 
     private func fetchIncidence(for district: District) async throws -> [ProcessValue<Dimension>]? {
         var incidence: [ProcessValue<Dimension>]? = nil
+        try Task.checkCancellation()
         if let data = try await CovidService.fetchIncidence(id: district.id, duration: self.measurementDuration) {
+            try Task.checkCancellation()
             if let measurements = try Self.parseData(data: data, district: district, tag: "weekIncidence", unit: UnitIncidence.casesPer100k) {
                 incidence = measurements
                 if let current = Self.nowCast(data: incidence, alpha: 0.33) {
@@ -129,7 +140,9 @@ class CovidController: ProcessController {
 
     private func fetchCases(for district: District) async throws -> [ProcessValue<Dimension>]? {
         var incidence: [ProcessValue<Dimension>]? = nil
+        try Task.checkCancellation()
         if let data = try await CovidService.fetchCases(id: district.id, duration: self.measurementDuration) {
+            try Task.checkCancellation()
             if let measurements = try Self.parseData(data: data, district: district, tag: "cases", unit: UnitPopulation.people) {
                 incidence = measurements
                 if let current = Self.nowCast(data: incidence, alpha: 0.33) {
@@ -142,7 +155,9 @@ class CovidController: ProcessController {
 
     private func fetchDeaths(for district: District) async throws -> [ProcessValue<Dimension>]? {
         var incidence: [ProcessValue<Dimension>]? = nil
+        try Task.checkCancellation()
         if let data = try await CovidService.fetchDeaths(id: district.id, duration: self.measurementDuration) {
+            try Task.checkCancellation()
             if let measurements = try Self.parseData(data: data, district: district, tag: "deaths", unit: UnitPopulation.people) {
                 incidence = measurements
                 if let current = Self.nowCast(data: incidence, alpha: 0.33) {
@@ -155,7 +170,9 @@ class CovidController: ProcessController {
 
     private func fetchRecovered(for district: District) async throws -> [ProcessValue<Dimension>]? {
         var incidence: [ProcessValue<Dimension>]? = nil
+        try Task.checkCancellation()
         if let data = try await CovidService.fetchRecovered(id: district.id, duration: self.measurementDuration) {
+            try Task.checkCancellation()
             if let measurements = try Self.parseData(data: data, district: district, tag: "recovered", unit: UnitPopulation.people) {
                 incidence = measurements
                 if let current = Self.nowCast(data: incidence, alpha: 0.33) {

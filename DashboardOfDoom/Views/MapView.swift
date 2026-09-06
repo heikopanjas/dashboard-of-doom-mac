@@ -110,7 +110,7 @@ struct MapView: View {
             else {
                 VStack {
                     #if os(macOS)
-                    CollisionMapView(position: self.viewModel.binding(for: \.region), annotations: self.annotations, pointsOfInterest: self.pointOfInterestPresenter.points)
+                    CollisionMapView(position: self.viewModel.binding(for: \.region), annotations: self.annotations, showsPointsOfInterest: self.pointOfInterestPresenter.isEnabled, pointsOfInterest: self.pointOfInterestPresenter.points)
                         .background(MapAppearanceView(colorScheme: self.colorScheme))
                     #else
                     Map(position: viewModel.binding(for: \.region), interactionModes: []) {

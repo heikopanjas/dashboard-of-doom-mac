@@ -7,6 +7,7 @@ struct MapAnnotationLabel: View {
     let selector: ProcessSelector
     let icon: String
     let faceplate: String
+    var backgroundOpacity: Double = 0.5
 
     var body: some View {
         HStack {
@@ -20,7 +21,7 @@ struct MapAnnotationLabel: View {
         .background(
             RoundedRectangle(cornerRadius: 13)
                 .fill(Color.faceplate(selector: self.selector))
-                .opacity(0.5)
+                .opacity(self.backgroundOpacity)
         )
         .foregroundStyle(.black)
         .accessibilityElement(children: .combine)

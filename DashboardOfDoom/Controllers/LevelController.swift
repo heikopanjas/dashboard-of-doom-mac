@@ -22,16 +22,22 @@ class LevelController: ProcessController {
     func refreshData(for location: Location) async throws -> [ProcessSensor] {
         var data: [ProcessSensor] = []
 
+        try Task.checkCancellation()
         if let nearestStation = try await fetchNearestStation(location: location) {
+            try Task.checkCancellation()
             trace.debug("Nearest station: \(nearestStation)")
             var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
+            try Task.checkCancellation()
             if let level = try await fetchMeasurements(station: nearestStation) {
+                try Task.checkCancellation()
                 var measurement: [ProcessValue<Dimension>] = []
                 measurement.append(contentsOf: self.interpolateMeasurements(measurements: level, distance: self.measurementDistance))
                 measurement.append(contentsOf: self.forecastMeasurements(data: measurement, duration: self.forecastDuration))
                 measurements[.water(.level)] = measurement.sorted(by: { $0.timestamp < $1.timestamp })
             }
+            try Task.checkCancellation()
             if let placemark = await GeocodingService.reverseGeocodeLocation(location: nearestStation.location) {
+                try Task.checkCancellation()
                 let sensor = ProcessSensor(
                     name: nearestStation.name, location: nearestStation.location, placemark: placemark, customData: ["icon": "water.waves"],
                     measurements: measurements,
@@ -50,7 +56,9 @@ class LevelController: ProcessController {
 
     func fetchNearestStation(location: Location) async throws -> Station? {
         var nearestStation: Station? = nil
+        try Task.checkCancellation()
         if let data = try await LevelService.fetchStations(networkManager: self.networkManager) {
+            try Task.checkCancellation()
             if let stations = try Self.parseStations(from: data) {
                 if self.nearestSensor() == true {
                     if let station = Self.nearestStation(stations: stations, location: location) {
@@ -59,7 +67,9 @@ class LevelController: ProcessController {
                     }
                 }
                 else {
+                    try Task.checkCancellation()
                     if let waterways = try await fetchNearestWaterways(for: location) {
+                        try Task.checkCancellation()
                         if let nearestWaterway = Self.nearestWaterway(waterways: waterways, location: location) {
                             trace.debug("Nearest waterway: \(nearestWaterway)")
                             if let synchronizedStations = Self.synchronize(stations, with: nearestWaterway) {
@@ -137,7 +147,9 @@ class LevelController: ProcessController {
 
     private func fetchNearestWaterways(for location: Location) async throws -> [Waterway]? {
         var waterways: [Waterway]? = nil
+        try Task.checkCancellation()
         if let data = try await LevelService.fetchWaterways(for: location, radius: 10000, networkManager: self.networkManager) {
+            try Task.checkCancellation()
             waterways = try Self.parseWaterways(data: data)
         }
         return waterways
@@ -197,7 +209,9 @@ class LevelController: ProcessController {
 
     private func fetchMeasurements(station: Station) async throws -> [ProcessValue<Dimension>]? {
         var measurements: [ProcessValue<Dimension>]? = nil
+        try Task.checkCancellation()
         if let data = try await LevelService.fetchMeasurements(for: station.id, networkManager: self.networkManager) {
+            try Task.checkCancellation()
             measurements = try Self.parseLevels(data: data)
         }
         return measurements

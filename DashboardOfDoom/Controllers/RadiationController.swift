@@ -15,16 +15,22 @@ class RadiationController: ProcessController {
 
     func refreshData(for location: Location) async throws -> [ProcessSensor] {
         var data: [ProcessSensor] = []
+        try Task.checkCancellation()
         let nearestStations = try await Self.fetchNearestStations(location: location)
+        try Task.checkCancellation()
         for nearestStation in nearestStations {
             var measurements: [ProcessSelector: [ProcessValue<Dimension>]] = [:]
+            try Task.checkCancellation()
             if let radiation = try await Self.fetchMeasurements(station: nearestStation) {
+                try Task.checkCancellation()
                 var measurement: [ProcessValue<Dimension>] = []
                 measurement.append(contentsOf: self.interpolateMeasurements(measurements: radiation, distance: self.measurementDistance))
                 measurement.append(contentsOf: self.forecastMeasurements(data: measurement, duration: self.forecastDuration))
                 measurements[.radiation(.total)] = measurement.sorted(by: { $0.timestamp < $1.timestamp })
             }
+            try Task.checkCancellation()
             if let placemark = await GeocodingService.reverseGeocodeLocation(location: nearestStation.location) {
+                try Task.checkCancellation()
                 let sensor = ProcessSensor(
                     name: nearestStation.name, location: nearestStation.location, placemark: placemark, customData: ["icon": "atom"],
                     measurements: measurements,
@@ -43,7 +49,9 @@ class RadiationController: ProcessController {
 
     private static func fetchNearestStations(location: Location) async throws -> [Station] {
         var nearestStations: [Station] = []
+        try Task.checkCancellation()
         if let data = try await RadiationService.fetchStations() {
+            try Task.checkCancellation()
             let stations = try await Self.parseStations(from: data)
             nearestStations = Self.nearestStations(stations: stations, location: location)
         }
@@ -80,7 +88,9 @@ class RadiationController: ProcessController {
 
     private static func fetchMeasurements(station: Station) async throws -> [ProcessValue<Dimension>]? {
         var radiation: [ProcessValue<Dimension>]? = nil
+        try Task.checkCancellation()
         if let data = try await RadiationService.fetchMeasurements(for: station.id) {
+            try Task.checkCancellation()
             radiation = try Self.parseRadiation(data: data)
         }
         return radiation

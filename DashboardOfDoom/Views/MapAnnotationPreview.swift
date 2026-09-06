@@ -7,6 +7,7 @@ import SwiftUI
 /// No live services, location tracking, timers, or preference writes in these fixtures.
 private struct MapAnnotationPreview: View {
     private let annotations: [MapAnnotationSnapshot]
+    private let showsPointsOfInterest: Bool
     private let places: [PointOfInterest]
     @State private var position: MapCameraPosition = .region(
         MKCoordinateRegion(
@@ -14,10 +15,11 @@ private struct MapAnnotationPreview: View {
     )
 
     var body: some View {
-        CollisionMapView(position: self.$position, annotations: self.annotations, pointsOfInterest: self.places)
+        CollisionMapView(position: self.$position, annotations: self.annotations, showsPointsOfInterest: self.showsPointsOfInterest, pointsOfInterest: self.places)
     }
 
-    init(coincident: Bool, separated: Bool = false, placeCount: Int = 0) {
+    init(coincident: Bool, separated: Bool = false, placeCount: Int = 0, showsPointsOfInterest: Bool = false) {
+        self.showsPointsOfInterest = showsPointsOfInterest
         self.places = (0 ..< placeCount).map { index -> PointOfInterest in
             let latitude = 52.49 + Double((index * 37) % 1000) * 0.00006
             let longitude = 13.345 + Double((index * 61) % 1000) * 0.00012
@@ -47,11 +49,20 @@ private struct MapAnnotationPreview: View {
 }
 
 #Preview("Two thousand places with environmental labels") {
-    MapAnnotationPreview(coincident: false, separated: true, placeCount: 2000).frame(width: 600, height: 400)
+    MapAnnotationPreview(coincident: false, separated: true, placeCount: 2000, showsPointsOfInterest: true).frame(width: 600, height: 400)
 }
 
 #Preview("Ten thousand places with environmental labels") {
-    MapAnnotationPreview(coincident: false, separated: true, placeCount: 10000).frame(width: 600, height: 400)
+    MapAnnotationPreview(coincident: false, separated: true, placeCount: 10000, showsPointsOfInterest: true).frame(width: 600, height: 400)
+}
+
+#Preview("Dense POIs, dark appearance") {
+    MapAnnotationPreview(coincident: false, separated: true, placeCount: 2000, showsPointsOfInterest: true)
+        .frame(width: 600, height: 400).preferredColorScheme(.dark)
+}
+
+#Preview("POIs enabled, loading or empty") {
+    MapAnnotationPreview(coincident: false, separated: true, showsPointsOfInterest: true).frame(width: 600, height: 400)
 }
 
 #Preview("Separated locations without connectors") {

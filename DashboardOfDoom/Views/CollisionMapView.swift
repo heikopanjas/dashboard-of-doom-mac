@@ -6,6 +6,7 @@ import SwiftUI
 struct CollisionMapView: View {
     @Binding var position: MapCameraPosition
     let annotations: [MapAnnotationSnapshot]
+    var showsPointsOfInterest = false
     var pointsOfInterest: [PointOfInterest] = []
     @State private var poiProjection = PointOfInterestProjection(symbols: [], projectedCount: 0)
 
@@ -68,7 +69,8 @@ struct CollisionMapView: View {
                     PointOfInterestOverlay(symbols: self.poiProjection.symbols, markers: self.layout.request?.items.map(\.marker) ?? [])
                         .equatable()
                     MapAnnotationOverlay(
-                        annotations: self.annotations, items: self.layout.request?.items ?? [], placements: self.layout.placements)
+                        annotations: self.annotations, items: self.layout.request?.items ?? [], placements: self.layout.placements,
+                        showsPointsOfInterest: self.showsPointsOfInterest)
                 }
                 .onMapCameraChange(frequency: .continuous) { _ in
                     self.update(self.request(proxy: proxy, size: geometry.size))

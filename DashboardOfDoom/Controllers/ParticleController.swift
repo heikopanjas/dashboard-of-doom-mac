@@ -23,19 +23,24 @@ class ParticleController: ProcessController {
 
         do {
             if let interval = Self.calculateMeasurementTimeInterval(span: self.measurementDuration) {
+                try Task.checkCancellation()
                 if let result = await Self.fetchNearestStation(location: location, from: interval.from, to: interval.to) {
+                    try Task.checkCancellation()
                     if let placemark = await GeocodingService.reverseGeocodeLocation(location: result.station.location) {
+                        try Task.checkCancellation()
                         // Use cached measurements if available, otherwise fetch them
                         var measurements: [ProcessSelector: [ProcessValue<Dimension>]]?
                         if let cached = result.cachedMeasurements {
                             trace.debug("Using cached measurements for station: \(result.station.code)")
                             measurements = cached
                         } else {
+                            try Task.checkCancellation()
                             measurements = try await Self.fetchMeasurements(station: result.station, from: interval.from, to: interval.to)
                         }
 
                         if var measurements = measurements {
                             if let forecastInterval = Self.calculateForecastTimeInterval(span: self.forecastDuration) {
+                                try Task.checkCancellation()
                                 if let forecast = try await Self.fetchForecasts(
                                     station: result.station, from: forecastInterval.from, to: forecastInterval.to)
                                 {
@@ -45,6 +50,7 @@ class ParticleController: ProcessController {
                                         measurements[selector] = actual
                                     }
                                 }
+                                try Task.checkCancellation()
                                 let sensor = ProcessSensor(
                                     name: result.station.name, location: result.station.location, placemark: placemark,
                                     customData: ["icon": "aqi.medium"],
@@ -57,7 +63,9 @@ class ParticleController: ProcessController {
                 }
             }
         }
+        catch is CancellationError { throw CancellationError() }
         catch {
+            guard Task.isCancelled == false else { throw CancellationError() }
             trace.error("Error refreshing particulate matter: %@", error.localizedDescription)
         }
         return data
@@ -130,10 +138,13 @@ class ParticleController: ProcessController {
     }
 
     private static func fetchNearestStation(location: Location, from: Date, to: Date) async -> StationResult? {
+        guard Task.isCancelled == false else { return nil }
         var result: StationResult? = nil
         do {
             if let data = try await ParticleService.fetchStations(from: from, to: to) {
+                guard Task.isCancelled == false else { return nil }
                 let unsortedStations = try await Self.parseStations(from: data)
+                guard Task.isCancelled == false else { return nil }
                 if unsortedStations.count > 0 {
                     let sortedStations = unsortedStations.sorted {
                         haversineDistance(location_0: location, location_1: $0.location)
@@ -150,6 +161,7 @@ class ParticleController: ProcessController {
                             result = stationResult
                         }
                         else if let station = sortedStations.first {
+                            guard Task.isCancelled == false else { return nil }
                             result = StationResult(station: station, cachedMeasurements: nil)
                         }
                     }
@@ -157,6 +169,7 @@ class ParticleController: ProcessController {
             }
         }
         catch {
+            guard Task.isCancelled == false else { return nil }
             trace.error("Error fetching stations: %@", error.localizedDescription)
         }
         return result
@@ -186,7 +199,9 @@ class ParticleController: ProcessController {
     private static func selectStation(stations: [Station], from: Date, to: Date) async -> StationResult? {
         // Fetch measurements for the full range and check if the station has relevant data
         for station in stations {
+            guard Task.isCancelled == false else { return nil }
             if let measurements = try? await fetchMeasurements(station: station, from: from, to: to) {
+                guard Task.isCancelled == false else { return nil }
                 if stationHasRelevantMeasurements(measurements) == true {
                     trace.debug("Selected station \(station.code) with cached measurements")
                     return StationResult(station: station, cachedMeasurements: measurements)
@@ -206,7 +221,9 @@ class ParticleController: ProcessController {
     private static func fetchMeasurements(station: Station, from: Date, to: Date) async throws -> [ProcessSelector: [ProcessValue<Dimension>]]? {
         var measurements: [ProcessSelector: [ProcessValue<Dimension>]]? = nil
         do {
+            try Task.checkCancellation()
             if let data = try await ParticleService.fetchMeasurements(code: station.code, from: from, to: to) {
+                try Task.checkCancellation()
                 if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
                     if let features = json["data"] as? [String: Any] {
                         if let featureId = features.keys.first {
@@ -260,7 +277,9 @@ class ParticleController: ProcessController {
 
     private static func fetchForecasts(station: Station, from: Date, to: Date) async throws -> [ProcessSelector: [ProcessValue<Dimension>]]? {
         var measurements: [ProcessSelector: [ProcessValue<Dimension>]]? = nil
+        try Task.checkCancellation()
         if let data = try await ParticleService.fetchForecasts(code: station.code, from: from, to: to) {
+            try Task.checkCancellation()
             if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
                 if let features = json["data"] as? [String: Any] {
                     if let featureId = features.keys.first {
