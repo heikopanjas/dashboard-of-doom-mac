@@ -1,3 +1,4 @@
+import Compression
 import DoomKitNetwork
 import DoomKitServices
 import DoomKitTools
@@ -67,35 +68,26 @@ class LevelController: ProcessController {
                     }
                 }
                 else {
-                    try Task.checkCancellation()
-                    if let waterways = try await fetchNearestWaterways(for: location) {
-                        try Task.checkCancellation()
-                        if let nearestWaterway = Self.nearestWaterway(waterways: waterways, location: location) {
-                            trace.debug("Nearest waterway: \(nearestWaterway)")
-                            if let synchronizedStations = Self.synchronize(stations, with: nearestWaterway) {
-                                if let synchronizedStation = Self.nearestStation(stations: synchronizedStations, location: location) {
-                                    nearestStation = Station(
-                                        id: synchronizedStation.id, name: nearestWaterway.name, location: synchronizedStation.location)
-                                }
-                            }
-                            else {
-                                trace.warning("No synchronized stations found, falling back to nearest station")
-                                if let station = Self.nearestStation(stations: stations, location: location) {
-                                    nearestStation = Station(
-                                        id: station.id, name: self.capitalizeGerman(text: station.name), location: station.location)
-                                }
-                            }
-                            if let nearestStation = nearestStation {
-                                trace.debug("Nearest station: \(nearestStation)")
-                            }
-                            else {
-                                trace.error("No station found")
-                            }
+                    if let waterwayName = Self.nearestNaturalWaterwayName(location: location, radius: Self.waterwaySearchRadius) {
+                        trace.debug("Nearest natural waterway: \(waterwayName)")
+                        let matchingStations = stations.filter { $0.name.caseInsensitiveCompare(waterwayName) == .orderedSame }
+                        if let matchedStation = Self.nearestStation(stations: matchingStations, location: location) {
+                            nearestStation = Station(
+                                id: matchedStation.id, name: self.capitalizeGerman(text: waterwayName), location: matchedStation.location)
+                        }
+                        else {
+                            trace.warning("No stations found for waterway \(waterwayName), falling back to nearest station")
+                        }
+                        if let nearestStation = nearestStation {
+                            trace.debug("Nearest station: \(nearestStation)")
+                        }
+                        else {
+                            trace.error("No station found")
                         }
                     }
                 }
-                // Waterway discovery is optional context. The official gauge data
-                // remains usable when Overpass is unavailable or returns no match.
+                // Waterway matching is optional context. The official gauge data
+                // remains usable when no natural waterway is found nearby.
                 if nearestStation == nil, let station = Self.nearestStation(stations: stations, location: location) {
                     try Task.checkCancellation()
                     nearestStation = Station(id: station.id, name: self.capitalizeGerman(text: station.name), location: station.location)
@@ -140,71 +132,66 @@ class LevelController: ProcessController {
         return nearestStation
     }
 
-    struct Waterway {
-        let name: String
-        let location: Location
+    // The federal waterway network (VerkNet-BWaStr, Bundesamt für Kartographie und
+    // Geodäsie's sibling agency GDWS) has no natural/artificial classification of its
+    // own, but PEGELONLINE's own waterway names already separate named canals from the
+    // natural river they branch off (e.g. "LANDWEHRKANAL" is its own name, distinct from
+    // "SPREE-ODER-WASSERSTRASSE", even though it's officially a sub-segment of the same
+    // Bundeswasserstraße). `BundeswasserstrassenNetz.json.zlib` is a one-time-curated
+    // crosswalk from each of PEGELONLINE's waterway names to its real polyline geometry
+    // and a natural/artificial flag, built from that dataset — see AGENTS.md.
+    static let waterwaySearchRadius = 10000.0
+
+    private struct RawWaterwayEntry: Decodable {
+        let isNatural: Bool
+        let lines: [[[Double]]]
     }
 
-    private func fetchNearestWaterways(for location: Location) async throws -> [Waterway]? {
-        var waterways: [Waterway]? = nil
-        try Task.checkCancellation()
-        if let data = try await LevelService.fetchWaterways(for: location, radius: 10000, networkManager: self.networkManager) {
-            try Task.checkCancellation()
-            waterways = try Self.parseWaterways(data: data)
-        }
-        return waterways
+    private struct Waterway {
+        let isNatural: Bool
+        let lines: [[Location]]
     }
 
-    static private func synchronize(_ stations: [Station], with waterway: Waterway) -> [Station]? {
-        var synchronizedStations: [Station]? = nil
-        var foundStations: [Station] = []
-        for station in stations where station.name.lowercased().contains(waterway.name.lowercased()) {
-            let maxDistance = Measurement(value: 16.67, unit: UnitLength.kilometers)
-            if haversineDistance(location_0: station.location, location_1: waterway.location) < maxDistance {
-                foundStations.append(station)
-            }
+    private static let waterways: [String: Waterway] = {
+        guard let url = Bundle.main.url(forResource: "BundeswasserstrassenNetz.json", withExtension: "zlib") else {
+            trace.error("Bundled federal waterway network resource not found")
+            return [:]
         }
-        if foundStations.count > 0 {
-            synchronizedStations = foundStations
-        }
-        return synchronizedStations
-    }
-
-    static private func parseWaterways(data: Data) throws -> [Waterway]? {
-        var waterways: [Waterway]? = nil
-        if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
-            if let elements = json["elements"] as? [[String: Any]] {
-                var foundWaterways: [Waterway] = []
-                for element in elements {
-                    if let center = element["center"] as? [String: Any] {
-                        if let latitude = center["lat"] as? Double, let longitude = center["lon"] as? Double {
-                            if let tags = element["tags"] as? [String: Any] {
-                                if let name = tags["name"] as? String {
-                                    foundWaterways.append(Waterway(name: name, location: Location(latitude: latitude, longitude: longitude)))
-                                }
-                            }
-                        }
+        do {
+            let compressed = try Data(contentsOf: url)
+            let data = try (compressed as NSData).decompressed(using: .zlib) as Data
+            let raw = try JSONDecoder().decode([String: RawWaterwayEntry].self, from: data)
+            return raw.mapValues { entry in
+                let lines = entry.lines.map { line in
+                    line.compactMap { point -> Location? in
+                        guard point.count >= 2 else { return nil }
+                        return Location(latitude: point[0], longitude: point[1])
                     }
                 }
-                if foundWaterways.count > 0 {
-                    waterways = foundWaterways
+                return Waterway(isNatural: entry.isNatural, lines: lines)
+            }
+        }
+        catch {
+            trace.error("Failed to load bundled federal waterway network: \(error.localizedDescription)")
+            return [:]
+        }
+    }()
+
+    private static func nearestNaturalWaterwayName(location: Location, radius: Double) -> String? {
+        var nearestName: String? = nil
+        var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
+        for (name, waterway) in Self.waterways where waterway.isNatural {
+            for line in waterway.lines {
+                guard let nearest = PolygonProximityCalculator.nearestPointOnPolyline(from: location, to: line) else { continue }
+                let distance = Measurement(value: nearest.distance, unit: UnitLength.meters)
+                if distance < minDistance {
+                    minDistance = distance
+                    nearestName = name
                 }
             }
         }
-        return waterways
-    }
-
-    private static func nearestWaterway(waterways: [Waterway], location: Location) -> Waterway? {
-        var nearestWaterway: Waterway? = nil
-        var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
-        for waterway in waterways {
-            let distance = haversineDistance(location_0: waterway.location, location_1: location)
-            if distance < minDistance {
-                minDistance = distance
-                nearestWaterway = waterway
-            }
-        }
-        return nearestWaterway
+        guard let nearestName, minDistance.converted(to: .meters).value <= radius else { return nil }
+        return nearestName
     }
 
     private func fetchMeasurements(station: Station) async throws -> [ProcessValue<Dimension>]? {

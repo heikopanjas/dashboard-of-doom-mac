@@ -296,6 +296,10 @@ struct SettingsView: View {
                 .font(.caption2)
                 .foregroundColor(.secondary)
 
+            Text("Federal waterway network: © WSV (GDWS), VerkNet-BWaStr")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+
             Text("© 2025 Heiko Panjas. All rights reserved.")
                 .font(.caption2)
                 .foregroundColor(.secondary)

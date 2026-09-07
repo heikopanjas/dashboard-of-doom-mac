@@ -41,6 +41,43 @@ public class PolygonProximityCalculator {
         return (point: nearestPoint, distance: minDistance)
     }
 
+    /// Find the nearest point on an open polyline (e.g. a river or canal) from a given location.
+    /// Unlike `nearestPointOnPolygon`, this does not wrap the last vertex back to the first —
+    /// a waterway is a line, not a closed ring.
+    /// - Parameters:
+    ///   - location: The reference point
+    ///   - polyline: Array of Location objects representing the polyline vertices, in order
+    /// - Returns: The nearest Location on the polyline and the distance in meters
+    public static func nearestPointOnPolyline(
+        from location: Location,
+        to polyline: [Location]
+    ) -> (point: Location, distance: Double)? {
+        guard polyline.count >= 2 else { return nil }
+
+        var nearestPoint = polyline[0]
+        var minDistance = Double.greatestFiniteMagnitude
+
+        for i in 0 ..< (polyline.count - 1) {
+            let startVertex = polyline[i]
+            let endVertex = polyline[i + 1]
+
+            let closestPointOnEdge = Self.nearestPointOnLineSegment(
+                point: location,
+                lineStart: startVertex,
+                lineEnd: endVertex
+            )
+
+            let distance = location.distance(to: closestPointOnEdge)
+
+            if distance < minDistance {
+                minDistance = distance
+                nearestPoint = closestPointOnEdge
+            }
+        }
+
+        return (point: nearestPoint, distance: minDistance)
+    }
+
     /// Find the nearest point on a line segment from a given point
     /// - Parameters:
     ///   - point: The reference point
