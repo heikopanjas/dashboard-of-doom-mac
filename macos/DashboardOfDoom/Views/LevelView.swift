@@ -39,13 +39,16 @@ struct LevelView: View {
                 .font(.footnote)
                 #endif
 
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                    ForEach(ProcessSelector.Water.allCases, id: \.self) { selector in
-                        if self.presenter.isAvailable(selector: .water(selector)) {
+                let selectors = ProcessSelector.Water.allCases.filter {
+                    self.presenter.isAvailable(selector: .water($0))
+                }
+
+                ScrollView {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                        ForEach(selectors, id: \.self) { selector in
                             VStack {
                                 LevelChartView(selector: .water(selector))
                             }
-
                             .frame(height: 167)
                         }
                     }

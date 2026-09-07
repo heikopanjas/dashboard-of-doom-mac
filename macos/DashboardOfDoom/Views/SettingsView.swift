@@ -1,4 +1,5 @@
 import DoomKitProcess
+import KeyboardShortcuts
 import LaunchAtLogin
 import SwiftUI
 
@@ -30,33 +31,13 @@ enum SettingsTab: String, CaseIterable {
     }
 }
 
-// MARK: - Toolbar Button
+// MARK: - Settings Selection
 
-struct SettingsToolbarButton: View {
-    let tab: SettingsTab
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 2) {
-                Image(systemName: tab.icon)
-                    .font(.system(size: 20))
-                    .frame(height: 24)
-                Text(tab.rawValue)
-                    .font(.system(size: 10))
-            }
-            .frame(width: 64, height: 46)
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(isSelected ? Color.primary.opacity(0.1) : Color.clear)
-            )
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .focusable(false)
-        .foregroundColor(.primary)
-    }
+/// Externally drivable tab selection. The settings panel is cached, so opening it
+/// a second time has to switch the tab of a view that already exists.
+@MainActor @Observable
+final class SettingsSelection {
+    var tab: SettingsTab = .general
 }
 
 // MARK: - Refresh Rate Picker
@@ -85,13 +66,13 @@ struct RefreshRatePicker: View {
 // MARK: - Settings View
 
 struct SettingsView: View {
-    @State private var selectedTab: SettingsTab = .general
+    let selection: SettingsSelection
 
     // Presenters for triggering refreshes when settings change
-    var levelPresenter: LevelPresenter?
-    var particlePresenter: ParticlePresenter?
-    var surveyPresenter: SurveyPresenter?
-    var pointOfInterestPresenter: PointOfInterestPresenter?
+    let levelPresenter: LevelPresenter
+    let particlePresenter: ParticlePresenter
+    let surveyPresenter: SurveyPresenter
+    let pointOfInterestPresenter: PointOfInterestPresenter
 
     // Enable toggles
     @AppStorage("showWeather") private var showWeather: Bool = true
@@ -124,10 +105,11 @@ struct SettingsView: View {
             // Toolbar
             HStack(spacing: 2) {
                 ForEach(SettingsTab.allCases, id: \.self) { tab in
-                    SettingsToolbarButton(
-                        tab: tab,
-                        isSelected: selectedTab == tab,
-                        action: { selectedTab = tab }
+                    ToolbarTabButton(
+                        label: tab.rawValue,
+                        icon: tab.icon,
+                        isSelected: self.selection.tab == tab,
+                        action: { self.selection.tab = tab }
                     )
                 }
             }
@@ -139,7 +121,7 @@ struct SettingsView: View {
 
             // Content
             Group {
-                switch selectedTab {
+                switch self.selection.tab {
                 case .general:
                     generalContent
                 case .weather:
@@ -155,9 +137,7 @@ struct SettingsView: View {
                 case .polls:
                     pollsContent
                 case .places:
-                    if let presenter = self.pointOfInterestPresenter {
-                        PointOfInterestSettingsView(presenter: presenter)
-                    }
+                    PointOfInterestSettingsView(presenter: self.pointOfInterestPresenter)
                 case .about:
                     aboutContent
                 }
@@ -167,19 +147,13 @@ struct SettingsView: View {
         .frame(width: 660, height: 400)
         .background(Color(light: .white, dark: Color(hex: "#000000")))
         .onChange(of: nearestLevelSensor) { _, _ in
-            if let presenter = levelPresenter {
-                AppProcess.shared.refreshSubscription(subscriber: presenter)
-            }
+            AppProcess.shared.refreshSubscription(subscriber: self.levelPresenter)
         }
         .onChange(of: nearestParticleSensor) { _, _ in
-            if let presenter = particlePresenter {
-                AppProcess.shared.refreshSubscription(subscriber: presenter)
-            }
+            AppProcess.shared.refreshSubscription(subscriber: self.particlePresenter)
         }
         .onChange(of: electionPollScope) { _, _ in
-            if let presenter = surveyPresenter {
-                AppProcess.shared.refreshSubscription(subscriber: presenter)
-            }
+            AppProcess.shared.refreshSubscription(subscriber: self.surveyPresenter)
         }
     }
 
@@ -189,6 +163,9 @@ struct SettingsView: View {
         Form {
             Section("Application") {
                 LaunchAtLogin.Toggle("Launch at Login")
+            }
+            Section("Keyboard Shortcut") {
+                KeyboardShortcuts.Recorder("Toggle Dashboard:", name: .toggleDashboard)
             }
             Section("Appearance") {
                 Toggle("Always Use Dark Theme", isOn: $alwaysUseDarkTheme)

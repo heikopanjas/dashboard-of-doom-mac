@@ -39,9 +39,13 @@ struct ParticleView: View {
                 .font(.footnote)
                 #endif
 
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                    ForEach(ProcessSelector.Particle.allCases, id: \.self) { selector in
-                        if self.presenter.isAvailable(selector: .particle(selector)) {
+                let selectors = ProcessSelector.Particle.allCases.filter {
+                    self.presenter.isAvailable(selector: .particle($0))
+                }
+
+                ScrollView {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                        ForEach(selectors, id: \.self) { selector in
                             VStack {
                                 ParticleChartView(selector: .particle(selector))
                             }

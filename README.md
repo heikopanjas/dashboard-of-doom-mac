@@ -150,7 +150,8 @@ iOS uses the same collision solver and POI rendering, with its existing 101 × 6
 
 - **Lightweight Menu Bar Extra**: Quick access to current conditions from system tray
 - **Live Temperature Display**: Real-time temperature in menu bar status item
-- **Streamlined Header Bar**: Direct action buttons for settings and quit (no menu needed)
+- **Status Item Menu**: Open Dashboard, Settings, About, and Quit from a single click
+- **Global Hotkey**: User-configurable system-wide shortcut (default Control-Command-D) toggles the dashboard window
 - **Adaptive Branding**: Text title in light mode, logo image in dark mode
 - **Settings Window**: Comprehensive configuration for preferences and data sources
 - **Dark Mode Optimized**: Native macOS appearance with pure black backgrounds

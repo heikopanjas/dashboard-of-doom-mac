@@ -39,10 +39,13 @@ struct ForecastView: View {
                 .font(.footnote)
 #endif
 
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                    ForEach(ProcessSelector.Forecast.allCases, id: \.self) { selector in
-                        let threshold = self.computeThreshold(selector: selector)
-                        if self.presenter.isAvailable(selector: .forecast(selector), treshold: threshold) {
+                let selectors = ProcessSelector.Forecast.allCases.filter {
+                    self.presenter.isAvailable(selector: .forecast($0), treshold: self.computeThreshold(selector: $0))
+                }
+
+                ScrollView {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                        ForEach(selectors, id: \.self) { selector in
                             VStack {
                                 ForecastChartView(selector: .forecast(selector))
                             }

@@ -39,9 +39,13 @@ struct RadiationView: View {
                 .font(.footnote)
                 #endif
 
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                    ForEach(ProcessSelector.Radiation.allCases, id: \.self) { selector in
-                        if self.presenter.isAvailable(selector: .radiation(selector)) {
+                let selectors = ProcessSelector.Radiation.allCases.filter {
+                    self.presenter.isAvailable(selector: .radiation($0))
+                }
+
+                ScrollView {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                        ForEach(selectors, id: \.self) { selector in
                             VStack {
                                 RadiationChartView(selector: .radiation(selector))
                             }

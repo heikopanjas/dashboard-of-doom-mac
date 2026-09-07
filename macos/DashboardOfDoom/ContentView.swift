@@ -1,178 +1,71 @@
 import SwiftUI
 
-struct GrowingButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-    }
-}
+enum DashboardTab: String, CaseIterable {
+    case home = "Home"
+    case weather = "Weather"
+    case covid = "COVID-19"
+    case level = "Level"
+    case radiation = "Radiation"
+    case particles = "Particles"
+    case polls = "Polls"
 
-struct MapSizeModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        #if os(iOS)
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            content
-                .frame(height: 667)
+    var icon: String {
+        switch self {
+        case .home: return "house"
+        case .weather: return "cloud.sun"
+        case .covid: return "facemask"
+        case .level: return "water.waves"
+        case .radiation: return "atom"
+        case .particles: return "aqi.medium"
+        case .polls: return "chart.bar"
         }
-        else {
-            content
-                .frame(height: 367)
-        }
-        #else
-        content
-            .frame(height: 600)
-        #endif
-    }
-}
-
-struct ContentPanelStyle: DisclosureGroupStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        VStack(alignment: .leading) {
-            Button {
-                configuration.isExpanded.toggle()
-            } label: {
-                HStack {
-                    configuration.label
-                    Spacer()
-                    Image(systemName: configuration.isExpanded ? "arrowtriangle.down" : "arrowtriangle.forward")
-                        .fontWeight(.light)
-                }
-                .padding(.vertical, 8)
-                .padding(.trailing)
-                .frame(height: 17)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-
-            if configuration.isExpanded {
-                configuration.content
-                    .padding(.leading)
-            }
-        }
-        .focusable(false)
-    }
-}
-
-struct ContentPanelView<Content: View>: View {
-    let label: String
-    let icon: String
-    @State private var isExpanded: Bool = false
-    @ViewBuilder var content: () -> Content
-
-    var body: some View {
-        DisclosureGroup(
-            isExpanded: $isExpanded,
-            content: {
-                content()
-            },
-            label: {
-                HStack {
-                    Image(systemName: self.icon)
-                        .imageScale(.large)
-                        .frame(width: 23)
-                    Text(self.label)
-                }
-                .padding()
-            }
-        )
-        .disclosureGroupStyle(ContentPanelStyle())
     }
 }
 
 struct ContentView: View {
-    @Environment(\.colorScheme) var colorScheme
-    @Environment(WeatherPresenter.self) private var viewModel
-    @Environment(AppDelegate.self) private var appDelegate
+    @State private var selection: DashboardTab = .home
 
     var body: some View {
-        VStack {
-            HStack {
-                if colorScheme == .light {
-                    Text("Dashboard of Doom")
-                        .font(.headline)
-                        .padding(.top, 10)
+        VStack(spacing: 0) {
+            HStack(spacing: 2) {
+                ForEach(DashboardTab.allCases, id: \.self) { tab in
+                    ToolbarTabButton(
+                        label: tab.rawValue,
+                        icon: tab.icon,
+                        isSelected: self.selection == tab,
+                        action: { self.selection = tab }
+                    )
                 }
-                else {
-                    Image("dashboard-of-doom-logo")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 200, height: 34)
-                        .padding(.top, 10)
-                }
-                Spacer()
-                HStack(spacing: 12) {
-                    Button {
-                        appDelegate.showSettings()
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                            .imageScale(.large)
-                    }
-                    .buttonStyle(GrowingButtonStyle())
-                    .focusable(false)
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .padding(.bottom, 6)
+            .background(Color(light: .white, dark: Color(hex: "#000000")))
 
-                    Button {
-                        NSApplication.shared.terminate(nil)
-                    } label: {
-                        Image(systemName: "togglepower")
-                            .imageScale(.large)
-                    }
-                    .buttonStyle(GrowingButtonStyle())
-                    .focusable(false)
+            Divider()
+
+            Group {
+                switch self.selection {
+                case .home:
+                    MapView().padding()
+                case .weather:
+                    ForecastView().padding()
+                case .covid:
+                    CovidView().padding()
+                case .level:
+                    LevelView().padding()
+                case .radiation:
+                    RadiationView().padding()
+                case .particles:
+                    ParticleView().padding()
+                case .polls:
+                    SurveyView().padding()
                 }
             }
-            .padding()
-            .frame(height: 34)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color(light: .white, dark: Color(hex: "#000000")))
-            ScrollView {
-                VStack {
-                    MapView()
-                        .padding(.horizontal)
-                        .cornerRadius(13)
-                        .padding(.vertical, 5)
-                        .modifier(MapSizeModifier())
-                    Divider()
-                    ContentPanelView(label: "Weather Forecast", icon: "cloud.sun") {
-                        ForecastView()
-                            .padding(5)
-                            .padding(.trailing, 10)
-                    }
-                    Divider()
-                    ContentPanelView(label: "COVID-19", icon: "facemask") {
-                        CovidView()
-                            .padding(5)
-                            .padding(.trailing, 10)
-                    }
-                    Divider()
-                    ContentPanelView(label: "Level", icon: "water.waves") {
-                        LevelView()
-                            .padding(5)
-                            .padding(.trailing, 10)
-                    }
-                    Divider()
-                    ContentPanelView(label: "Radiation", icon: "atom") {
-                        RadiationView()
-                            .padding(5)
-                            .padding(.trailing, 10)
-                    }
-                    Divider()
-                    ContentPanelView(label: "Particulate Matter", icon: "aqi.medium") {
-                        ParticleView()
-                            .padding(5)
-                            .padding(.trailing, 10)
-                    }
-                    Divider()
-                    ContentPanelView(label: "Election Polls", icon: "popcorn") {
-                        SurveyView()
-                            .padding(5)
-                            .padding(.trailing, 10)
-                    }
-                }
-                .background(Color(light: .white, dark: Color(hex: "#000000")))
-            }
-            .scrollContentBackground(.hidden)
-            .background(Color(light: .white, dark: Color(hex: "#000000")))
-            .padding(.bottom, 10)
         }
-        .frame(width: 800, height: 859)
+        .frame(minWidth: 700, minHeight: 500)
         .foregroundStyle(Color(light: .primary, dark: .cyan))
         .background(Color(light: .white, dark: Color(hex: "#000000")))
     }

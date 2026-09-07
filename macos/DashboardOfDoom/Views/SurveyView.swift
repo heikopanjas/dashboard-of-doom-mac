@@ -39,9 +39,13 @@ struct SurveyView: View {
                 .font(.footnote)
                 #endif
 
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                    ForEach(ProcessSelector.Survey.allCases, id: \.self) { selector in
-                        if self.presenter.isAvailable(selector: .survey(selector), treshold: 5.0) {
+                let selectors = ProcessSelector.Survey.allCases.filter {
+                    self.presenter.isAvailable(selector: .survey($0), treshold: 5.0)
+                }
+
+                ScrollView {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                        ForEach(selectors, id: \.self) { selector in
                             VStack {
                                 SurveyChartView(selector: .survey(selector))
                             }

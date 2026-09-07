@@ -4,6 +4,52 @@ This file is the append-only log of project decisions and notable changes, maint
 
 <!-- {changelog} -->
 
+### 2026-09-07 (macos v6.5.0, remove dashboard card chrome, 12:10)
+
+- remove the card treatment from all six category views and from the home map, and delete the now unused dashboard card modifier
+- keep only the outer padding on the home map, so it stays inset from the window edges with square corners and no border
+- rationale: the card look was not wanted; charts read better bare on the plain background
+- chart height stays at the fixed 167 points introduced in the previous entry; nothing here reintroduces height growth
+- validation: signed debug and release builds succeed, all 14 macos unit tests and nine build-script tests pass, ios build unaffected; a clean build confirms no stale references to the deleted modifier, and the bare charts and padded map were verified visually
+- no version bump: continues the current macos 6.5.0 cycle
+
+### 2026-09-07 (macos v6.5.0, dashboard chart cards, 12:00)
+
+- present each chart as a card with a faint fill, hairline border, and the app's existing corner radius of 13, via a new shared `dashboardCard` view modifier
+- restore the fixed 167 point chart height and remove the geometryreader that had made charts grow with the window
+- rationale: growing charts were not wanted; a card layout reads better than bare charts on a flat background
+- apply the same outer padding to the home map as the category tabs, and give it the same card treatment with no inner padding so it fills its card edge to edge; this also restores the rounded map look the pre-tab layout had
+- use concrete black and white opacities rather than the semantic primary color inside the light and dark color initializer, which resolves through a dynamic nscolor provider
+- validation: signed debug and release builds succeed, all 14 macos unit tests and nine build-script tests pass, ios build unaffected; manually verified cards on every category tab, the fixed chart height on a single-chart category, the padded and clipped map, and card contrast in both light and dark themes
+- two apparent regressions during verification were false alarms from accessibility scripting, not app defects: system events does not enumerate the settings nspanel and does not report frontmost correctly for this lsuielement app; the settings panel was confirmed visible through its own window frame
+- no version bump: continues the current macos 6.5.0 cycle
+
+### 2026-09-07 (macos v6.5.0, tabbed dashboard and resizable window, 11:40)
+
+- replace the dashboard header title, logo, and settings button with a toolbar strip of category buttons matching the settings window pattern: home, weather forecast, covid-19, level, radiation, particulate matter, polls
+- replace the stacked disclosure-group panels with a tab interface; selecting a toolbar button shows exactly one category full screen instead of scrolling through all of them at once
+- make the home tab the full-size map view, filling the whole content area instead of a fixed 600 point strip above the panels
+- make the dashboard window freely resizable with a 700x500 minimum and no maximum, instead of a fixed 800x859
+- make each category's chart grid grow to fill available height via a per-view geometryreader, falling back to a 167 point minimum with scrolling once a category has too many selectors to fit
+- extract the settings window's toolbar button into a shared `toolbartabbutton` view reused by both the settings panel and the new dashboard toolbar, removing the duplicate implementation
+- truncate the full election party name on macos to one line, matching the existing ios truncation, since narrow resized windows would otherwise wrap it across three or four lines and crush the chart
+- rationale: the previous single scrolling column did not scale to many data sources and could not be resized at all; the map was squeezed into a small preview instead of being a first class view
+- bug caught during manual verification: wrapping each category view in an additional outer scrollview at the content-view level collapsed its internal geometryreader to zero height, rendering charts invisibly; fixed by letting each category view scroll only internally
+- validation: signed debug and release builds succeed, all 14 macos unit tests and nine build-script tests pass, ios build unaffected since ios owns a separate content view and map sizing modifier; manually verified every toolbar tab, chart growth at a 3-selector category, chart scrolling at a 12-selector category, the 700x500 resize floor, unbounded growth to 1400x1000, and single-line party name truncation at the minimum width
+- no version bump: continues the current macos 6.5.0 cycle
+
+### 2026-09-07 (macos v6.5.0, menu bar menu and global hotkey, 11:10)
+
+- replace the menu bar click-to-open dashboard popover with a status item menu: open dashboard, settings, about, quit
+- promote the dashboard to a real swiftui window scene opened and focused via appdelegate, since the menu no longer hosts it directly
+- add a user-configurable system-wide hotkey, default control-command-d, that toggles the dashboard window, using the sindresorhus keyboardshortcuts package
+- move all nine presenters from app-struct state into appdelegate as non-optional properties so settings and the dashboard window both see live presenters regardless of which scene renders first
+- add a shared settings-selection object so about opens the settings panel directly on its about tab while other entry points keep the last used tab
+- remove the header quit button from the dashboard now that quit lives in the menu; keep the settings ellipsis button
+- rationale: a single click-to-open popover left no room for settings, about, or a keyboard path to the app; the previous onAppear presenter handoff also broke silently once the dashboard stopped being the first rendered view
+- validation: signed debug and release builds succeed, all 14 macos unit tests and nine build-script tests pass, ios build unaffected; manually verified the menu, dashboard window open and close, about routing, the recorder, and the global hotkey opening, closing, and raising the window from another frontmost app
+- version bump: 6.4.3 to 6.5.0 (minor - new user-facing capability, no breaking change)
+
 ### 2026-09-07 (macos v6.4.3, archive paths, 01:37)
 
 - fix macos archive finalization by applying output roots through xcode build-location preferences; keep direct build-setting overrides for ordinary debug and release builds

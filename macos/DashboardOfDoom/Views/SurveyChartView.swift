@@ -86,6 +86,8 @@ struct SurveyChartView: View {
                         Text("\(self.fullLabels[selector] ?? String(format: "%d <Unknown>", selector.rawValue))")
                             .font(.callout)
                             .foregroundColor(.gray)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
                         #endif
                     }
                 }

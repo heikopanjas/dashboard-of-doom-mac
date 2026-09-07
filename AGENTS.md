@@ -1,6 +1,6 @@
 # Agent Instructions for Dashboard of Doom (macOS and iOS)
 
-*Last updated: September 7, 2026, 01:37 CEST (macOS archive paths)*
+*Last updated: September 7, 2026, 12:10 CEST (macOS dashboard chrome removal)*
 
 ## Project Overview
 
@@ -152,12 +152,17 @@ Controllers → Services → Transformers → Presenters → Views
 ## Platform-Specific Considerations
 
 ### macOS Menu Bar Application
-- Lightweight menu bar extra with current conditions
-- Settings window for configuration
+- Status item shows current temperature; clicking it opens a menu (Open Dashboard, Settings, About, Quit), not the dashboard itself
+- Dashboard is a real `Window` scene (`AppDelegate.dashboardWindowID`), opened/focused/closed via `AppDelegate.showDashboard()`/`hideDashboard()`/`toggleDashboard()`
+- User-configurable system-wide hotkey (default Cmd+Ctrl+D) toggles the dashboard window, built on the `KeyboardShortcuts` package; recorder lives in Settings > General
+- Settings window for configuration; "About..." opens it on the About tab via `AppDelegate.showSettings(tab:)` and `SettingsSelection`
 - Dark mode optimization
 - Native macOS appearance integration
-- System tray icon with real-time status updates
-- Popover interface for quick data access
+- App is `LSUIElement`; menu item key equivalents (Settings ⌘,, Quit ⌘Q) only fire while the status menu is open, the global hotkey is the only system-wide binding
+- Dashboard window is freely resizable (minimum 700x500, no maximum) via `ContentView`'s `.frame(minWidth:minHeight:)` and `.windowResizability(.contentMinSize)`
+- Content is tab-based (`DashboardTab`), not scrolling disclosure panels: a toolbar strip (`ToolbarTabButton`, shared with `SettingsView`) switches between Home (full-size map) and one category per data source
+- Charts are bare, fixed 167-point cells in a two-column `LazyVGrid` with no card or container chrome; do not add fills, borders, or rounded corners, and do not make chart height depend on window size
+- The Home map gets the same outer `.padding()` as the category tabs and nothing else
 
 ## Testing Guidelines
 

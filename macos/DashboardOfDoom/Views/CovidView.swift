@@ -39,9 +39,13 @@ struct CovidView: View {
                 .font(.footnote)
                 #endif
 
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                    ForEach(ProcessSelector.Covid.allCases, id: \.self) { selector in
-                        if self.presenter.isAvailable(selector: .covid(selector)) {
+                let selectors = ProcessSelector.Covid.allCases.filter {
+                    self.presenter.isAvailable(selector: .covid($0))
+                }
+
+                ScrollView {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                        ForEach(selectors, id: \.self) { selector in
                             VStack {
                                 CovidChartView(selector: .covid(selector))
                             }
