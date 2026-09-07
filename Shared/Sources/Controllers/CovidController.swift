@@ -203,12 +203,44 @@ class CovidController: ProcessController {
         }
     }
 
+    // Area-weighted centroid (shoelace formula per ring, combined across a
+    // MultiPolygon's rings by ring area), not a plain average of every boundary
+    // vertex. A vertex average is skewed toward wherever a boundary happens to be
+    // traced with more points (a winding riverbank, a jagged administrative edge),
+    // and can land far from a district's actual visual center as a result.
     private static func centroid(of polygons: [[Location]]) -> Location? {
-        let points = polygons.flatMap { $0 }
-        guard points.isEmpty == false else { return nil }
-        let latitude = points.map(\.latitude).reduce(0, +) / Double(points.count)
-        let longitude = points.map(\.longitude).reduce(0, +) / Double(points.count)
-        return Location(latitude: latitude, longitude: longitude)
+        var totalArea = 0.0
+        var weightedLongitude = 0.0
+        var weightedLatitude = 0.0
+        for ring in polygons where ring.count >= 3 {
+            var signedArea = 0.0
+            var longitudeSum = 0.0
+            var latitudeSum = 0.0
+            for i in 0 ..< ring.count {
+                let p0 = ring[i]
+                let p1 = ring[(i + 1) % ring.count]
+                let cross = p0.longitude * p1.latitude - p1.longitude * p0.latitude
+                signedArea += cross
+                longitudeSum += (p0.longitude + p1.longitude) * cross
+                latitudeSum += (p0.latitude + p1.latitude) * cross
+            }
+            signedArea /= 2
+            guard signedArea != 0 else { continue }
+            let ringArea = abs(signedArea)
+            totalArea += ringArea
+            weightedLongitude += (longitudeSum / (6 * signedArea)) * ringArea
+            weightedLatitude += (latitudeSum / (6 * signedArea)) * ringArea
+        }
+        guard totalArea > 0 else {
+            // Degenerate geometry (every ring under 3 points or zero area) — fall
+            // back to a plain vertex average rather than returning nil.
+            let points = polygons.flatMap { $0 }
+            guard points.isEmpty == false else { return nil }
+            let latitude = points.map(\.latitude).reduce(0, +) / Double(points.count)
+            let longitude = points.map(\.longitude).reduce(0, +) / Double(points.count)
+            return Location(latitude: latitude, longitude: longitude)
+        }
+        return Location(latitude: weightedLatitude / totalArea, longitude: weightedLongitude / totalArea)
     }
 
 

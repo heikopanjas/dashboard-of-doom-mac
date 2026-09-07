@@ -122,7 +122,7 @@ targets:
         CODE_SIGN_IDENTITY[sdk=macosx*]: Developer ID Application
         CODE_SIGN_STYLE: Manual
         COMBINE_HIDPI_IMAGES: 'YES'
-        CURRENT_PROJECT_VERSION: '151'
+        CURRENT_PROJECT_VERSION: '152'
         DEAD_CODE_STRIPPING: 'YES'
         DEVELOPMENT_ASSET_PATHS: ''
         DEVELOPMENT_TEAM: ''
@@ -142,7 +142,7 @@ targets:
         - "$(inherited)"
         - "@executable_path/../Frameworks"
         MACOSX_DEPLOYMENT_TARGET: '15.0'
-        MARKETING_VERSION: 6.5.3
+        MARKETING_VERSION: 6.5.4
         PRODUCT_BUNDLE_IDENTIFIER: com.panjas.dashboard-of-doom
         PRODUCT_NAME: Dashboard of Doom
         PROVISIONING_PROFILE_SPECIFIER: ''

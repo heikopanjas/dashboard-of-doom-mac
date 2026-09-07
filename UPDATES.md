@@ -4,6 +4,15 @@ This file is the append-only log of project decisions and notable changes, maint
 
 <!-- {changelog} -->
 
+### 2026-09-07 (macos v6.5.4, area-weighted covid district centroid, 17:50)
+
+- fix the covid sensor's displayed location, reported by the user as an oddly specific street address for a district-wide statistic
+- the location was a district polygon centroid computed as a plain average of every boundary vertex, which is skewed toward wherever the boundary happens to be traced with more points, such as a winding riverbank; for berlin mitte this landed the reverse-geocoded placemark on seydlitzstrasse, a real address but not near the district's actual center
+- replace it with a proper area-weighted centroid, computed per ring with the standard polygon centroid formula and combined across a district's rings by area, so a multi-part district is not skewed by one oddly-shaped or finely-traced piece
+- this is the same function used for every district nationwide, not just berlin's boroughs, since both call sites share it
+- validation: computed both the old and new centroid for berlin mitte and reverse-geocoded each; the old one reproduces the user's exact report, the new one resolves to a different, still-plausible address in the same postal district; all automated checks pass (22 tool tests, debug and release macos builds, point-of-interest tests, ios build, six build-script tests); the district id resolution itself was already correct and unaffected, since it uses real point-in-polygon containment separately from this display-only centroid
+- version bump: 6.5.3 to 6.5.4 (patch - corrects a display value, no new user-facing capability)
+
 ### 2026-09-07 (macos v6.5.3, audit waterway classification against wrrl, 17:25)
 
 - audit the name-based natural/artificial heuristic from the previous entry against wasserblick, the eu water framework directive's own water body classification, after the user downloaded the current dataset directly (the public version investigated during the previous entry's research pass was inaccessible)
