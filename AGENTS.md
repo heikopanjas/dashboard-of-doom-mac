@@ -1,6 +1,6 @@
 # Agent Instructions for Dashboard of Doom (macOS and iOS)
 
-*Last updated: September 7, 2026, 14:00 CEST (macOS combined Sensors tab)*
+*Last updated: September 7, 2026, 15:50 CEST (COVID district lookup via BKG WFS, Berlin Bezirk fix)*
 
 ## Project Overview
 
@@ -69,7 +69,7 @@ Controllers → Services → Transformers → Presenters → Views
 - **UBA (Umweltbundesamt)**: Air quality data (PM10, PM2.5, O3, NO2)
 - **Pegelonline**: Federal waterway and shipping administration
 - **NINA API**: National warning system for civil protection
-- **Corona-Zahlen.org**: COVID-19 statistics
+- **Corona-Zahlen.org**: COVID-19 statistics; district resolution uses BKG's VG250 WFS (`vg250:vg250_krs`), not Overpass/OSM
 - **OpenStreetMap**: Geographic data and points of interest via Overpass API
 - **DAWUM**: Political polling and survey data with categorical gradient visualization
 
@@ -298,7 +298,9 @@ Controllers → Services → Transformers → Presenters → Views
 - Keep concrete presenters, Berlin fallback configuration, settings, and the starting `AppProcess.shared` factory in the app; shared process models and coordinator lifecycle policy belong to DoomKitProcess
 - Preserve the unrelated theme notification observer
 
-- Overpass requests share one cancellation-aware transport queue in DoomKitNetwork. Keep COVID and waterway discovery ahead of background POIs; never rotate endpoints on HTTP 429. Availability fallback uses overpass.private.coffee, and missing waterway discovery falls back to the nearest official gauge.
+- Overpass requests share one cancellation-aware transport queue in DoomKitNetwork. Keep waterway discovery ahead of background POIs; never rotate endpoints on HTTP 429. Availability fallback uses overpass.private.coffee, and missing waterway discovery falls back to the nearest official gauge.
+- COVID district resolution queries BKG's VG250 WFS (`vg250:vg250_krs`) directly, not Overpass; it resolves the containing Kreis by real point-in-polygon containment (falling back to nearest polygon edge), reusing `isPointInPolygon`/`PolygonProximityCalculator` from `DoomKitProcess`/`DoomKitTools`. No fallback to Overpass if BKG is unreachable — same graceful no-data-this-cycle behavior as any other source failure.
+- Berlin is a special case: RKI/corona-zahlen.org reports COVID data per Bezirk (12 boroughs, ids 11001-11012), not city-wide, because Berlin's Bezirke are not independent Gemeinden and never appear in BKG's VG250 layers. When BKG resolves a location to Berlin's whole-city Kreis ("11000", not itself a valid RKI id), `CovidController` falls through to a bundled Bezirk boundary dataset (`Shared/Sources/Resources/BerlinBezirke.geojson`, CC-BY, Amt für Statistik Berlin-Brandenburg) and re-resolves by the same point-in-polygon logic. Verified this is the only such nationwide exception — Hamburg and every other city currently report as a single district like the rest of Germany.
 
 ### Git Conventions
 

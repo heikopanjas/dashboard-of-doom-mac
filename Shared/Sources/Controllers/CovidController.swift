@@ -72,54 +72,143 @@ class CovidController: ProcessController {
         let id: String
         let name: String
         let location: Location
+        let polygons: [[Location]]
+
+        static func == (lhs: District, rhs: District) -> Bool { lhs.id == rhs.id }
     }
 
+    // BKG's VG250 models Berlin as a single Kreis-level feature ("11000"), but the RKI/
+    // corona-zahlen.org API reports Berlin's COVID data per Bezirk (borough), not city-wide —
+    // Berlin's 12 Bezirke are not independent Gemeinden and so never appear as their own
+    // features in any BKG layer. This is the only such case nationwide (verified against the
+    // live RKI district list: 411 districts vs. ~401 official Kreise, with Hamburg and every
+    // other city-state or kreisfreie Stadt reporting as a single district like everywhere else).
+    private static let berlinWholeCityAGS = "11000"
+
     private func fetchDistrict(for location: Location) async throws -> District? {
-        var nearestDistrict: District? = nil
         try Task.checkCancellation()
-        if let data = try await CovidService.fetchDistricts(for: location, radius: 30000) {
-            try Task.checkCancellation()
-            if let candidateDistricts: [District] = try await Self.parseDistricts(data: data) {
-                try Task.checkCancellation()
-                var minDistance = Measurement(value: 1000.0, unit: UnitLength.kilometers)  // This is more than the distance from List to Oberstdorf (960km)
-                for candidateDistrict in candidateDistricts {
-                    let candidateLocation = candidateDistrict.location
-                    let distance = haversineDistance(location_0: candidateLocation, location_1: location).converted(to: .kilometers)
-                    if distance < minDistance {
-                        minDistance = distance
-                        nearestDistrict = candidateDistrict
-                    }
-                }
+        guard let data = try await CovidService.fetchDistricts(for: location, radius: 30000) else { return nil }
+        try Task.checkCancellation()
+        guard let candidates = try await Self.parseDistricts(data: data), candidates.isEmpty == false else { return nil }
+
+        let resolved: District?
+        if let contained = candidates.first(where: { district in
+            district.polygons.contains { isPointInPolygon(point: location, polygon: $0) }
+        }) {
+            resolved = contained
+        }
+        else {
+            // Location falls outside every fetched candidate (bbox edge, fallback location) —
+            // fall back to nearest polygon edge, same pattern HazardController uses.
+            resolved = candidates.min { a, b in
+                let distanceA = a.polygons.compactMap { PolygonProximityCalculator.nearestPointOnPolygon(from: location, to: $0)?.distance }.min() ?? .greatestFiniteMagnitude
+                let distanceB = b.polygons.compactMap { PolygonProximityCalculator.nearestPointOnPolygon(from: location, to: $0)?.distance }.min() ?? .greatestFiniteMagnitude
+                return distanceA < distanceB
             }
         }
-        return nearestDistrict
+
+        guard let resolved else { return nil }
+        guard resolved.id == Self.berlinWholeCityAGS else { return resolved }
+
+        // Resolve down to the containing Bezirk; fall back to the whole-city district
+        // (which RKI doesn't recognize as a valid id) only if that somehow fails.
+        return Self.resolveBerlinBezirk(for: location) ?? resolved
+    }
+
+    private static let berlinBezirkRKIIds: [String: String] = [
+        "Mitte": "11001",
+        "Friedrichshain-Kreuzberg": "11002",
+        "Pankow": "11003",
+        "Charlottenburg-Wilmersdorf": "11004",
+        "Spandau": "11005",
+        "Steglitz-Zehlendorf": "11006",
+        "Tempelhof-Schöneberg": "11007",
+        "Neukölln": "11008",
+        "Treptow-Köpenick": "11009",
+        "Marzahn-Hellersdorf": "11010",
+        "Lichtenberg": "11011",
+        "Reinickendorf": "11012",
+    ]
+
+    private static func resolveBerlinBezirk(for location: Location) -> District? {
+        guard let url = Bundle.main.url(forResource: "BerlinBezirke", withExtension: "geojson"),
+              let data = try? Data(contentsOf: url),
+              let json = try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any],
+              let features = json["features"] as? [[String: Any]]
+        else { return nil }
+
+        var bezirke: [District] = []
+        for feature in features {
+            guard let properties = feature["properties"] as? [String: Any],
+                  let name = properties["name"] as? String,
+                  let id = Self.berlinBezirkRKIIds[name],
+                  let geometry = feature["geometry"] as? [String: Any],
+                  let polygons = Self.parsePolygons(from: geometry),
+                  let centroid = Self.centroid(of: polygons)
+            else { continue }
+            bezirke.append(District(id: id, name: "Berlin \(name)", location: centroid, polygons: polygons))
+        }
+        guard bezirke.isEmpty == false else { return nil }
+
+        if let contained = bezirke.first(where: { bezirk in
+            bezirk.polygons.contains { isPointInPolygon(point: location, polygon: $0) }
+        }) {
+            return contained
+        }
+
+        return bezirke.min { a, b in
+            let distanceA = a.polygons.compactMap { PolygonProximityCalculator.nearestPointOnPolygon(from: location, to: $0)?.distance }.min() ?? .greatestFiniteMagnitude
+            let distanceB = b.polygons.compactMap { PolygonProximityCalculator.nearestPointOnPolygon(from: location, to: $0)?.distance }.min() ?? .greatestFiniteMagnitude
+            return distanceA < distanceB
+        }
     }
 
     static private func parseDistricts(data: Data) async throws -> [District]? {
-        var districts: [District]? = nil
-        if let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any] {
-            if let elements = json["elements"] as? [[String: Any]] {
-                var nearestDistricts: [District] = []
-                for element in elements {
-                    if let center = element["center"] as? [String: Any] {
-                        if let latitude = center["lat"] as? Double, let longitude = center["lon"] as? Double {
-                            if let tags = element["tags"] as? [String: Any] {
-                                if let name = tags["name"] as? String {
-                                    if let id = tags["de:regionalschluessel"] as? String {
-                                        if id.count >= 5 {
-                                            let location = Location(latitude: latitude, longitude: longitude)
-                                            nearestDistricts.append(District(id: String(id.prefix(5)), name: name, location: location))
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                districts = nearestDistricts
-            }
+        guard let json = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]) as? [String: Any],
+              let features = json["features"] as? [[String: Any]]
+        else { return nil }
+
+        var districts: [District] = []
+        for feature in features {
+            guard let properties = feature["properties"] as? [String: Any],
+                  let id = properties["ags"] as? String,
+                  let name = properties["gen"] as? String,
+                  let geometry = feature["geometry"] as? [String: Any],
+                  let polygons = Self.parsePolygons(from: geometry),
+                  let centroid = Self.centroid(of: polygons)
+            else { continue }
+            districts.append(District(id: id, name: name, location: centroid, polygons: polygons))
         }
         return districts
+    }
+
+    private static func parsePolygons(from geometry: [String: Any]) -> [[Location]]? {
+        guard let type = geometry["type"] as? String else { return nil }
+        switch type {
+            case "Polygon":
+                guard let rings = geometry["coordinates"] as? [[[Double]]], let outer = rings.first else { return nil }
+                return [Self.ring(from: outer)]
+            case "MultiPolygon":
+                guard let parts = geometry["coordinates"] as? [[[[Double]]]] else { return nil }
+                return parts.compactMap { $0.first }.map { Self.ring(from: $0) }
+            default:
+                return nil
+        }
+    }
+
+    private static func ring(from coordinates: [[Double]]) -> [Location] {
+        return coordinates.compactMap { point in
+            guard point.count >= 2 else { return nil }
+            return Location(latitude: point[1], longitude: point[0])
+        }
+    }
+
+    private static func centroid(of polygons: [[Location]]) -> Location? {
+        let points = polygons.flatMap { $0 }
+        guard points.isEmpty == false else { return nil }
+        let latitude = points.map(\.latitude).reduce(0, +) / Double(points.count)
+        let longitude = points.map(\.longitude).reduce(0, +) / Double(points.count)
+        return Location(latitude: latitude, longitude: longitude)
     }
 
 

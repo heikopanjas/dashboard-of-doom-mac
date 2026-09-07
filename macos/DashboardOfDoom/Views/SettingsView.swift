@@ -288,6 +288,14 @@ struct SettingsView: View {
 
             Spacer()
 
+            Text("COVID-19 district boundaries: © BKG (\(Calendar.current.component(.year, from: Date()))) dl-de/by-2-0")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+
+            Text("Berlin borough boundaries: Amt für Statistik Berlin-Brandenburg, CC-BY")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+
             Text("© 2025 Heiko Panjas. All rights reserved.")
                 .font(.caption2)
                 .foregroundColor(.secondary)

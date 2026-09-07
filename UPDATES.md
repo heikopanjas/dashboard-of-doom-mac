@@ -4,6 +4,26 @@ This file is the append-only log of project decisions and notable changes, maint
 
 <!-- {changelog} -->
 
+### 2026-09-07 (macos v6.5.1, berlin bezirk exception for covid lookup, 15:50)
+
+- discovered during manual verification of the prior entry: bkg's vg250 kreis layer models all of berlin as one feature, but rki reports covid data per berlin bezirk (12 boroughs, ids 11001 through 11012), since the bezirke are not independent gemeinden and never appear as separate features in any bkg layer; the whole-city id bkg returns for berlin is not even a valid rki district id, so covid data for any berlin location silently never loaded under the prior entry's implementation
+- confirmed live against the current rki district list that this is the only such exception nationwide: 411 rki districts against germany's roughly 401 official kreise, with hamburg and every other city reporting as a single district like the rest of the country; the user's recollection was that hamburg had the same problem historically, but the live api disagrees today, so hamburg is left unhandled as a known possible gap rather than asserted fixed
+- when bkg resolves a location to berlin's whole-city feature, fall through to a bundled dataset of the 12 bezirk boundaries (sourced from the amt fuer statistik berlin-brandenburg via a cc-by mirror) and re-resolve with the same point-in-polygon and nearest-edge logic already written for the general case, reusing rather than duplicating it
+- add a second attribution line for the bezirk data alongside the bkg one
+- validation: live end to end test at the user's actual location now correctly resolves to berlin mitte and successfully loads real incidence, cases, deaths, and recovered data, closing out the manual verification left pending in the previous entry; signed debug and release builds succeed, all 14 macos unit tests and nine build-script tests pass, ios build unaffected
+- no version bump: continues the 6.5.1 patch from the previous entry
+
+### 2026-09-07 (macos v6.5.1, covid district lookup via bkg wfs, 14:45)
+
+- replace the osm overpass query used to resolve a location's covid district with a direct query against bkg's own vg250 wfs kreis layer
+- rationale: the overpass approach queried four administrative tiers at once as a workaround for incomplete regionalschluessel tagging in osm, but never deduplicated the resulting candidates and only ever had centroid distance to rank them, since overpass's out center never returns real polygon geometry; a kreis and a nested gemeinde or stadtteil could both surface as separate candidates, and centroid distance is a poor proxy for which polygon a point actually falls inside near a kreis border
+- bkg is the federal agency that owns the regionalschluessel scheme itself, so querying only its kreis layer returns exactly one feature per kreis with no tagging gaps to work around, and real multipolygon geometry enables genuine point-in-polygon containment for the first time, with a nearest-polygon-edge fallback for points outside every fetched candidate
+- reused the app's existing point-in-polygon and nearest-point-on-polygon helpers and the geojson polygon-parsing pattern already established by the unrelated civil-protection hazard controller, rather than introducing new geometry primitives
+- add a bkg attribution line to the macos about tab per its data licence; no equivalent about surface exists on ios today, so ios carries no attribution yet, a known gap rather than an in-scope fix
+- no fallback to overpass if bkg is unreachable; district data is simply skipped that refresh cycle, matching how every other network failure in this controller already behaves
+- validation: verified the bkg wfs endpoint, layer name, and response shape live before implementation; isPointInPolygon and filterItemsInPolygon unit tests still pass; manual verification of district resolution across several real locations, including a kreis-border case, and of graceful offline behavior is still pending
+- version bump: 6.5.0 to 6.5.1 (patch - corrects existing district-resolution behavior, no new user-facing capability)
+
 ### 2026-09-07 (macos v6.5.0, combined sensors tab, 14:00)
 
 - merge the level, radiation, and particles dashboard tabs into one sensors tab with a gauge icon, shortening the toolbar from seven tabs to five

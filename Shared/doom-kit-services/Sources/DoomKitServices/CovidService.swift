@@ -6,19 +6,13 @@ import Foundation
 public class CovidService {
     public static func fetchDistricts(for location: Location, radius: Double, networkManager: NetworkManager = .shared) async throws -> Data? {
         let box = calculateBoundingBox(center: location, radiusInMeters: radius)
-        let query =
-            "[out:json][timeout:25][bbox:\(box.minLatitude),\(box.minLongitude),\(box.maxLatitude),\(box.maxLongitude)];relation(around:\(radius),\(location.latitude),\(location.longitude))[\"boundary\"=\"administrative\"][\"admin_level\"~\"4|6|7|8|9\"];out center tags qt;"
-
-        // URL encode the query and construct proper API endpoint
-        guard let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
-            trace.error("Failed to encode Overpass query")
-            return nil
-        }
-
-        let urlString = "https://overpass-api.de/api/interpreter?data=\(encodedQuery)"
+        let urlString =
+            "https://sgx.geodatenzentrum.de/wfs_vg250?service=WFS&version=2.0.0&request=GetFeature"
+            + "&typeNames=vg250:vg250_krs"
+            + "&bbox=\(box.minLongitude),\(box.minLatitude),\(box.maxLongitude),\(box.maxLatitude),EPSG:4326"
+            + "&outputFormat=application/json&count=20"
 
         trace.debug("Fetching covid districts near location: \(location.latitude), \(location.longitude), radius: \(radius)m")
-        trace.debug("Overpass API URL length: \(urlString.count) chars")
 
         let networkStatus = await networkManager.isConnected
         trace.debug("Network status before districts request: \(networkStatus ? "connected" : "disconnected")")
@@ -34,7 +28,6 @@ public class CovidService {
                 trace.error("  Location: \(location.latitude), \(location.longitude), radius: \(radius)m")
                 trace.error("  Network before: \(networkStatus), after: \(networkStatusAfter)")
                 trace.error("  URL length: \(urlString.count) chars")
-                trace.error("  Query: \(query)")
                 return nil
         }
     }
