@@ -4,6 +4,16 @@ This file is the append-only log of project decisions and notable changes, maint
 
 <!-- {changelog} -->
 
+### 2026-09-07 (macos v6.5.0, combined sensors tab, 14:00)
+
+- merge the level, radiation, and particles dashboard tabs into one sensors tab with a gauge icon, shortening the toolbar from seven tabs to five
+- stack the three sections vertically in one scrolling view, each keeping its own placemark and last update header since these sensors can each sit at a different location
+- also rename weather forecast to weather and particulate matter to particles in the toolbar, matching the existing settings tab labels
+- rationale: level, radiation, and particles are all small, thematically related physical sensor readings, and did not need a dedicated toolbar slot each
+- explicitly left the settings window untouched: it keeps separate level, radiation, and particles tabs with their own enable toggles and refresh intervals, since merging the dashboard display has no bearing on those per source settings
+- validation: signed debug and release builds succeed, all 14 macos unit tests and nine build-script tests pass, ios build unaffected since it owns separate content and category views; manually verified all three sections render with distinct locations and data, dividers separate them, and settings still shows the three tabs unchanged
+- no version bump: continues the current macos 6.5.0 cycle
+
 ### 2026-09-07 (macos v6.5.0, remove dashboard card chrome, 12:10)
 
 - remove the card treatment from all six category views and from the home map, and delete the now unused dashboard card modifier

@@ -43,14 +43,12 @@ struct RadiationView: View {
                     self.presenter.isAvailable(selector: .radiation($0))
                 }
 
-                ScrollView {
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                        ForEach(selectors, id: \.self) { selector in
-                            VStack {
-                                RadiationChartView(selector: .radiation(selector))
-                            }
-                            .frame(height: 167)
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                    ForEach(selectors, id: \.self) { selector in
+                        VStack {
+                            RadiationChartView(selector: .radiation(selector))
                         }
+                        .frame(height: 167)
                     }
                 }
             }

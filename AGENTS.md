@@ -1,6 +1,6 @@
 # Agent Instructions for Dashboard of Doom (macOS and iOS)
 
-*Last updated: September 7, 2026, 12:10 CEST (macOS dashboard chrome removal)*
+*Last updated: September 7, 2026, 14:00 CEST (macOS combined Sensors tab)*
 
 ## Project Overview
 
@@ -160,7 +160,8 @@ Controllers → Services → Transformers → Presenters → Views
 - Native macOS appearance integration
 - App is `LSUIElement`; menu item key equivalents (Settings ⌘,, Quit ⌘Q) only fire while the status menu is open, the global hotkey is the only system-wide binding
 - Dashboard window is freely resizable (minimum 700x500, no maximum) via `ContentView`'s `.frame(minWidth:minHeight:)` and `.windowResizability(.contentMinSize)`
-- Content is tab-based (`DashboardTab`), not scrolling disclosure panels: a toolbar strip (`ToolbarTabButton`, shared with `SettingsView`) switches between Home (full-size map) and one category per data source
+- Content is tab-based (`DashboardTab`), not scrolling disclosure panels: a toolbar strip (`ToolbarTabButton`, shared with `SettingsView`) switches between Home (full-size map), Weather, COVID-19, Sensors, and Polls
+- The Sensors tab (`SensorsView`) stacks Level, Radiation, and Particles in one scrolling view, each keeping its own placemark/last-update header since these sensors can each sit at a different location; `SettingsTab` keeps them as three separate tabs with independent toggles and refresh intervals — the two are unrelated
 - Charts are bare, fixed 167-point cells in a two-column `LazyVGrid` with no card or container chrome; do not add fills, borders, or rounded corners, and do not make chart height depend on window size
 - The Home map gets the same outer `.padding()` as the category tabs and nothing else
 

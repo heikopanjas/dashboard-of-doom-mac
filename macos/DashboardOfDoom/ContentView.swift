@@ -4,9 +4,7 @@ enum DashboardTab: String, CaseIterable {
     case home = "Home"
     case weather = "Weather"
     case covid = "COVID-19"
-    case level = "Level"
-    case radiation = "Radiation"
-    case particles = "Particles"
+    case sensors = "Sensors"
     case polls = "Polls"
 
     var icon: String {
@@ -14,9 +12,7 @@ enum DashboardTab: String, CaseIterable {
         case .home: return "house"
         case .weather: return "cloud.sun"
         case .covid: return "facemask"
-        case .level: return "water.waves"
-        case .radiation: return "atom"
-        case .particles: return "aqi.medium"
+        case .sensors: return "gauge"
         case .polls: return "chart.bar"
         }
     }
@@ -52,12 +48,8 @@ struct ContentView: View {
                     ForecastView().padding()
                 case .covid:
                     CovidView().padding()
-                case .level:
-                    LevelView().padding()
-                case .radiation:
-                    RadiationView().padding()
-                case .particles:
-                    ParticleView().padding()
+                case .sensors:
+                    SensorsView().padding()
                 case .polls:
                     SurveyView().padding()
                 }
