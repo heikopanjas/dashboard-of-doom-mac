@@ -4,6 +4,16 @@ This file is the append-only log of project decisions and notable changes, maint
 
 <!-- {changelog} -->
 
+### 2026-09-07 (macos v6.5.3, audit waterway classification against wrrl, 17:25)
+
+- audit the name-based natural/artificial heuristic from the previous entry against wasserblick, the eu water framework directive's own water body classification, after the user downloaded the current dataset directly (the public version investigated during the previous entry's research pass was inaccessible)
+- parsed the esri filegdb format by hand to read it, since no gdal or python geo library was available in this environment; validated the parser byte-exact against the declared field count and per-row length before trusting any output
+- found wrrl cannot replace the heuristic wholesale: its names are ecological water bodies, not pegelonline's shipping-route names, so only 47 of 103 names join exactly; and its artificial flag is origin-based, not behavioural, so a canal dug along an old river course reads as not artificial to wrrl, which is the wrong signal for a heuristic that cares whether the level is naturally variable or lock-controlled
+- of the 47 exact-name joins, most disagreements were kanal-named waterways where wrrl's origin-based flag was simply the wrong classifier for our purpose and the existing heuristic was kept
+- one real correction: muritz-elde-wasserstrasse has no kanal in its name but is a heavily locked system connecting the mueritz lake district to the elbe; wrrl's constituent water bodies agree it is artificial by a clear majority, so it is now hard-overridden in the offline curation script rather than left to the name heuristic
+- no swift code changed; only the bundled classification data and its curation script were touched
+- version bump: 6.5.2 to 6.5.3 (patch - corrects one waterway's classification, no new user-facing capability)
+
 ### 2026-09-07 (macos v6.5.2, waterway lookup via bundled verknet-bwastr, 16:50)
 
 - replace the osm overpass query used to find the nearest natural waterway for water-level gauge resolution with a bundled, offline-converted federal waterway network, removing the osm dependency from level lookups entirely
